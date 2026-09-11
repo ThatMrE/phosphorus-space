@@ -551,59 +551,184 @@
   </div>
 </section>
 
-<!-- ============================ LIFE ALOFT ============================ -->
-<section class="band" data-rail="Life aloft">
+<!-- ============================ CONSTRUCTION ============================ -->
+<section class="band" data-rail="Building it">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">11 · Life aloft</p>
-      <h2>Everything a human needs is already in the air outside, except the phosphorus.</h2>
+      <p class="eyebrow">11 · Construction</p>
+      <h2>How you build a hundred-and-twenty-nine-metre ship and fit it inside an aeroshell.</h2>
+      <div class="sec-head__meta">
+        <span>69 gores</span><span>9.4 km of welded seam</span><span>30 700 : 1 packed</span><span>8 years of air-making</span>
+      </div>
     </div>
 
-    <dl class="factgrid reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
-      <div class="fact"><dt>One lap of Venus</dt><dd>≈ 5 days</dd></div>
-      <div class="fact"><dt>Distance per lap</dt><dd>38 340 km</dd></div>
-      <div class="fact"><dt>Night length</dt><dd>≈ 50 h</dd></div>
-      <div class="fact"><dt>Sunlight vs Earth surface</dt><dd>+40%</dd></div>
-      <div class="fact"><dt>Solar constant</dt><dd>2 601 W/m²</dd></div>
-      <div class="fact"><dt>Laps in 30 days</dt><dd>≈ 6</dd></div>
-    </dl>
+    <div class="builds reveal" id="build"></div>
 
-    <div class="two">
-      <div class="prose reveal">
-        <p>
-          The airship does not fly anywhere. It is carried — the whole atmosphere
-          super-rotates, and at the float altitude that means about 60&nbsp;m/s of free
-          westward travel. The crew circumnavigates a planet roughly once a working week
-          without spending a watt on propulsion.
-        </p>
-        <p>
-          The cost of that ride is the night. Venus&rsquo; own day is 117 Earth days long, so
-          the only thing setting sunrise is the balloon&rsquo;s own motion, and half a lap is
-          about fifty hours in the dark. Energy storage sized for fifty hours is the single
-          heaviest subsystem after the ascent vehicle.
-        </p>
-        <p class="note">
-          Each of the four loops below has already been demonstrated somewhere. MOXIE ran the
-          oxygen reaction on Mars in 2021. NASA&rsquo;s EVE study ran the same solid-oxide cells
-          on simulated Venus atmosphere to make lift gas. None of them has been run together,
-          at scale, in acid.
-        </p>
+    <div class="prose col reveal" style="margin-top: clamp(2.5rem, 6vw, 3.5rem)">
+      <h3 style="font-size:var(--step-1); margin-bottom:0.4rem">Why the phases are shaped the way they are</h3>
+      <p>
+        That last step is the reason Phase 2 exists. Thirty-three tonnes of breathable air is
+        more than the airship&rsquo;s entire useful payload, so it can never be carried — it has
+        to be manufactured on station, and manufacturing it takes years at any sane power budget.
+      </p>
+      <p>
+        Which means the programme is not really &ldquo;send a hull, then send a crew&rdquo;. It is
+        <strong>send a hull and let it breathe in for eight years</strong>. The 2034 window is not
+        a rehearsal that happens to come first; it is the start of a process that has to finish
+        before 2042 is flyable at all.
+      </p>
+      <p class="note">
+        Until that fill is complete the ship still flies — the helium cells alone lift
+        <span class="num">66.8&nbsp;t</span>, leaving about <span class="num">46&nbsp;t</span>
+        of useful load after structure. The air volume is what takes it to
+        <span class="num">63&nbsp;t</span> and turns the lower hull from a shape-keeping
+        ballonet into somewhere a person can stand.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LIFE IN THE CLOUDS ============================ -->
+<section class="band" data-rail="Life in the clouds">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">12 · Life in the clouds</p>
+      <h2>Thirty days at nine-tenths of a gravity, inside a cloud you can never see out of.</h2>
+    </div>
+
+    <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
+      <p>
+        The ship does not fly anywhere. It is carried — the whole atmosphere super-rotates, and
+        at the float band that means 60 to 95&nbsp;m/s of free westward travel. The crew
+        circumnavigates a planet roughly once a working week without spending a watt on propulsion.
+      </p>
+      <p>
+        The price of that ride is the night, and the length of the night is a choice. Venus&rsquo;
+        own day is 117 Earth days long, so the only thing setting sunrise is the ship&rsquo;s own
+        motion. Float low and you get more lift, a slower lap and a longer darkness; float high
+        and the reverse. <strong>Altitude sets the length of your day.</strong>
+      </p>
+    </div>
+
+    <div class="lap reveal">
+      <div class="lap__head">
+        <p class="eyebrow eyebrow--aqua">One lap of Venus, at your chosen float altitude</p>
+        <div style="display:flex; align-items:center; gap:0.8rem">
+          <span class="lap__pick-l">Float km</span>
+          <div class="lap__pick" id="lapPick" role="group" aria-label="Float altitude in kilometres"></div>
+        </div>
       </div>
-      <div class="reveal">
-        <p class="eyebrow" style="margin-bottom:1rem">Closing the loops</p>
-        <div class="loops" id="loops"></div>
-      </div>
+      <div id="lapSvg"></div>
+      <dl class="lap__out">
+        <div class="lap__cell"><dt>Lap</dt><dd><span id="lLap">5.6</span><span>days</span></dd></div>
+        <div class="lap__cell"><dt>Night</dt><dd><span id="lNight">68</span><span>hours</span></dd></div>
+        <div class="lap__cell"><dt>Storage needed</dt><dd><span id="lStore">541</span><span>kWh</span></dd></div>
+        <div class="lap__cell"><dt>Wind</dt><dd><span id="lWind">75</span><span>m/s</span></dd></div>
+        <div class="lap__cell"><dt>Helium lift</dt><dd><span id="lLift">54.3</span><span>t</span></dd></div>
+      </dl>
+      <p class="note" style="margin-top:1rem">
+        Storage assumes an 8&nbsp;kW average habitat load carried straight through the dark.
+        Battery mass is the second-heaviest thing on the ship after the ascent vehicle, which is
+        why those two hundred kilowatt-hours between 50 and 55&nbsp;km are a real design argument
+        and not a detail.
+      </p>
+    </div>
+
+    <div class="reveal" style="margin-top: clamp(2.5rem, 6vw, 3.5rem)">
+      <dl class="factgrid">
+        <div class="fact"><dt>One lap of Venus</dt><dd>4.5 – 7.0 d</dd></div>
+        <div class="fact"><dt>Distance per lap</dt><dd>38 340 km</dd></div>
+        <div class="fact"><dt>Night length</dt><dd>54 – 83 h</dd></div>
+        <div class="fact"><dt>Laps in 30 days</dt><dd>4 – 7</dd></div>
+        <div class="fact"><dt>Solar constant</dt><dd>2 601 W/m²</dd></div>
+        <div class="fact"><dt>vs Earth surface</dt><dd>+40%</dd></div>
+      </dl>
+      <p class="note" style="margin-top:1.2rem; max-width:72ch">
+        Lap and night are measured against the Sun rather than the ground: Venus&rsquo; retrograde
+        rotation runs the same way as the wind, so the two rates add and the solar cycle comes out
+        slightly shorter than the lap over the surface.
+      </p>
     </div>
 
     <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
-      <p class="eyebrow" style="margin-bottom:1rem">12 · The crew — four people, two stations</p>
-      <div class="crewlist" id="crew"></div>
-      <p class="note" style="margin-top:1.4rem; max-width:66ch">
-        NASA&rsquo;s HAVOC study left the transit habitat empty in Venus orbit for the thirty
-        days its two crew were in the atmosphere. This plan does not. Two crew stay with the
-        ride home and keep it alive; two fly the airship. Nobody is ever the only person
-        aboard a vehicle.
+      <p class="eyebrow" style="margin-bottom:1rem">Closing the loops</p>
+      <div class="loops" id="loops"></div>
+      <p class="note" style="margin-top:1.2rem; max-width:72ch">
+        Each loop has been demonstrated somewhere. MOXIE ran the oxygen reaction on Mars in 2021;
+        NASA&rsquo;s EVE study ran the same solid-oxide cells on simulated Venus atmosphere to make
+        lift gas. None of them has been run together, at scale, in acid — which is what Phase 1 and
+        Phase 2 are for.
       </p>
+    </div>
+
+    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
+      <p class="eyebrow" style="margin-bottom:1rem">What it is actually like</p>
+      <div class="experience" id="experience"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CREW ============================ -->
+<section class="band" data-rail="The crew">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">13 · The crew</p>
+      <h2>Four people, two stations, and nobody ever alone aboard a vehicle.</h2>
+      <div class="sec-head__meta">
+        <span>2 in Venus orbit for 459 days</span>
+        <span>2 in the clouds for 30</span>
+      </div>
+    </div>
+    <div class="crews reveal" id="crewDetail"></div>
+    <p class="note reveal" style="margin-top:1.6rem; max-width:66ch">
+      NASA&rsquo;s HAVOC study sized the atmospheric crew at two and left the transit habitat empty
+      in Venus orbit for the whole month they were gone. This plan spends two more seats to avoid
+      that: the ride home stays crewed and maintained, the descent pair have someone overhead who
+      can help, and no single failure leaves one person as the only human on a vehicle.
+    </p>
+  </div>
+</section>
+
+<!-- ============================ SCIENCE ============================ -->
+<section class="band" data-rail="The science">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">14 · The science</p>
+      <h2>Six questions worth sending people for.</h2>
+      <div class="sec-head__meta">
+        <span>What a laboratory at 52 km can do that a falling probe cannot</span>
+      </div>
+    </div>
+
+    <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
+      <p>
+        Venus is the nearest worked example of a planet that went wrong. It is the same size as
+        Earth, made of the same material, at the same distance from the same star — and it is
+        460&nbsp;°C. Whatever separated the two of them is the single most consequential unknown
+        in planetary science, because it is also the thing that decides how to read every
+        Earth-sized exoplanet we will ever find.
+      </p>
+      <p>
+        Every question below is open <em>now</em>, and every one of them is open specifically
+        because the answer is in the clouds and we have never had hands there.
+      </p>
+    </div>
+
+    <div class="questions reveal" id="science"></div>
+
+    <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
+      <p class="eyebrow" style="margin-bottom:1rem">What the crew adds</p>
+      <div class="advantages" id="advantage"></div>
+    </div>
+
+    <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
+      <p class="eyebrow eyebrow--aqua" style="margin-bottom:0.6rem">The sampling ladder</p>
+      <p class="note" style="margin-bottom:1.4rem; max-width:64ch">
+        The ship is the laboratory and the middle rung. Everything above and below it is deployed
+        from the hull — tethered packages that come back, sondes that do not, and one probe that
+        gets about two hours on the surface before the heat takes it.
+      </p>
+      <div class="ladder" id="sampling"></div>
     </div>
   </div>
 </section>
@@ -612,7 +737,7 @@
 <section class="band" data-rail="The bill">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">13 · The bill</p>
+      <p class="eyebrow">15 · The bill</p>
       <h2>Forty-four billion dollars over twenty years, and launch is barely one per cent of it.</h2>
     </div>
 
@@ -653,7 +778,7 @@
 <section class="band" data-rail="What could kill it">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow" style="color:var(--critical)">14 · The honest column</p>
+      <p class="eyebrow" style="color:var(--critical)">16 · The honest column</p>
       <h2>Seven things that could kill this, in the order they are likely to.</h2>
       <div class="sec-head__meta">
         <span>No mission plan that omits this section is worth reading.</span>
@@ -667,7 +792,7 @@
 <section class="band" data-rail="Sources">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">15 · The verdict</p>
+      <p class="eyebrow">17 · The verdict</p>
       <h2>Venus is not easier than Mars. It is shorter, closer, warmer and better shielded — and it has no floor.</h2>
     </div>
 

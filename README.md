@@ -51,6 +51,7 @@ python3 porkchop.py          # Earth→Venus departure opportunities, 2030–205
 python3 roundtrip.py         # round-trip itineraries with a fixed atmospheric stay
 python3 compare.py           # Venus vs Mars, buoyancy table, envelope sizing
 python3 export_trajectory.py # regenerates assets/trajectory.js for the orbit plot
+python3 lapcycle.py          # lap period, night length and storage across the float band
 ```
 
 **Method.** Planet states come from JPL's *Approximate Positions of the Planets*
@@ -77,6 +78,31 @@ columns:
   surface is 21. Note that Venus has no magnetic field, so this is column density
   only — Earth's geomagnetic cutoff is additional protection Venus does not have.
 
+**The lap cycle.** The airship is carried by the super-rotating atmosphere, so
+how long a "day" lasts aboard is set by float altitude — wind speed varies with
+height. Venus' own retrograde rotation runs the same way as the wind, so the two
+rates add and the solar cycle is slightly shorter than the lap measured against
+the surface. Across the 50–55 km band that gives a **4.5–7.0 day lap and a 54–83
+hour night**, and at an 8 kW habitat load, **431–668 kWh** of storage to cross the
+dark. The commonly quoted "~50 hours" applies to balloons floating higher and
+faster than this mission's band.
+
+**The air fill.** The lower hull holds 31 500 m³ of breathable air — 33.6 t of
+gas, more than the airship's entire useful payload, so it can never be shipped.
+It is made on station instead: O₂ by solid-oxide electrolysis of CO₂, N₂ stripped
+from the 3.5% of the atmosphere that is already nitrogen. Over the 2 912 days
+between the Phase 2 hull arriving (Dec 2034) and the crew departing (Jul 2042),
+that is **11.5 kg/day**, processing about **240 m³ of Venus' air daily**. This is
+why the programme is phased the way it is: the 2034 window is not a rehearsal
+that happens to come first, it is the start of a process that has to finish
+before 2042 is flyable.
+
+**Envelope packing.** At 200 g/m² and ~1.6 g/cm³ the laminate is about 125 µm
+thick; over 11 100 m² of envelope that is only 1.4 m³ of solid material, ~2.5 m³
+folded — an inflated-to-packed ratio of about **30 700 : 1**. The hull's widest
+girth is 107 m, so at a 1.55 m usable laminate width the envelope is cut as
+**69 gores** with roughly **9.4 km** of heat-fused seam.
+
 **A cross-check worth noting.** Sizing an envelope for ~40 t of payload on
 breathable-air lift at 50 km independently returns 73 900 m³ at 127 m × 33 m. NASA
 Langley's published HAVOC airship is 77 500 m³ at 129 m × 34 m, and the same hull
@@ -100,6 +126,14 @@ assets/trajectory.js    generated — heliocentric geometry for the orbit plot
 assets/mission.js       scroll engine, canvas and SVG renderers
 scripts/*.py            the orbital mechanics behind the numbers
 ```
+
+### Sections
+
+The argument · the Venus/Mars ledger · a scroll-flown descent to the surface ·
+the buoyancy physics · the five-phase programme · the voyage · launch windows ·
+the fleet · entry and inflation · the habitat · **construction** ·
+**life in the clouds** · **the crew** · **the science** · the bill · the risk
+register · the verdict.
 
 No build step, no dependencies, no framework. Open `index.html` directly or serve
 the directory; both work.
@@ -162,6 +196,14 @@ every number, unit and date.
 
 **Missions in the 2026–2032 window**
 - Rocket Lab / MIT [Venus Life Finder](https://rocketlabcorp.com/missions/launches/first-private-mission-to-venus/) · ISRO Shukrayaan-1 · NASA [DAVINCI](https://science.nasa.gov/mission/davinci/) · NASA [VERITAS](https://science.nasa.gov/mission/veritas/) · ESA EnVision
+
+**Science — open questions the mission targets**
+- Greaves et al., [*Phosphine gas in the cloud decks of Venus*](https://arxiv.org/abs/2011.08176) (re-analysis, arXiv:2011.08176), and Villanueva et al., [*No evidence of phosphine…*](https://www.nature.com/articles/s41550-021-01422-z), Nature Astronomy 2021 — both sides of a still-open dispute
+- Spacek et al., [*Iron-sulfur chemistry can explain the ultraviolet absorber in the clouds of Venus*](https://www.science.org/doi/10.1126/sciadv.adg8826), Science Advances 2024
+- Herrick & Hensley, [*Surface changes observed on a Venusian volcano during the Magellan mission*](https://www.jpl.nasa.gov/news/ongoing-venus-volcanic-activity-discovered-with-nasas-magellan-data/), Science 2023
+- Lai et al., [*Contribution of Thermal Tides to Venus Upper Cloud-Layer Superrotation*](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025AV001880), AGU Advances 2025
+- Way & Del Genio, [*Venusian habitable climate scenarios*](https://www.giss.nasa.gov/pubs/abs/wa02800e.html), JGR Planets 2020, on the lost ocean and the D/H record
+- Sagdeev et al., [*Overview of VEGA Venus Balloon in Situ Meteorological Measurements*](https://www.science.org/doi/10.1126/science.231.4744.1411), Science 1986 — the only in-situ flight data from the band, including the 3.5 m/s downdrafts
 
 **Cost anchors**
 - [*The Cost of SLS and Orion*](https://www.planetary.org/space-policy/cost-of-sls-and-orion), The Planetary Society

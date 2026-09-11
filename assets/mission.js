@@ -1037,25 +1037,6 @@
     });
   }
 
-  function buildCrew() {
-    var wrap = $('#crew');
-    if (!wrap) return;
-    D.CREW.forEach(function (c) {
-      var row = el('div', 'crewrow');
-      row.appendChild(el('p', 'crewrow__r', c.role));
-      row.appendChild(el('p', 'crewrow__s num', c.station));
-      var bar = el('div', 'crewrow__bar');
-      var fill = el('div', 'crewrow__fill');
-      fill.style.width = (c.days / 459 * 100).toFixed(1) + '%';
-      if (c.days === 30) { fill.style.background = 'var(--aqua)'; fill.style.marginLeft = (124 / 459 * 100).toFixed(1) + '%'; }
-      bar.appendChild(fill);
-      row.appendChild(bar);
-      row.appendChild(el('p', 'crewrow__d num', c.days + ' d'));
-      row.appendChild(el('p', 'crewrow__w', c.why));
-      wrap.appendChild(row);
-    });
-  }
-
   function buildCost() {
     var wrap = $('#costBars');
     if (!wrap) return;
@@ -1146,6 +1127,247 @@
     });
   }
 
+  /* ---------- science: open questions --------------------- */
+
+  function buildScience() {
+    var wrap = $('#science');
+    if (!wrap) return;
+    D.SCIENCE.forEach(function (q) {
+      var a = el('article', 'q');
+      var h = el('div', 'q__h');
+      h.appendChild(el('p', 'q__n num', String(q.n).padStart(2, '0')));
+      h.appendChild(el('p', 'q__tag', q.tag));
+      a.appendChild(h);
+      var b = el('div', 'q__b');
+      b.appendChild(el('h3', 'q__name', q.name));
+      b.appendChild(el('p', 'q__known', q.known));
+      var split = el('div', 'q__split');
+      [['A probe can', q.probe, 'probe'], ['A crew can', q.crew, 'crew']].forEach(function (c) {
+        var col = el('div', 'q__col q__col--' + c[2]);
+        col.appendChild(el('p', 'q__col-k', c[0]));
+        col.appendChild(el('p', 'q__col-v', c[1]));
+        split.appendChild(col);
+      });
+      b.appendChild(split);
+      a.appendChild(b);
+      wrap.appendChild(a);
+    });
+  }
+
+  function buildSampling() {
+    var wrap = $('#sampling');
+    if (!wrap) return;
+    D.SAMPLING.forEach(function (st) {
+      var band = st.km >= 50 && st.km <= 54;
+      var row = el('div', 'st' + (band ? ' st--band' : ''));
+      var alt = el('div', 'st__alt');
+      alt.appendChild(el('span', 'st__km num', String(st.km)));
+      alt.appendChild(el('span', 'st__unit', 'km'));
+      row.appendChild(alt);
+      var body = el('div', 'st__b');
+      var top = el('div', 'st__top');
+      top.appendChild(el('h4', 'st__n', st.name));
+      top.appendChild(el('span', 'st__dur num', st.dur));
+      body.appendChild(top);
+      body.appendChild(el('p', 'st__gets', st.gets));
+      body.appendChild(el('p', 'st__kit num', st.kit));
+      row.appendChild(body);
+      wrap.appendChild(row);
+    });
+  }
+
+  function buildAdvantage() {
+    var wrap = $('#advantage');
+    if (!wrap) return;
+    D.CREW_ADVANTAGE.forEach(function (a) {
+      var c = el('article', 'adv');
+      c.appendChild(el('h4', 'adv__t', a.t));
+      c.appendChild(el('p', 'adv__d', a.d));
+      wrap.appendChild(c);
+    });
+  }
+
+  /* ---------- construction -------------------------------- */
+
+  function buildConstruction() {
+    var wrap = $('#build');
+    if (!wrap) return;
+    D.BUILD.forEach(function (b) {
+      var a = el('article', 'bd');
+      var l = el('div', 'bd__l');
+      l.appendChild(el('p', 'bd__step', b.step));
+      l.appendChild(el('p', 'bd__where num', b.where));
+      var fig = el('div', 'bd__fig');
+      fig.appendChild(el('p', 'bd__num', b.num));
+      fig.appendChild(el('p', 'bd__numlab', b.numlab));
+      l.appendChild(fig);
+      a.appendChild(l);
+      var r = el('div', 'bd__r');
+      r.appendChild(el('h4', 'bd__head', b.head));
+      r.appendChild(el('p', 'bd__body', b.body));
+      a.appendChild(r);
+      wrap.appendChild(a);
+    });
+  }
+
+  /* ---------- the lap: one circumnavigation --------------- */
+
+  function lapChart() {
+    var host = $('#lapSvg');
+    if (!host || !D.LAP) return;
+    var pick = $('#lapPick');
+    var out = {
+      lap: $('#lLap'), night: $('#lNight'), store: $('#lStore'),
+      lift: $('#lLift'), wind: $('#lWind')
+    };
+
+    var W = 920, H = 268, PAD = { l: 58, r: 58, t: 52, b: 26 };
+    var IW = W - PAD.l - PAD.r;
+    var s = svg('svg', {
+      viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
+      preserveAspectRatio: 'xMidYMid meet', role: 'img',
+      'aria-label': 'One circumnavigation of Venus at the selected float altitude, showing the daylight and night halves and the battery state through the night'
+    });
+    host.appendChild(s);
+
+    /* altitude buttons */
+    D.LAP.forEach(function (row, i) {
+      var b = el('button', 'lap__btn' + (row.km === 52 ? ' is-on' : ''));
+      b.type = 'button';
+      b.textContent = row.km;
+      b.setAttribute('aria-pressed', row.km === 52 ? 'true' : 'false');
+      b.addEventListener('click', function () { select(i); });
+      pick.appendChild(b);
+      void 0;
+    });
+
+    function draw(row) {
+      while (s.firstChild) s.removeChild(s.firstChild);
+      var hours = row.lapDays * 24;
+      var mid = PAD.l + IW / 2;
+      /* battery band on top, then a clear label row, then the day/night bar */
+      var topY = PAD.t, botY = PAD.t + 54;
+      var labelY = PAD.t + 78;
+      var barY = PAD.t + 86, barH = 44;
+
+      /* day / night halves */
+      var dayG = svg('linearGradient', { id: 'dayg', x1: 0, y1: 0, x2: 1, y2: 0 });
+      dayG.appendChild(svg('stop', { offset: '0%', 'stop-color': '#5A4A2E' }));
+      dayG.appendChild(svg('stop', { offset: '50%', 'stop-color': '#E8B33A' }));
+      dayG.appendChild(svg('stop', { offset: '100%', 'stop-color': '#5A4A2E' }));
+      var defs = svg('defs'); defs.appendChild(dayG); s.appendChild(defs);
+
+      s.appendChild(svg('rect', { x: PAD.l, y: barY, width: IW / 2, height: barH, fill: 'url(#dayg)' }));
+      s.appendChild(svg('rect', { x: mid, y: barY, width: IW / 2, height: barH, fill: '#141223', stroke: '#2A2740', 'stroke-width': 1 }));
+
+      function txt(x, y, t, o) {
+        o = o || {};
+        var n = svg('text', {
+          x: x, y: y, 'text-anchor': o.a || 'middle',
+          'font-family': o.f || '"IBM Plex Mono", monospace',
+          'font-size': o.s || 17, fill: o.c || '#8B8373',
+          'font-weight': o.w || 400, 'letter-spacing': o.ls || 0
+        });
+        n.textContent = t;
+        s.appendChild(n);
+        return n;
+      }
+
+      txt(PAD.l + IW / 4, barY + 27, 'DAYLIGHT  ' + Math.round(hours / 2) + ' h', { c: '#1A1408', s: 18, w: 500, ls: 1.4 });
+      txt(mid + IW / 4, barY + 27, 'NIGHT  ' + Math.round(row.nightH) + ' h', { c: '#F2E8D0', s: 18, w: 500, ls: 1.4 });
+
+      /* hour axis */
+      var axisY = barY + barH + 16;
+      s.appendChild(svg('line', { x1: PAD.l, y1: axisY, x2: PAD.l + IW, y2: axisY, stroke: '#2A2740', 'stroke-width': 1 }));
+      var stepH = hours > 140 ? 24 : 12;
+      for (var t = 0; t <= hours + 0.01; t += stepH) {
+        var x = PAD.l + (t / hours) * IW;
+        s.appendChild(svg('line', { x1: x, y1: axisY, x2: x, y2: axisY + 6, stroke: '#2A2740', 'stroke-width': 1 }));
+        txt(x, axisY + 24, String(Math.round(t)), { s: 14, c: '#5A5648' });
+      }
+      txt(PAD.l + IW / 2, axisY + 44, 'hours since local sunrise', { s: 14, c: '#5A5648' });
+
+      /* battery state through the lap */
+      s.appendChild(svg('line', { x1: PAD.l, y1: topY, x2: PAD.l + IW, y2: topY, stroke: '#1F1D33', 'stroke-width': 1 }));
+      s.appendChild(svg('line', { x1: PAD.l, y1: botY, x2: PAD.l + IW, y2: botY, stroke: '#1F1D33', 'stroke-width': 1 }));
+      txt(PAD.l - 10, topY + 5, 'full', { a: 'end', s: 14, c: '#5A5648' });
+      txt(PAD.l - 10, botY + 5, 'empty', { a: 'end', s: 14, c: '#5A5648' });
+
+      var d = 'M' + PAD.l + ' ' + botY;
+      d += ' L' + mid + ' ' + topY;          /* charging through the day */
+      d += ' L' + (PAD.l + IW) + ' ' + botY; /* discharging through the night */
+      s.appendChild(svg('path', { d: d, fill: 'none', stroke: '#5FD0C4', 'stroke-width': 3, 'stroke-linejoin': 'round' }));
+      s.appendChild(svg('circle', { cx: mid, cy: topY, r: 4.5, fill: '#5FD0C4' }));
+      txt(mid, topY - 12, Math.round(row.storageKwh) + ' kWh stored', { c: '#5FD0C4', s: 16 });
+
+      /* sunrise / sunset markers */
+      [PAD.l, mid, PAD.l + IW].forEach(function (x) {
+        s.appendChild(svg('line', { x1: x, y1: labelY + 4, x2: x, y2: barY + barH + 6, stroke: '#5A5648', 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
+      });
+      txt(PAD.l, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'start' });
+      txt(mid, labelY, 'sunset', { s: 14, c: '#5A5648' });
+      txt(PAD.l + IW, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'end' });
+    }
+
+    function select(i) {
+      var row = D.LAP[i];
+      Array.prototype.forEach.call(pick.children, function (b, j) {
+        b.classList.toggle('is-on', j === i);
+        b.setAttribute('aria-pressed', j === i ? 'true' : 'false');
+      });
+      draw(row);
+      out.lap.textContent = row.lapDays.toFixed(1);
+      out.night.textContent = Math.round(row.nightH);
+      out.store.textContent = fmt(row.storageKwh, 0);
+      out.lift.textContent = row.lift.toFixed(1);
+      out.wind.textContent = row.wind;
+    }
+
+    select(2); /* 52 km */
+  }
+
+  /* ---------- experience + crew --------------------------- */
+
+  function buildExperience() {
+    var wrap = $('#experience');
+    if (!wrap) return;
+    D.EXPERIENCE.forEach(function (x) {
+      var a = el('article', 'xp');
+      var h = el('div', 'xp__h');
+      h.appendChild(el('p', 'xp__k', x.k));
+      h.appendChild(el('p', 'xp__v num', x.v));
+      a.appendChild(h);
+      a.appendChild(el('p', 'xp__d', x.d));
+      wrap.appendChild(a);
+    });
+  }
+
+  function buildCrewDetail() {
+    var wrap = $('#crewDetail');
+    if (!wrap) return;
+    D.CREW_DETAIL.forEach(function (c) {
+      var a = el('article', 'cw' + (c.days === 30 ? ' cw--aloft' : ''));
+      var h = el('div', 'cw__h');
+      h.appendChild(el('h4', 'cw__r', c.role));
+      h.appendChild(el('p', 'cw__s num', c.station));
+      var bar = el('div', 'cw__bar');
+      var fill = el('div', 'cw__fill');
+      fill.style.width = (c.days / 459 * 100).toFixed(1) + '%';
+      if (c.days === 30) fill.style.marginLeft = (124 / 459 * 100).toFixed(1) + '%';
+      bar.appendChild(fill);
+      h.appendChild(bar);
+      h.appendChild(el('p', 'cw__d num', c.days + ' days on station'));
+      a.appendChild(h);
+      var b = el('div', 'cw__b');
+      var ul = el('ul', 'cw__duties');
+      c.duties.forEach(function (d) { ul.appendChild(el('li', null, d)); });
+      b.appendChild(ul);
+      b.appendChild(el('p', 'cw__why', c.why));
+      a.appendChild(b);
+      wrap.appendChild(a);
+    });
+  }
+
   /* ---------- reveal on scroll ---------------------------- */
 
   function reveals() {
@@ -1194,7 +1416,13 @@
     buildFleet();
     buildLaminate();
     buildAloft();
-    buildCrew();
+    buildScience();
+    buildSampling();
+    buildAdvantage();
+    buildConstruction();
+    buildExperience();
+    buildCrewDetail();
+    lapChart();
     buildCost();
     buildRisks();
     buildSources();
