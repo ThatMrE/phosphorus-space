@@ -1,5 +1,5 @@
 /* ============================================================
-   PROJECT PHOSPHORUS — page behaviour
+   PROJECT PHOSPHORUS — page behavior
    No framework, no build step. One rAF loop drives every
    scroll-linked graphic; everything else is rendered once
    from assets/data.js.
@@ -154,7 +154,7 @@
       ['Float altitude', D.FLOAT_BAND.lo + '–' + D.FLOAT_BAND.hi, 'km'],
       ['Cabin pressure', '1.05', 'atm'],
       ['Gravity', D.VENUS.gravityG.toFixed(3), 'g'],
-      ['Programme cost', '$' + D.COSTS.total.toFixed(1), 'bn']
+      ['Program cost', '$' + D.COSTS.total.toFixed(1), 'bn']
     ];
     rows.forEach(function (r) {
       var d = el('div', 'hero__stat');
@@ -503,7 +503,7 @@
     render(100);
   }
 
-  /* ---------- programme phases ---------------------------- */
+  /* ---------- program phases ---------------------------- */
 
   function buildPhases() {
     var wrap = $('#phases');
@@ -572,161 +572,6 @@
       var use = el('td', 'use', w.use || '—');
       tr.appendChild(use);
       body.appendChild(tr);
-    });
-  }
-
-  /* ---------- trajectory stage ---------------------------- */
-
-  var DAY_STOPS = [
-    [0.00, 0], [0.34, 124], [0.40, 124], [0.52, 154], [0.58, 154], [1.00, 459]
-  ];
-
-  function trajectoryStage() {
-    var stage = $('#voyage');
-    if (!stage || !TRAJ) return;
-    var track = $('.stage__track', stage);
-    var host = $('#orbitSvg');
-
-    var S = 300;                      /* px per AU */
-    var VB = 1000;
-    var s = svg('svg', {
-      viewBox: '-500 -560 1000 1080',
-      width: '100%', height: '100%',
-      preserveAspectRatio: 'xMidYMid meet',
-      role: 'img',
-      'aria-label': 'Heliocentric view of the Phosphorus 1 transfer, Earth departure 2042-07-27 to Earth return 2043-10-29'
-    });
-
-    function pt(p) { return [p[0] * S, -p[1] * S]; }
-    function path(pts) {
-      var d = '';
-      for (var i = 0; i < pts.length; i++) {
-        var q = pt(pts[i]);
-        d += (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1);
-      }
-      return d;
-    }
-
-    /* orbits */
-    s.appendChild(svg('path', { d: path(TRAJ.orbitEarth) + 'Z', fill: 'none', stroke: '#2A2740', 'stroke-width': 1.4 }));
-    s.appendChild(svg('path', { d: path(TRAJ.orbitVenus) + 'Z', fill: 'none', stroke: '#3A3250', 'stroke-width': 1.4 }));
-
-    /* sun */
-    var sunG = svg('g');
-    sunG.appendChild(svg('circle', { cx: 0, cy: 0, r: 26, fill: 'rgba(232,179,58,0.12)' }));
-    sunG.appendChild(svg('circle', { cx: 0, cy: 0, r: 13, fill: 'rgba(232,179,58,0.28)' }));
-    sunG.appendChild(svg('circle', { cx: 0, cy: 0, r: 6.5, fill: '#F2E8D0' }));
-    s.appendChild(sunG);
-
-    /* transfer arcs */
-    var outPath = svg('path', { d: path(TRAJ.outbound), fill: 'none', stroke: '#5FD0C4', 'stroke-width': 3, 'stroke-linecap': 'round' });
-    var inPath = svg('path', { d: path(TRAJ.inbound), fill: 'none', stroke: '#E8B33A', 'stroke-width': 3, 'stroke-linecap': 'round' });
-    var outGhost = svg('path', { d: path(TRAJ.outbound), fill: 'none', stroke: 'rgba(95,208,196,0.16)', 'stroke-width': 1.5 });
-    var inGhost = svg('path', { d: path(TRAJ.inbound), fill: 'none', stroke: 'rgba(232,179,58,0.16)', 'stroke-width': 1.5 });
-    s.appendChild(outGhost); s.appendChild(inGhost);
-    s.appendChild(outPath); s.appendChild(inPath);
-
-    /* planet markers */
-    function body(r, fill, stroke) {
-      var g = svg('g');
-      g.appendChild(svg('circle', { r: r + 7, fill: 'none', stroke: stroke, 'stroke-width': 1, opacity: 0.35 }));
-      g.appendChild(svg('circle', { r: r, fill: fill }));
-      return g;
-    }
-    var earth = body(8, '#5FD0C4', '#5FD0C4');
-    var venus = body(9, '#E8B33A', '#E8B33A');
-    var craft = svg('g');
-    craft.appendChild(svg('circle', { r: 11, fill: 'none', stroke: '#F2E8D0', 'stroke-width': 1, opacity: 0.5 }));
-    craft.appendChild(svg('circle', { r: 4.5, fill: '#F2E8D0' }));
-    s.appendChild(earth); s.appendChild(venus); s.appendChild(craft);
-
-    /* labels */
-    function label(text, cls) {
-      var t = svg('text', {
-        'font-family': '"IBM Plex Mono", monospace', 'font-size': 19,
-        fill: cls, 'letter-spacing': 1.6
-      });
-      t.textContent = text;
-      s.appendChild(t);
-      return t;
-    }
-    var lE = label('EARTH', '#5FD0C4');
-    var lV = label('VENUS', '#E8B33A');
-
-    /* apoapsis callout on the return leg */
-    var far = TRAJ.inbound.reduce(function (a, p) {
-      return (p[0] * p[0] + p[1] * p[1]) > (a[0] * a[0] + a[1] * a[1]) ? p : a;
-    }, TRAJ.inbound[0]);
-    var fp = pt(far);
-    var apo = svg('g', { opacity: 0 });
-    apo.appendChild(svg('circle', { cx: fp[0], cy: fp[1], r: 5, fill: 'none', stroke: '#FF7A45', 'stroke-width': 1.5 }));
-    var apoL = svg('text', {
-      x: fp[0] + (fp[0] > 0 ? -14 : 14), y: fp[1] + 34,
-      'text-anchor': fp[0] > 0 ? 'end' : 'start',
-      'font-family': '"IBM Plex Mono", monospace', 'font-size': 17, fill: '#FF7A45'
-    });
-    apoL.textContent = '1.32 AU — the long way home';
-    apo.appendChild(svg('line', { x1: fp[0], y1: fp[1] + 6, x2: fp[0], y2: fp[1] + 22, stroke: '#FF7A45', 'stroke-width': 1 }));
-    apo.appendChild(apoL);
-    s.appendChild(apo);
-
-    host.appendChild(s);
-
-    var outLen = outPath.getTotalLength ? outPath.getTotalLength() : 1000;
-    var inLen = inPath.getTotalLength ? inPath.getTotalLength() : 1000;
-    outPath.setAttribute('stroke-dasharray', outLen);
-    inPath.setAttribute('stroke-dasharray', inLen);
-
-    var rDay = $('#vDay'), rDate = $('#vDate'), rPhase = $('#vPhase'), rDist = $('#vDist');
-
-    function at(list, idx) {
-      var i = clamp(idx, 0, list.length - 1);
-      var a = list[Math.floor(i)], b = list[Math.min(Math.ceil(i), list.length - 1)];
-      var f = i - Math.floor(i);
-      return [lerp(a[0], b[0], f), lerp(a[1], b[1], f)];
-    }
-
-    var lastDay = -1;
-    onTick(function () {
-      var p = trackProgress(track);
-      var day = keyed(DAY_STOPS, p);
-      if (Math.abs(day - lastDay) < 0.25) return;
-      lastDay = day;
-
-      var eP = at(TRAJ.earthTrack, day / 2);
-      var vP = at(TRAJ.venusTrack, day / 2);
-      var e = pt(eP), v = pt(vP);
-      earth.setAttribute('transform', 'translate(' + e[0].toFixed(1) + ',' + e[1].toFixed(1) + ')');
-      venus.setAttribute('transform', 'translate(' + v[0].toFixed(1) + ',' + v[1].toFixed(1) + ')');
-      lE.setAttribute('x', e[0] + 16); lE.setAttribute('y', e[1] - 14);
-      lV.setAttribute('x', v[0] + 16); lV.setAttribute('y', v[1] - 14);
-
-      var cP, phase;
-      if (day <= 124) {
-        cP = at(TRAJ.outbound, day / 2);
-        phase = 'Outbound cruise';
-        outPath.setAttribute('stroke-dashoffset', outLen * (1 - day / 124));
-        inPath.setAttribute('stroke-dashoffset', inLen);
-      } else if (day < 154) {
-        cP = vP;
-        phase = 'Aloft at 50–54 km';
-        outPath.setAttribute('stroke-dashoffset', 0);
-        inPath.setAttribute('stroke-dashoffset', inLen);
-      } else {
-        cP = at(TRAJ.inbound, (day - 154) / 2);
-        phase = 'Return cruise';
-        outPath.setAttribute('stroke-dashoffset', 0);
-        inPath.setAttribute('stroke-dashoffset', inLen * (1 - (day - 154) / 305));
-      }
-      var c = pt(cP);
-      craft.setAttribute('transform', 'translate(' + c[0].toFixed(1) + ',' + c[1].toFixed(1) + ')');
-      apo.setAttribute('opacity', day > 260 ? 1 : 0);
-
-      var dist = Math.hypot(cP[0] - eP[0], cP[1] - eP[1]) * 149.598;
-      rDay.firstChild.nodeValue = fmt(Math.round(day));
-      rDate.textContent = prettyDate(dayToDate(TRAJ.dates.depart, Math.round(day)));
-      rPhase.textContent = phase;
-      rDist.firstChild.nodeValue = fmt(Math.round(dist));
     });
   }
 
@@ -836,7 +681,7 @@
     var s = svg('svg', {
       viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
       preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'Cutaway of the Phosphorus airship: a 129 metre envelope carrying sealed helium lift cells above an ambient-pressure breathable-air volume, with a gondola holding the habitat module and the Vesper ascent vehicle'
+      'aria-label': 'Cutaway of the Phosphorus airship: a 129 meter envelope carrying sealed helium lift cells above an ambient-pressure breathable-air volume, with a gondola holding the habitat module and the Vesper ascent vehicle'
     });
 
     var cx = 720, cy = 190, a = 340, b = 92;
@@ -976,7 +821,7 @@
       else { v = 'Too thin. This hull cannot lift its own structure up here.'; col = 'var(--critical)'; }
       outs.verdict.textContent = v;
       outs.verdict.style.color = col;
-      input.setAttribute('aria-valuetext', km.toFixed(1) + ' kilometres');
+      input.setAttribute('aria-valuetext', km.toFixed(1) + ' kilometers');
     }
     input.addEventListener('input', update);
     update();
@@ -1405,6 +1250,8 @@
 
   /* ---------- boot ---------------------------------------- */
 
+  function PHOS_ACTS() { return (window.PHOS || {}).ACTS; }
+
   function boot() {
     var sky = $('#heroSky');
     if (sky) starfield(sky);
@@ -1429,8 +1276,8 @@
     cutaway();
     liftCalc();
     descentStage();
-    trajectoryStage();
     ediStage();
+    if (PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
     rail();
     reveals();
 

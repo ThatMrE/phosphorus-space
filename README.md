@@ -1,11 +1,13 @@
 # Project Phosphorus
 
-A scroll-driven mission plan for a crewed floating habitat in the clouds of Venus.
+A scroll-driven mission plan for a crewed floating habitat in the clouds of Venus —
+told in three acts you fly by scrolling: getting ready in Earth orbit, the trip, and the
+descent into the cloud band. With 3D models of the fleet you can turn by hand.
 
 The site argues a specific case — that the cloud deck at 50–54 km is the most
 habitable place off Earth, and that a crewed visit is shorter, cheaper and gentler
 on a human body than the equivalent Mars mission — and then commits to a complete
-architecture: a five-phase programme, a dated flagship flight, four vehicles, an
+architecture: a five-phase program, a dated flagship flight, four vehicles, an
 envelope laminate, a crew of four, a cost breakdown, and a risk register that says
 plainly what could kill it.
 
@@ -93,7 +95,7 @@ It is made on station instead: O₂ by solid-oxide electrolysis of CO₂, N₂ s
 from the 3.5% of the atmosphere that is already nitrogen. Over the 2 912 days
 between the Phase 2 hull arriving (Dec 2034) and the crew departing (Jul 2042),
 that is **11.5 kg/day**, processing about **240 m³ of Venus' air daily**. This is
-why the programme is phased the way it is: the 2034 window is not a rehearsal
+why the program is phased the way it is: the 2034 window is not a rehearsal
 that happens to come first, it is the start of a process that has to finish
 before 2042 is flyable.
 
@@ -110,6 +112,9 @@ on helium yields ~113 t gross — consistent with HAVOC's stated ~70 t payload. 
 independently computed 11.29 km/s entry speed matches HAVOC's published 11.3, and
 the 459-day round trip matches HAVOC's 440-day figure to within one opportunity.
 
+**Language.** The site is written in American English, in a plain human voice,
+and deliberately short — the graphics carry the argument.
+
 **Costs are order-of-magnitude.** They are built bottom-up from analogous
 programmes, not from a costed work-breakdown structure, and historical experience
 says such estimates run low. The site says so on the page.
@@ -124,16 +129,36 @@ assets/styles.css       design tokens and components
 assets/data.js          every displayed number, in one place
 assets/trajectory.js    generated — heliocentric geometry for the orbit plot
 assets/mission.js       scroll engine, canvas and SVG renderers
-scripts/*.py            the orbital mechanics behind the numbers
+assets/acts.js          the three acts: orbital assembly, departure/cruise/arrival
+assets/models.js        generated — OBJ text for the 3D viewer
+assets/viewer.js        the 3D fleet viewer (drag to turn, cutaway, model switcher)
+assets/vendor/          three.js r128 (MIT — license alongside)
+models/*.obj, *.mtl     generated — design files, meters, Y up, open in Blender etc.
+scripts/*.py            the orbital mechanics and the model generator
 ```
 
 ### Sections
 
-The argument · the Venus/Mars ledger · a scroll-flown descent to the surface ·
-the buoyancy physics · the five-phase programme · the voyage · launch windows ·
-the fleet · entry and inflation · the habitat · **construction** ·
-**life in the clouds** · **the crew** · **the science** · the bill · the risk
-register · the verdict.
+Why Venus (with the Venus/Mars ledger) · **Act 01 — getting ready**, the stack
+assembling in orbit · **Act 02 — the trip**, one camera from leaving Earth through
+the computed transfer to braking at Venus · **Act 03 — going down**, the descent
+through the atmosphere to the floor · entry and inflation · the ship · **the fleet in
+3D** · how it floats · life up there · the crew · what we'd learn · the program and
+launch windows · the fleet · the bill · what could go wrong · so.
+
+### The 3D models
+
+`scripts/build_models.py` generates every model from the plan's own dimensions —
+the 129 × 34 m hull with its helium cells and breathable-air volume, the 180 m³
+transit habitat with wings and tanks, a two-stage ascent vehicle sized for ~40 t of
+LOX/methane, and the assembled orbital stack. A 1.8 m person stands beside each one.
+No external assets: online model libraries were not reachable from the build
+environment, and nothing that exists elsewhere is this specific vehicle anyway.
+
+Outputs are `models/*.obj` + `.mtl` (the design files) and `assets/models.js`, the
+same geometry as JS strings so the page works from `file://` without a fetch. The
+viewer parses OBJ in about thirty lines and renders with vendored three.js; drag to
+turn, +/− to zoom, cutaway shows the lift cells inside the hull.
 
 No build step, no dependencies, no framework. Open `index.html` directly or serve
 the directory; both work.
@@ -156,7 +181,7 @@ animation and renders all content statically.
 
 A deliberate single-theme page: the night side of Venus. The palette is taken from
 the planet rather than from the pop-culture orange — `#F2E8D0` is close to Venus's
-true-colour cloud tops, on a violet-biased black. Warm (`#E8B33A` sulfur,
+true-color cloud tops, on a violet-biased black. Warm (`#E8B33A` sulfur,
 `#FF7A45` ember) always means Venus, heat or acid; cool (`#5FD0C4`) always means
 Earth, water, breathable air or crew. That split carries information, not
 decoration.
