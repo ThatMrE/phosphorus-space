@@ -375,6 +375,7 @@
       /* the ship's long axis is +Y; point it along the direction of travel */
       var q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), tmp2);
       obj.quaternion.copy(q);
+      obj.position.addScaledVector(tmp2, -26);   /* the model's origin is its base; center it on the path */
     }
 
     var L0 = new THREE.Vector3(-330, -420, -760), L1 = new THREE.Vector3(-110, -70, -560), L2 = new THREE.Vector3(70, 460, -460);
