@@ -53,7 +53,8 @@ python3 porkchop.py          # Earth→Venus departure opportunities, 2030–205
 python3 roundtrip.py         # round-trip itineraries with a fixed atmospheric stay
 python3 compare.py           # Venus vs Mars, buoyancy table, envelope sizing
 python3 export_trajectory.py # regenerates assets/trajectory.js for the orbit plot
-python3 lapcycle.py          # lap period, night length and storage across the float band
+python3 lapcycle.py          # what the lap and night would be if the ship only drifted
+python3 sunchase.py          # the sun-chasing cycle, and why parking under the sun does not close
 ```
 
 **Method.** Planet states come from JPL's *Approximate Positions of the Planets*
@@ -80,14 +81,20 @@ columns:
   surface is 21. Note that Venus has no magnetic field, so this is column density
   only — Earth's geomagnetic cutoff is additional protection Venus does not have.
 
-**The lap cycle.** The airship is carried by the super-rotating atmosphere, so
-how long a "day" lasts aboard is set by float altitude — wind speed varies with
-height. Venus' own retrograde rotation runs the same way as the wind, so the two
-rates add and the solar cycle is slightly shorter than the lap measured against
-the surface. Across the 50–55 km band that gives a **4.5–7.0 day lap and a 54–83
-hour night**, and at an 8 kW habitat load, **431–668 kWh** of storage to cross the
-dark. The commonly quoted "~50 hours" applies to balloons floating higher and
-faster than this mission's band.
+**Chasing the sun.** The airship is carried by the super-rotating atmosphere;
+left to drift it would lap Venus every 4.5–7.0 days and spend 54–83 hours of
+every lap in the dark (`lapcycle.py`). It cannot hold still under the sun: the
+wind at 52 km is 75 m/s, the sub-solar point moves at only 3.8 m/s, and drag on
+a 34 m hull goes as the cube of airspeed, so station-keeping at the equator
+would take ~24 MW. What it can do is bend the cycle (`sunchase.py`): by day it
+floats at 51 km and flies 10 m/s upwind on solar surplus (~73 kW), and at
+sunset it climbs to 55 km and coasts across the night on the fastest air. That
+gives an **88-hour day and a 54-hour night — 62% of the stay in daylight** —
+and at an 8 kW habitat load, **431 kWh** of storage for every night instead of
+up to 668. The same script shows station-keeping by latitude: the propulsive
+power and the array's output only meet at ~85°, inside the polar vortex, where
+the sun never rises more than a few degrees. Wind by latitude is taken as flat
+to 50° and solid-body poleward of that, after Venus Express cloud tracking.
 
 **The air fill.** The lower hull holds 31 500 m³ of breathable air — 33.6 t of
 gas, more than the airship's entire useful payload, so it can never be shipped.

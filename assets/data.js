@@ -164,7 +164,7 @@ PHOS.PHASES = [
     status: 'proposed', window: 'Leaves May 22, 2031',
     thesis: 'One uncrewed balloon, one Venus year in the clouds. Everything that must not surprise a crew gets surprised here first.',
     items: [
-      { name: 'The balloon', who: '6,000 m³ at 52 km', when: '225 days minimum', what: 'Flies the exact skin the crewed ship will wear, through 45 laps and 45 acid-and-heat cycles.' },
+      { name: 'The balloon', who: '6,000 m³ at 52 km', when: '225 days minimum', what: 'Flies the exact skin the crewed ship will wear, through 45 days and nights of acid and heat.' },
       { name: 'Making oxygen', who: 'solid-oxide cells', when: 'continuous', what: 'Cracks the CO₂ outside into oxygen and lift gas. Proves a balloon here need not have a lifetime.' },
       { name: 'Making water', who: 'droplet collector', when: 'continuous', what: 'Pulls sulfuric acid from the cloud and splits it. Water is the part that matters.' }
     ],
@@ -198,7 +198,7 @@ PHOS.PHASES = [
     items: [
       { name: 'Out', who: '124 days', when: 'July 27, 2042', what: 'One 3.5 km/s burn out of low Earth orbit.' },
       { name: 'Arrive', who: '11.3 km/s at the top of the air', when: 'Nov 28, 2042', what: 'The atmosphere does the braking. Two stay in orbit; the airship goes in direct with the other two.' },
-      { name: 'A month in the clouds', who: '2 crew, 50–54 km', when: 'Nov – Dec 2042', what: 'Roughly six laps of the planet, carried by the wind.' },
+      { name: 'A month in the clouds', who: '2 crew, 51–55 km', when: 'Nov – Dec 2042', what: 'Five times around the planet, chasing the sun by day and coasting high at night. About two-thirds of the month in daylight.' },
       { name: 'Home', who: '305 days', when: 'Dec 28, 2042', what: 'Up to orbit, meet the ship, burn for Earth. Hits the atmosphere at 14.06 km/s — see the risks.' }
     ],
     cost: 17.8
@@ -239,8 +239,9 @@ PHOS.FLEET = [
       ['Skin', '~11,100 m² at ~200 g/m²'],
       ['Lift', '46,000 m³ helium + 31,500 m³ breathable air'],
       ['Carries', '83.6 t gross → ~63 t useful'],
-      ['Floats at', '50 – 54 km'],
-      ['Power', '~1,000 m² thin-film solar + fuel cells']
+      ['Floats at', '51 km by day, 55 km at night'],
+      ['Power', '~1,000 m² thin-film solar + fuel cells'],
+      ['Propulsion', '2 × 9 m electric props, 10 m/s upwind by day']
     ]
   },
   {
@@ -277,7 +278,7 @@ PHOS.EDI = [
   { t: 'E + 3 min', alt: 74,   name: 'Chute',           detail: 'Supersonic parachute out. Five seconds later the heat shield drops away.' },
   { t: 'E + 4 min', alt: 72,   name: 'Start inflating', detail: 'The hull is pulled from the shell and the helium starts flowing. From here it stops falling like a probe and starts becoming a ship.' },
   { t: 'E + 11 min',alt: 52,   name: 'Full',            detail: 'Chute released. The hull is flying. Outside: 0.82 atmospheres, 140 °F.' },
-  { t: 'E + 21 min',alt: 52,   name: 'Settle',          detail: 'Inflation gear jettisoned, controls live, ballonets trimmed. First lap begins.' },
+  { t: 'E + 21 min',alt: 52,   name: 'Settle',          detail: 'Inflation gear jettisoned, controls live, ballonets trimmed. Props on, nose into the wind, and the first day-side run begins.' },
   { t: 'E + 30 d',  alt: 50,   name: 'Go up',           detail: 'Vesper lights at 50 km. Eight kilometers per second later the two of them are in orbit, closing on the ride home.' }
 ];
 
@@ -293,11 +294,16 @@ PHOS.LAMINATE = [
 PHOS.ALOFT = {
   circumnavKm: 38340,        // derived: 2*pi*(6051.8+50)
   windMs: [60, 95],
-  /* Lap and night are measured against the Sun, not the ground: Venus'
-     own backward spin runs the same way as the wind and shortens the
-     solar cycle a little. derived — scripts/lapcycle.py */
-  circumnavDays: [4.5, 7.0],
-  nightHours: [54, 83],
+  /* The ship chases the sun: by day it floats low and flies upwind at
+     10 m/s on solar surplus; at night it climbs to 55 km and coasts on
+     the fastest air. Day and night are measured against the Sun, not
+     the ground. derived — scripts/sunchase.py */
+  chase: { dayKm: 51, nightKm: 55, airspeedMs: 10, propKw: 73 },
+  dayHours: 88,
+  nightHours: 54,
+  sunPct: 62,
+  cycleDays: 5.9,
+  driftNightHours: [54, 83],  // what the night would be if the ship only drifted
   solarVsEarthSurface: '+40%',
   loops: [
     { name: 'Oxygen',     in: 'CO₂ from outside',        out: 'O₂ to breathe, CO to burn', how: 'Solid-oxide electrolysis. MOXIE did this on Mars in 2021.' },
@@ -352,12 +358,12 @@ PHOS.RISKS = [
   {
     rank: 4, name: 'Cooling off in a hot sky', severity: 'high',
     what: 'At 50 km it is 167 °F outside. Radiators need somewhere colder to dump heat into, and there is nowhere.',
-    fix: 'Altitude is the thermostat. Climb through the day where it is cooler, sink at night where the lift is better. Flying the ship and cooling it are one system.'
+    fix: 'Altitude is the thermostat, and it runs on the sun\'s clock. By day the ship sits low in the warm, slow air to stay in the light, and cooling is the biggest thing the array pays for. At sunset it climbs to 55 km, where it is 80 °F and the heat finally has somewhere to go.'
   },
   {
-    rank: 5, name: 'Nights that last days', severity: 'medium',
-    what: 'Carried by the wind, the ship laps Venus every four to seven days, so darkness lasts 54 to 83 hours at a stretch.',
-    fix: 'Fuel cells sized to run 8 kW straight through the longest night, charged by sunlight almost twice as strong as ours.'
+    rank: 5, name: 'Nights that last two days', severity: 'medium',
+    what: 'Nothing that floats can hold still under the sun here: the wind runs 75 m/s and holding against it would take 24 megawatts. Left to drift, the ship would sit in the dark for up to 83 hours at a stretch.',
+    fix: 'Chase the sun instead. Fly upwind at 10 m/s by day on solar surplus, then climb into the fastest air at night. Every night is 54 hours, the day is 88, and fuel cells sized for 430 kWh carry 8 kW through the dark.'
   },
   {
     rank: 6, name: 'There is no ground', severity: 'structural',
@@ -418,7 +424,7 @@ PHOS.SCIENCE = [
     n: 3, tag: 'Weather', name: 'Why does the sky spin sixty times faster than the planet?',
     known: 'Venus turns once in 243 days. Its atmosphere laps the planet in four. We mostly understand the mechanism now, but the accounting still does not close — and the same physics runs on every tidally locked planet out there.',
     probe: 'Winds tracked from orbit, at one altitude, inferred from the top.',
-    crew: 'The ship is a tracer — it goes where the air goes, for six laps, with a full weather station. Drop probes through the shear and you measure the answer instead of inferring it.'
+    crew: 'At night the ship is a tracer — it goes where the air goes, with a full weather station. By day it flies against the flow and feels every gust. Drop probes through the shear and you measure the answer instead of inferring it.'
   },
   {
     n: 4, tag: 'Climate', name: 'Did Venus have an ocean, and when did it go?',
@@ -497,29 +503,59 @@ PHOS.LIFT_NOTE = {
 };
 
 /* ============================================================
-   LIFE ALOFT — the lap cycle and what it is like
+   LIFE ALOFT — the sun-chasing cycle and what it is like
    ============================================================ */
 
-/* derived — scripts/lapcycle.py. Night is measured against the Sun:
-   Venus' retrograde rotation runs the same way as the wind. */
-PHOS.LAP = [
-  { km: 50, wind: 60, lapDays: 6.96, nightH: 83.5, storageKwh: 668, lift: 66.8 },
-  { km: 51, wind: 67, lapDays: 6.27, nightH: 75.2, storageKwh: 602, lift: 61.8 },
-  { km: 52, wind: 75, lapDays: 5.63, nightH: 67.6, storageKwh: 541, lift: 54.3 },
-  { km: 53, wind: 82, lapDays: 5.17, nightH: 62.1, storageKwh: 497, lift: 49.0 },
-  { km: 54, wind: 90, lapDays: 4.73, nightH: 56.8, storageKwh: 454, lift: 44.1 },
-  { km: 55, wind: 95, lapDays: 4.49, nightH: 53.9, storageKwh: 431, lift: 38.6 }
+/* derived — scripts/sunchase.py. One sun-chasing cycle for each day-side
+   float altitude and airspeed; the night is always coasted at 55 km.
+   Day and night are measured against the Sun. */
+PHOS.SUNCHASE = [
+  { km: 50, u:  0, wind: 60, dayH:  83.5, nightH: 53.9, lapDays: 5.72, sunPct: 61, propKw:   0, storageKwh: 431, lift: 66.8 },
+  { km: 50, u:  5, wind: 60, dayH:  90.6, nightH: 53.9, lapDays: 6.02, sunPct: 63, propKw:  10, storageKwh: 431, lift: 66.8 },
+  { km: 50, u: 10, wind: 60, dayH:  99.0, nightH: 53.9, lapDays: 6.37, sunPct: 65, propKw:  81, storageKwh: 431, lift: 66.8 },
+  { km: 50, u: 15, wind: 60, dayH: 109.1, nightH: 53.9, lapDays: 6.79, sunPct: 67, propKw: 273, storageKwh: 431, lift: 66.8 },
+  { km: 51, u:  0, wind: 67, dayH:  75.2, nightH: 53.9, lapDays: 5.38, sunPct: 58, propKw:   0, storageKwh: 431, lift: 61.8 },
+  { km: 51, u:  5, wind: 67, dayH:  80.9, nightH: 53.9, lapDays: 5.62, sunPct: 60, propKw:   9, storageKwh: 431, lift: 61.8 },
+  { km: 51, u: 10, wind: 67, dayH:  87.6, nightH: 53.9, lapDays: 5.90, sunPct: 62, propKw:  73, storageKwh: 431, lift: 61.8 },
+  { km: 51, u: 15, wind: 67, dayH:  95.4, nightH: 53.9, lapDays: 6.22, sunPct: 64, propKw: 247, storageKwh: 431, lift: 61.8 },
+  { km: 52, u:  0, wind: 75, dayH:  67.6, nightH: 53.9, lapDays: 5.06, sunPct: 56, propKw:   0, storageKwh: 431, lift: 54.3 },
+  { km: 52, u:  5, wind: 75, dayH:  72.2, nightH: 53.9, lapDays: 5.25, sunPct: 57, propKw:   8, storageKwh: 431, lift: 54.3 },
+  { km: 52, u: 10, wind: 75, dayH:  77.4, nightH: 53.9, lapDays: 5.47, sunPct: 59, propKw:  66, storageKwh: 431, lift: 54.3 },
+  { km: 52, u: 15, wind: 75, dayH:  83.5, nightH: 53.9, lapDays: 5.73, sunPct: 61, propKw: 221, storageKwh: 431, lift: 54.3 },
+  { km: 53, u:  0, wind: 82, dayH:  62.1, nightH: 53.9, lapDays: 4.83, sunPct: 54, propKw:   0, storageKwh: 431, lift: 49.0 },
+  { km: 53, u:  5, wind: 82, dayH:  65.9, nightH: 53.9, lapDays: 4.99, sunPct: 55, propKw:   7, storageKwh: 431, lift: 49.0 },
+  { km: 53, u: 10, wind: 82, dayH:  70.3, nightH: 53.9, lapDays: 5.18, sunPct: 57, propKw:  60, storageKwh: 431, lift: 49.0 },
+  { km: 53, u: 15, wind: 82, dayH:  75.2, nightH: 53.9, lapDays: 5.38, sunPct: 58, propKw: 201, storageKwh: 431, lift: 49.0 },
+  { km: 54, u:  0, wind: 90, dayH:  56.8, nightH: 53.9, lapDays: 4.61, sunPct: 51, propKw:   0, storageKwh: 431, lift: 44.1 },
+  { km: 54, u:  5, wind: 90, dayH:  60.0, nightH: 53.9, lapDays: 4.75, sunPct: 53, propKw:   7, storageKwh: 431, lift: 44.1 },
+  { km: 54, u: 10, wind: 90, dayH:  63.6, nightH: 53.9, lapDays: 4.90, sunPct: 54, propKw:  53, storageKwh: 431, lift: 44.1 },
+  { km: 54, u: 15, wind: 90, dayH:  67.6, nightH: 53.9, lapDays: 5.06, sunPct: 56, propKw: 180, storageKwh: 431, lift: 44.1 },
+];
+
+/* Why the ship cannot simply park under the sun: the airspeed needed to
+   hold the sub-solar longitude at 52 km, the propulsive power that costs
+   (drag on a 34 m hull goes as speed cubed) and what a 1,000 m² array
+   makes at that latitude. derived — scripts/sunchase.py */
+PHOS.SUNKEEP = [
+  { lat:  0, wind: 75, airspeed: 71, propKw:    23648, solarKw: 210 },
+  { lat: 30, wind: 75, airspeed: 72, propKw:    24159, solarKw: 182 },
+  { lat: 50, wind: 75, airspeed: 73, propKw:    25027, solarKw: 135 },
+  { lat: 60, wind: 58, airspeed: 56, propKw:    11779, solarKw: 105 },
+  { lat: 70, wind: 40, airspeed: 39, propKw:     3770, solarKw:  72 },
+  { lat: 75, wind: 30, airspeed: 29, propKw:     1634, solarKw:  54 },
+  { lat: 80, wind: 20, airspeed: 20, propKw:      493, solarKw:  36 },
+  { lat: 85, wind: 10, airspeed: 10, propKw:       62, solarKw:  18 },
 ];
 
 PHOS.EXPERIENCE = [
   { k: 'Weight',        v: '0.904 g',              d: 'You walk. Nothing floats, nothing needs strapping down, and the puffy face and thinning bones of a Mars trip just do not happen. Of everything here, this is what a crew would feel most.' },
   { k: 'The view',      v: 'a few hundred yards',  d: 'You are inside the cloud, not above it. Think heavy fog. No horizon, and the ground is never visible — thirty miles of haze below. Venus is the place you go to and never see.' },
   { k: 'The light',     v: 'bright overcast',      d: 'Yellowish-white, shadowless, from every direction at once. Plenty to read by.' },
-  { k: 'The sound',     v: 'quiet',                d: 'You move with the wind, so there is no wind. Fans, pumps, the oxygen plant — and in rough air, the hull working above you.' },
+  { k: 'The sound',     v: 'a breeze by day',      d: 'By day the props are on and there is a steady twenty-knot breeze over the hull. At sunset they stop, you climb, and the ship goes quiet: fans, pumps, the oxygen plant — and in rough air, the hull working above you.' },
   { k: 'The weather',   v: 'real',                 d: 'In 1985 the VEGA balloons hit downdrafts that shoved them a mile and a half below where they wanted to be, in gusts lasting about an hour. The ship rides it. You buckle in.' },
   { k: 'Going outside', v: 'not a spacewalk',      d: 'Outside is one atmosphere and about 140 °F. No pressure difference means no pressure suit — you need an acid-proof coverall, cooling, and your own air. Closer to a hazmat job than an EVA, which is why fixing the hull can be routine.' },
   { k: 'The airlock',   v: 'a rinse',              d: 'The danger coming back in is not vacuum, it is acid on your suit. So the lock is a shower: water, then neutralizer, then the inner door.' },
-  { k: 'The clock',     v: 'yours to set',         d: 'A day out there lasts four to seven Earth days depending on altitude. You keep a 24-hour clock on the lights and treat the sun outside as weather.' }
+  { k: 'The clock',     v: 'yours to set',         d: 'Out there, daylight runs about 88 hours and the night about 54. You keep a 24-hour clock on the lights and treat the sun outside as weather.' }
 ];
 
 PHOS.CREW_DETAIL = [

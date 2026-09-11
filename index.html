@@ -312,6 +312,11 @@
             can build survives long enough to use it.
           </p>
         </div>
+        <aside class="benefit benefit--stack">
+          <b>Two-thirds of the month in the sun.</b>
+          The ship flies upwind by day and coasts high at night: 88 hours of light,
+          54 of dark, and no night longer than that.
+        </aside>
       </div>
 
       <div class="stage__step">
@@ -512,35 +517,64 @@
 
     <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
       <p>
-        You do not fly the ship anywhere. The whole sky is moving, and you move with it —
-        a full lap of the planet about once a working week, for free.
+        The whole sky is moving. Left alone, the ship would ride it around the planet
+        once a working week and spend half of every lap in the dark. Holding still under
+        the sun is not an option &mdash; the wind runs 75&nbsp;m/s and fighting it would take
+        24 megawatts &mdash; but the cycle can be bent.
       </p>
       <p>
-        What that costs you is the night, and how long the night lasts is your choice.
-        Float low for more lift and a longer darkness; float high and the reverse.
-        <strong>Altitude sets the length of your day.</strong>
+        <strong>So the ship chases the sun.</strong> By day it floats low, points its nose
+        into the wind and flies 10&nbsp;m/s upwind on power the array has to spare, stretching
+        the daylight. At sunset the props stop, it climbs to 55&nbsp;km where the air is
+        fastest and coolest, and coasts across the night. Eighty-eight hours of light,
+        fifty-four of dark, and two-thirds of the month in the sun.
       </p>
     </div>
 
     <div class="lap reveal">
       <div class="lap__head">
-        <p class="eyebrow eyebrow--aqua">One lap of Venus, at your chosen altitude</p>
-        <div style="display:flex; align-items:center; gap:0.8rem">
-          <span class="lap__pick-l">Float km</span>
-          <div class="lap__pick" id="lapPick" role="group" aria-label="Float altitude in kilometers"></div>
+        <p class="eyebrow eyebrow--aqua">One day and one night, chasing the sun</p>
+        <div class="lap__picks">
+          <div style="display:flex; align-items:center; gap:0.8rem">
+            <span class="lap__pick-l">Day float km</span>
+            <div class="lap__pick" id="lapPick" role="group" aria-label="Day-side float altitude in kilometers"></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.8rem">
+            <span class="lap__pick-l">Upwind m/s</span>
+            <div class="lap__pick" id="lapAir" role="group" aria-label="Airspeed flown upwind by day, meters per second"></div>
+          </div>
         </div>
       </div>
       <div id="lapSvg"></div>
       <dl class="lap__out">
-        <div class="lap__cell"><dt>Lap</dt><dd><span id="lLap">5.6</span><span>days</span></dd></div>
-        <div class="lap__cell"><dt>Night</dt><dd><span id="lNight">68</span><span>hours</span></dd></div>
-        <div class="lap__cell"><dt>Battery</dt><dd><span id="lStore">541</span><span>kWh</span></dd></div>
-        <div class="lap__cell"><dt>Wind</dt><dd><span id="lWind">75</span><span>m/s</span></dd></div>
-        <div class="lap__cell"><dt>Helium lift</dt><dd><span id="lLift">54.3</span><span>t</span></dd></div>
+        <div class="lap__cell"><dt>Daylight</dt><dd><span id="lDay">88</span><span>hours</span></dd></div>
+        <div class="lap__cell"><dt>Night</dt><dd><span id="lNight">54</span><span>hours</span></dd></div>
+        <div class="lap__cell"><dt>In the sun</dt><dd><span id="lSun">62</span><span>%</span></dd></div>
+        <div class="lap__cell"><dt>Props by day</dt><dd><span id="lProp">73</span><span>kW</span></dd></div>
+        <div class="lap__cell"><dt>Battery</dt><dd><span id="lStore">431</span><span>kWh</span></dd></div>
+        <div class="lap__cell"><dt>Wind</dt><dd><span id="lWind">67</span><span>m/s</span></dd></div>
       </dl>
       <p class="note" style="margin-top:1rem">
-        Those two hundred kilowatt-hours between 50 and 55&nbsp;km are real weight.
-        Batteries are the second-heaviest thing on the ship.
+        Drag goes as the cube of speed: 10&nbsp;m/s costs about 70&nbsp;kW, 15 costs 250.
+        Lower is more sun and more heat; the nominal day is 51&nbsp;km. The night is always the
+        same 54 hours, coasted at 55&nbsp;km, and that is what sizes the fuel cells.
+      </p>
+    </div>
+
+    <div class="sunkeep reveal">
+      <div class="sunkeep__head">
+        <p class="eyebrow">Why not just park under the sun?</p>
+        <p class="sunkeep__lede">
+          The airspeed it would take to hold the noon line at 52&nbsp;km, what that costs, and
+          what a 1,000&nbsp;m&sup2; array makes at that latitude. Nothing that floats closes this
+          anywhere the sun is worth having.
+        </p>
+      </div>
+      <div class="sunkeep__rows" id="sunkeep"></div>
+      <p class="note" style="margin-top:1rem; max-width:64ch">
+        Wind by latitude from Venus Express cloud tracking: roughly flat to 50&deg;, then falling
+        toward the pole. Only at 85&deg; does the gap shrink to a factor of three &mdash; inside the polar
+        vortex, with the sun never more than a hand&rsquo;s width above the horizon.
       </p>
     </div>
 

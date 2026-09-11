@@ -1055,120 +1055,173 @@
     });
   }
 
-  /* ---------- the lap: one circumnavigation --------------- */
+  /* ---------- chasing the sun: one day and one night ------ */
 
-  function lapChart() {
+  function sunChart() {
     var host = $('#lapSvg');
-    if (!host || !D.LAP) return;
-    var pick = $('#lapPick');
+    if (!host || !D.SUNCHASE) return;
+    var pickKm = $('#lapPick'), pickAir = $('#lapAir');
     var out = {
-      lap: $('#lLap'), night: $('#lNight'), store: $('#lStore'),
-      lift: $('#lLift'), wind: $('#lWind')
+      day: $('#lDay'), night: $('#lNight'), sun: $('#lSun'),
+      prop: $('#lProp'), store: $('#lStore'), wind: $('#lWind')
     };
+    var chase = (D.ALOFT && D.ALOFT.chase) || { dayKm: 51, airspeedMs: 10, nightKm: 55 };
+    var km = chase.dayKm, air = chase.airspeedMs;
 
-    var W = 920, H = 268, PAD = { l: 58, r: 58, t: 52, b: 26 };
+    var W = 920, H = 318, PAD = { l: 58, r: 58, t: 26, b: 26 };
     var IW = W - PAD.l - PAD.r;
     var s = svg('svg', {
       viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
       preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'One circumnavigation of Venus at the selected float altitude, showing the daylight and night halves and the battery state through the night'
+      'aria-label': 'One day and one night aboard the airship at the selected day-side altitude and airspeed: the altitude flown, the battery state, and the length of daylight and darkness'
     });
     host.appendChild(s);
 
-    /* altitude buttons */
-    D.LAP.forEach(function (row, i) {
-      var b = el('button', 'lap__btn' + (row.km === 52 ? ' is-on' : ''));
-      b.type = 'button';
-      b.textContent = row.km;
-      b.setAttribute('aria-pressed', row.km === 52 ? 'true' : 'false');
-      b.addEventListener('click', function () { select(i); });
-      pick.appendChild(b);
-      void 0;
-    });
+    function uniq(key) {
+      var seen = {}, list = [];
+      D.SUNCHASE.forEach(function (r) { if (!seen[r[key]]) { seen[r[key]] = 1; list.push(r[key]); } });
+      return list;
+    }
+    function buttons(pick, values, current, onpick) {
+      values.forEach(function (v) {
+        var b = el('button', 'lap__btn' + (v === current ? ' is-on' : ''));
+        b.type = 'button';
+        b.textContent = v;
+        b.setAttribute('aria-pressed', v === current ? 'true' : 'false');
+        b.addEventListener('click', function () {
+          Array.prototype.forEach.call(pick.children, function (c) {
+            var on = c === b;
+            c.classList.toggle('is-on', on);
+            c.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+          onpick(v);
+        });
+        pick.appendChild(b);
+      });
+    }
+    buttons(pickKm, uniq('km'), km, function (v) { km = v; select(); });
+    buttons(pickAir, uniq('u'), air, function (v) { air = v; select(); });
+
+    function txt(x, y, t, o) {
+      o = o || {};
+      var n = svg('text', {
+        x: x, y: y, 'text-anchor': o.a || 'middle',
+        'font-family': o.f || '"IBM Plex Mono", monospace',
+        'font-size': o.s || 17, fill: o.c || '#8B8373',
+        'font-weight': o.w || 400, 'letter-spacing': o.ls || 0
+      });
+      n.textContent = t;
+      s.appendChild(n);
+      return n;
+    }
 
     function draw(row) {
       while (s.firstChild) s.removeChild(s.firstChild);
-      var hours = row.lapDays * 24;
-      var mid = PAD.l + IW / 2;
-      /* battery band on top, then a clear label row, then the day/night bar */
-      var topY = PAD.t, botY = PAD.t + 54;
-      var labelY = PAD.t + 78;
-      var barY = PAD.t + 86, barH = 44;
+      var hours = row.dayH + row.nightH;
+      var dayW = IW * row.dayH / hours;
+      var sunset = PAD.l + dayW;
+      var end = PAD.l + IW;
 
-      /* day / night halves */
+      /* rows, top to bottom: altitude flown, battery state, day/night bar, hour axis */
+      var altHi = PAD.t + 6, altLo = PAD.t + 34;
+      var topY = PAD.t + 76, botY = PAD.t + 124;
+      var labelY = PAD.t + 150;
+      var barY = PAD.t + 158, barH = 44;
+      var axisY = barY + barH + 16;
+
+      /* altitude: low and upwind by day, climb at sunset, coast high through the night */
+      var altD = 'M' + PAD.l + ' ' + altLo + ' L' + sunset + ' ' + altLo + ' L' + (sunset + 14) + ' ' + altHi +
+                 ' L' + (end - 14) + ' ' + altHi + ' L' + end + ' ' + altLo;
+      s.appendChild(svg('path', { d: altD, fill: 'none', stroke: '#8B8373', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      txt(PAD.l - 10, altLo + 5, row.km + ' km', { a: 'end', s: 14, c: '#5A5648' });
+      txt(end + 10, altHi + 5, chase.nightKm + ' km', { a: 'start', s: 14, c: '#5A5648' });
+      txt(PAD.l + dayW / 2, altLo - 10, row.u ? 'props on · ' + row.u + ' m/s upwind · ' + row.propKw + ' kW' : 'props off · drifting', { s: 14, c: '#8B8373' });
+      txt(sunset + (IW - dayW) / 2, altHi - 10, 'coasting', { s: 14, c: '#8B8373' });
+
+      /* day / night bar, widths in proportion to hours */
       var dayG = svg('linearGradient', { id: 'dayg', x1: 0, y1: 0, x2: 1, y2: 0 });
       dayG.appendChild(svg('stop', { offset: '0%', 'stop-color': '#5A4A2E' }));
       dayG.appendChild(svg('stop', { offset: '50%', 'stop-color': '#E8B33A' }));
       dayG.appendChild(svg('stop', { offset: '100%', 'stop-color': '#5A4A2E' }));
       var defs = svg('defs'); defs.appendChild(dayG); s.appendChild(defs);
-
-      s.appendChild(svg('rect', { x: PAD.l, y: barY, width: IW / 2, height: barH, fill: 'url(#dayg)' }));
-      s.appendChild(svg('rect', { x: mid, y: barY, width: IW / 2, height: barH, fill: '#141223', stroke: '#2A2740', 'stroke-width': 1 }));
-
-      function txt(x, y, t, o) {
-        o = o || {};
-        var n = svg('text', {
-          x: x, y: y, 'text-anchor': o.a || 'middle',
-          'font-family': o.f || '"IBM Plex Mono", monospace',
-          'font-size': o.s || 17, fill: o.c || '#8B8373',
-          'font-weight': o.w || 400, 'letter-spacing': o.ls || 0
-        });
-        n.textContent = t;
-        s.appendChild(n);
-        return n;
-      }
-
-      txt(PAD.l + IW / 4, barY + 27, 'DAYLIGHT  ' + Math.round(hours / 2) + ' h', { c: '#1A1408', s: 18, w: 500, ls: 1.4 });
-      txt(mid + IW / 4, barY + 27, 'NIGHT  ' + Math.round(row.nightH) + ' h', { c: '#F2E8D0', s: 18, w: 500, ls: 1.4 });
+      s.appendChild(svg('rect', { x: PAD.l, y: barY, width: dayW, height: barH, fill: 'url(#dayg)' }));
+      s.appendChild(svg('rect', { x: sunset, y: barY, width: IW - dayW, height: barH, fill: '#141223', stroke: '#2A2740', 'stroke-width': 1 }));
+      txt(PAD.l + dayW / 2, barY + 27, 'DAYLIGHT  ' + Math.round(row.dayH) + ' h', { c: '#1A1408', s: 18, w: 500, ls: 1.4 });
+      txt(sunset + (IW - dayW) / 2, barY + 27, 'NIGHT  ' + Math.round(row.nightH) + ' h', { c: '#F2E8D0', s: 18, w: 500, ls: 1.4 });
 
       /* hour axis */
-      var axisY = barY + barH + 16;
-      s.appendChild(svg('line', { x1: PAD.l, y1: axisY, x2: PAD.l + IW, y2: axisY, stroke: '#2A2740', 'stroke-width': 1 }));
-      var stepH = hours > 140 ? 24 : 12;
-      for (var t = 0; t <= hours + 0.01; t += stepH) {
+      s.appendChild(svg('line', { x1: PAD.l, y1: axisY, x2: end, y2: axisY, stroke: '#2A2740', 'stroke-width': 1 }));
+      for (var t = 0; t <= hours + 0.01; t += 24) {
         var x = PAD.l + (t / hours) * IW;
         s.appendChild(svg('line', { x1: x, y1: axisY, x2: x, y2: axisY + 6, stroke: '#2A2740', 'stroke-width': 1 }));
         txt(x, axisY + 24, String(Math.round(t)), { s: 14, c: '#5A5648' });
       }
       txt(PAD.l + IW / 2, axisY + 44, 'hours since local sunrise', { s: 14, c: '#5A5648' });
 
-      /* battery state through the lap */
-      s.appendChild(svg('line', { x1: PAD.l, y1: topY, x2: PAD.l + IW, y2: topY, stroke: '#1F1D33', 'stroke-width': 1 }));
-      s.appendChild(svg('line', { x1: PAD.l, y1: botY, x2: PAD.l + IW, y2: botY, stroke: '#1F1D33', 'stroke-width': 1 }));
+      /* battery: charging through the day, full at sunset, drawn down through the night */
+      s.appendChild(svg('line', { x1: PAD.l, y1: topY, x2: end, y2: topY, stroke: '#1F1D33', 'stroke-width': 1 }));
+      s.appendChild(svg('line', { x1: PAD.l, y1: botY, x2: end, y2: botY, stroke: '#1F1D33', 'stroke-width': 1 }));
       txt(PAD.l - 10, topY + 5, 'full', { a: 'end', s: 14, c: '#5A5648' });
       txt(PAD.l - 10, botY + 5, 'empty', { a: 'end', s: 14, c: '#5A5648' });
-
-      var d = 'M' + PAD.l + ' ' + botY;
-      d += ' L' + mid + ' ' + topY;          /* charging through the day */
-      d += ' L' + (PAD.l + IW) + ' ' + botY; /* discharging through the night */
+      var fullAt = PAD.l + dayW * 0.6; /* topped up well before sunset; the surplus runs the props */
+      var d = 'M' + PAD.l + ' ' + botY + ' L' + fullAt + ' ' + topY + ' L' + sunset + ' ' + topY + ' L' + end + ' ' + botY;
       s.appendChild(svg('path', { d: d, fill: 'none', stroke: '#5FD0C4', 'stroke-width': 3, 'stroke-linejoin': 'round' }));
-      s.appendChild(svg('circle', { cx: mid, cy: topY, r: 4.5, fill: '#5FD0C4' }));
-      txt(mid, topY - 12, Math.round(row.storageKwh) + ' kWh stored', { c: '#5FD0C4', s: 16 });
+      s.appendChild(svg('circle', { cx: sunset, cy: topY, r: 4.5, fill: '#5FD0C4' }));
+      txt(sunset, topY - 12, Math.round(row.storageKwh) + ' kWh stored', { c: '#5FD0C4', s: 16, a: sunset > end - 120 ? 'end' : 'middle' });
 
       /* sunrise / sunset markers */
-      [PAD.l, mid, PAD.l + IW].forEach(function (x) {
+      [PAD.l, sunset, end].forEach(function (x) {
         s.appendChild(svg('line', { x1: x, y1: labelY + 4, x2: x, y2: barY + barH + 6, stroke: '#5A5648', 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
       });
       txt(PAD.l, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'start' });
-      txt(mid, labelY, 'sunset', { s: 14, c: '#5A5648' });
-      txt(PAD.l + IW, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'end' });
+      txt(sunset, labelY, 'sunset', { s: 14, c: '#5A5648' });
+      txt(end, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'end' });
     }
 
-    function select(i) {
-      var row = D.LAP[i];
-      Array.prototype.forEach.call(pick.children, function (b, j) {
-        b.classList.toggle('is-on', j === i);
-        b.setAttribute('aria-pressed', j === i ? 'true' : 'false');
-      });
+    function select() {
+      var row = null;
+      D.SUNCHASE.forEach(function (r) { if (r.km === km && r.u === air) row = r; });
+      if (!row) return;
       draw(row);
-      out.lap.textContent = row.lapDays.toFixed(1);
+      out.day.textContent = Math.round(row.dayH);
       out.night.textContent = Math.round(row.nightH);
+      out.sun.textContent = row.sunPct;
+      out.prop.textContent = row.propKw;
       out.store.textContent = fmt(row.storageKwh, 0);
-      out.lift.textContent = row.lift.toFixed(1);
       out.wind.textContent = row.wind;
     }
 
-    select(2); /* 52 km */
+    select();
+  }
+
+  /* ---------- why not park under the sun: by latitude ----- */
+
+  function sunkeepRows() {
+    var wrap = $('#sunkeep');
+    if (!wrap || !D.SUNKEEP) return;
+    var lo = 1, hi = 0;
+    D.SUNKEEP.forEach(function (r) { hi = Math.max(hi, Math.log10(r.propKw)); });
+    function width(kw) { return Math.max(1.5, 100 * (Math.log10(Math.max(kw, 10)) - lo) / (hi - lo)); }
+    function kw(v) { return v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + ' MW' : v + ' kW'; }
+    D.SUNKEEP.forEach(function (r) {
+      var row = el('div', 'sk');
+      row.appendChild(el('span', 'sk__lat', r.lat + '°'));
+      var bars = el('div', 'sk__bars');
+      var need = el('div', 'sk__bar sk__bar--need'); need.style.width = width(r.propKw) + '%';
+      var have = el('div', 'sk__bar sk__bar--have'); have.style.width = width(r.solarKw) + '%';
+      bars.appendChild(need); bars.appendChild(have);
+      row.appendChild(bars);
+      var v = el('span', 'sk__v');
+      v.appendChild(el('b', null, kw(r.propKw) + ' to hold'));
+      v.appendChild(document.createTextNode(kw(r.solarKw) + ' of sun'));
+      row.appendChild(v);
+      wrap.appendChild(row);
+    });
+    var key = el('div', 'sk__key');
+    var k1 = el('span', null, 'to hold still'); k1.insertBefore(el('i', 'sk__bar--need'), k1.firstChild);
+    var k2 = el('span', null, 'from the array'); k2.insertBefore(el('i', 'sk__bar--have'), k2.firstChild);
+    key.appendChild(k1); key.appendChild(k2);
+    wrap.parentNode.insertBefore(key, wrap.nextSibling);
   }
 
   /* ---------- experience + crew --------------------------- */
@@ -1269,7 +1322,8 @@
     buildConstruction();
     buildExperience();
     buildCrewDetail();
-    lapChart();
+    sunChart();
+    sunkeepRows();
     buildCost();
     buildRisks();
     buildSources();
