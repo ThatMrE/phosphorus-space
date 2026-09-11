@@ -293,8 +293,11 @@ PHOS.LAMINATE = [
 PHOS.ALOFT = {
   circumnavKm: 38340,        // derived: 2*pi*(6051.8+50)
   windMs: [60, 95],
-  circumnavDays: [4.7, 7.4],
-  nightHours: 50,
+  /* Lap and night are measured against the Sun, not the surface: Venus'
+     own retrograde rotation runs the same way as the wind and shortens
+     the solar cycle slightly. derived — scripts/lapcycle.py */
+  circumnavDays: [4.5, 7.0],
+  nightHours: [54, 83],
   solarVsEarthSurface: '+40%',
   loops: [
     { name: 'Oxygen', in: 'CO₂ from outside the hull', out: 'O₂ to breathe, CO for fuel', how: 'Solid-oxide electrolysis. MOXIE proved the same reaction on Mars in 2021.' },
@@ -303,13 +306,6 @@ PHOS.ALOFT = {
     { name: 'Lift',   in: 'CO₂', out: 'CO + O₂ lift gas', how: 'The same electrolyser that makes oxygen replaces leaked buoyancy. A balloon that need not have a lifetime.' }
   ]
 };
-
-PHOS.CREW = [
-  { role: 'Commander',      station: 'Hesperus, Venus orbit', days: 459, why: 'Holds the return asset. Never enters the atmosphere.' },
-  { role: 'Flight engineer', station: 'Hesperus, Venus orbit', days: 459, why: 'Keeps the ride home alive through a 30-day solo loiter.' },
-  { role: 'Aeronaut — systems', station: 'Phosphorus, 50–54 km', days: 30, why: 'Flies the airship. Buoyancy, thermal, acid management.' },
-  { role: 'Aeronaut — science', station: 'Phosphorus, 50–54 km', days: 30, why: 'Analytical chemist and astrobiologist. The reason the mission is worth flying.' }
-];
 
 /* ---- Cost ------------------------------------------------
    Order-of-magnitude, 2026 US dollars. Built bottom-up from the
@@ -388,6 +384,201 @@ PHOS.SOURCES = [
   { tag: 'Radiation',    cite: 'Herbst et al., “Revisiting the cosmic-ray induced Venusian radiation dose”, A&A 2020', url: 'https://www.aanda.org/articles/aa/full_html/2020/01/aa36968-19/aa36968-19.html' },
   { tag: 'ISRU',         cite: 'Exploring Venus with Electrolysis (EVE), NASA NIAC', url: 'https://www.nasa.gov/directorates/stmd/niac/niac-studies/exploring-venus-with-electrolysis-eve/' },
   { tag: 'Missions',     cite: 'NASA DAVINCI · VERITAS · ESA EnVision · ISRO Shukrayaan-1 · Rocket Lab Venus Life Finder', url: 'https://science.nasa.gov/mission/davinci/' },
+  { tag: 'Astrobiology', cite: 'Greaves et al., “Phosphine gas in the cloud decks of Venus”, Nature Astronomy 2021; re-analysis arXiv:2011.08176', url: 'https://arxiv.org/abs/2011.08176' },
+  { tag: 'Astrobiology', cite: 'Villanueva et al., “No evidence of phosphine in the atmosphere of Venus from independent analyses”, Nature Astronomy 2021', url: 'https://www.nature.com/articles/s41550-021-01422-z' },
+  { tag: 'Chemistry',    cite: 'Spacek et al., “Iron-sulfur chemistry can explain the ultraviolet absorber in the clouds of Venus”, Science Advances 2024', url: 'https://www.science.org/doi/10.1126/sciadv.adg8826' },
+  { tag: 'Geology',      cite: 'Herrick & Hensley, “Surface changes observed on a Venusian volcano during the Magellan mission”, Science 2023', url: 'https://www.jpl.nasa.gov/news/ongoing-venus-volcanic-activity-discovered-with-nasas-magellan-data/' },
+  { tag: 'Dynamics',     cite: 'Lai et al., “Contribution of Thermal Tides to Venus Upper Cloud-Layer Superrotation”, AGU Advances 2025', url: 'https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2025AV001880' },
+  { tag: 'Climate',      cite: 'Venus’ D/H ratio and the lost ocean — Donahue et al., Science 1982; Way & Del Genio, JGR Planets 2020', url: 'https://www.giss.nasa.gov/pubs/abs/wa02800e.html' },
+  { tag: 'Flight data',  cite: 'Sagdeev et al., “Overview of VEGA Venus Balloon in Situ Meteorological Measurements”, Science 1986', url: 'https://www.science.org/doi/10.1126/science.231.4744.1411' },
   { tag: 'Cost',         cite: 'The Cost of SLS and Orion, The Planetary Society', url: 'https://www.planetary.org/space-policy/cost-of-sls-and-orion' },
   { tag: 'Viewer',       cite: '3D Solar System — Venus', url: 'https://3dsolarsystem.online/viewer/#venus' }
+];
+
+/* ============================================================
+   SCIENCE — what the mission is actually for
+   ============================================================ */
+
+/* The open questions. `probe` is what an uncrewed mission can reach;
+   `crew` is what a laboratory with hands in it adds. */
+PHOS.SCIENCE = [
+  {
+    n: 1, tag: 'Astrobiology', name: 'Is anything alive in the clouds?',
+    known: 'Phosphine was reported at ~20 ppb in 2020, revised to 1–7 ppb and still disputed; no abiotic source has been made to work in an atmosphere this oxidising. Ammonia has been proposed as a second anomaly. Against it: the droplets’ water activity is ≤0.004, roughly a hundred times below anything terrestrial life tolerates.',
+    probe: 'One descent, one set of spectra, no second look. A nephelometer can say “something fluoresces”.',
+    crew: 'Continuous aerosol capture across 45–62 km for thirty days. Concentrate it, put it under a microscope, section it, test it for chirality and isotopic fractionation, and try to culture it — then go back and sample the same air mass on the next lap.'
+  },
+  {
+    n: 2, tag: 'Atmospheric chemistry', name: 'What is the unknown ultraviolet absorber?',
+    known: 'Something in the upper cloud soaks up about half the solar energy Venus absorbs, and after sixty years nobody knows what it is. Candidates include ferric chloride, amorphous sulfur, S₂O, OSSO and ammonium pyrosulfate. Separately, the large “Mode 3” particles measured by Pioneer Venus were non-spherical — so they are not liquid acid droplets, and we do not know what they are either.',
+    probe: 'Remote spectra and a few seconds of in-situ sampling on the way down.',
+    crew: 'Fly to the absorber’s own altitude, collect the particles, and look at them. Imaging, diffraction and mass spectrometry on material that has never been held still long enough to be examined.'
+  },
+  {
+    n: 3, tag: 'Atmospheric dynamics', name: 'Why does the air move sixty times faster than the planet?',
+    known: 'Venus rotates once in 243 days; its atmosphere laps the planet in four. Thermal tides are now understood to carry the momentum, but the full budget still does not close — and this is the same physics that governs tidally locked exoplanets.',
+    probe: 'Orbital cloud tracking gives winds at one altitude, inferred from the top.',
+    crew: 'The airship is itself a Lagrangian tracer — it goes where the air goes, for six laps, carrying a full meteorological package. Drop sondes through the shear layers on command and you measure the momentum flux directly instead of inferring it.'
+  },
+  {
+    n: 4, tag: 'Comparative climate', name: 'Did Venus have an ocean, and when did it go?',
+    known: 'Venus’ deuterium-to-hydrogen ratio is about 100× Earth’s, which is the fingerprint of an ocean that boiled and escaped — somewhere between 4 m and 525 m of global equivalent water, on a timeline that could be the first 100 million years or could be three billion. Which of those is true decides whether Earth-sized planets in the habitable zone are usually Earths or usually Venuses.',
+    probe: 'DAVINCI will measure noble gases and D/H once, on one descent, through one column.',
+    crew: 'Repeat mass spectrometry at precision a falling probe cannot hold, across latitudes and altitudes, with standards and blanks run alongside — the difference between one measurement and a calibrated dataset.'
+  },
+  {
+    n: 5, tag: 'Geology', name: 'Is Venus volcanically active right now?',
+    known: 'A vent on Maat Mons changed shape between two Magellan radar passes eight months apart in 1991 — the first direct evidence of an eruption, implying at least a few per year. Nobody has yet caught one happening.',
+    probe: 'Orbital radar change-detection, months between looks.',
+    crew: 'Sulfur dioxide, carbonyl sulfide and hydrogen sulfide all have volcanic gradients below the cloud base. Drop sondes into a suspected plume within hours of an orbiter flagging it, because there is a human on station who can decide to.'
+  },
+  {
+    n: 6, tag: 'Life support', name: 'Can a closed loop actually run on Venus’ air?',
+    known: 'Carbon, oxygen, nitrogen, sulfur and hydrogen are all in the atmosphere outside the hull. Solid-oxide electrolysis has cracked CO₂ on Mars; nobody has run the whole loop — oxygen, water out of sulfuric acid, buffer nitrogen and lift gas — together, at scale, in acid.',
+    probe: 'Component demonstrations, one reaction at a time.',
+    crew: 'Thirty days of a real crew’s real metabolic load closing against a real atmosphere. This is the experiment that decides whether Phase 5 is a settlement or a series of visits.'
+  }
+];
+
+/* Sampling stations, top to bottom. Everything except the ship itself is
+   deployed from it and most of it is expendable. */
+PHOS.SAMPLING = [
+  { km: 62, name: 'Tethered ascent package', dur: 'hours, recovered',
+    gets: 'The ultraviolet absorber at its own altitude, above the main deck.',
+    kit: 'Particle impactor · UV spectrometer · nephelometer' },
+  { km: 54, name: 'Airship — top of band', dur: 'continuous',
+    gets: 'Upper-cloud aerosol, the coolest and brightest station.',
+    kit: 'Aerosol inlet · microscope · mass spectrometer' },
+  { km: 52, name: 'Airship — nominal float', dur: '30 days',
+    gets: 'The main laboratory. Everything routes back here.',
+    kit: 'Wet lab · culture bay · isotope suite · met package' },
+  { km: 50, name: 'Airship — bottom of band', dur: 'continuous',
+    gets: 'Densest cloud, most concentrated acid, most lift.',
+    kit: 'Droplet collector · pH and water-activity cell' },
+  { km: 45, name: 'Tethered descent package', dur: 'hours, recovered',
+    gets: 'Below the cloud base, where volcanic gases show up.',
+    kit: 'Gas chromatograph · SO₂ / OCS / H₂S sensors' },
+  { km: 30, name: 'Drop sonde', dur: '~20 min, expended',
+    gets: 'The deep atmosphere profile, on demand.',
+    kit: 'P / T / wind · optical backscatter' },
+  { km: 0, name: 'Short-lived surface probe', dur: '~2 hours, expended',
+    gets: 'Rock chemistry and a look at the ground, released over a chosen target.',
+    kit: 'Camera · X-ray fluorescence · thermal probe' }
+];
+
+PHOS.CREW_ADVANTAGE = [
+  { t: 'Decide in minutes', d: 'An orbiter flags a possible eruption. A robotic campaign replans over weeks, or waits for the next window. A crew retasks a sonde before the plume disperses.' },
+  { t: 'Handle the sample', d: 'Concentrate it, split it, stain it, section it, run it again with a blank. Almost nothing that makes a laboratory a laboratory can be automated onto a probe.' },
+  { t: 'Repair the instrument', d: 'A clogged aerosol inlet ends a robotic mission. Aboard, it is a morning’s work — and the inlet will clog, because it is sampling sulfuric acid.' },
+  { t: 'Fly the mass', d: 'The airship carries tens of tonnes of useful load. Every Venus probe ever flown, added together, weighs less than the laboratory this one brings.' }
+];
+
+/* ============================================================
+   CONSTRUCTION — how the hull gets made, packed and filled
+   ============================================================ */
+
+PHOS.BUILD = [
+  {
+    step: 'Cut', where: 'on Earth',
+    head: 'Sixty-nine gores, nine kilometres of seam',
+    body: 'The hull’s widest girth is 107 m, and acid-grade laminate comes off the roll about 1.55 m wide, so the envelope is cut as 69 tapering gores. PTFE welds to itself, so the seams are heat-fused rather than glued — no adhesive to be eaten. Zylon PBO tendons are laid along every seam, and catenary curtains inside carry the gondola’s weight into the whole envelope instead of hanging it off a patch.',
+    num: '9.4 km', numlab: 'of welded seam'
+  },
+  {
+    step: 'Fold', where: 'on Earth',
+    head: 'A 77 500 m³ hull packs into about two and a half cubic metres',
+    body: 'The laminate runs about 125 µm thick at 200 g/m². Spread over 11 100 m² of envelope that is only 1.4 m³ of actual solid material — call it 2.5 m³ folded. The aeroshell is sized by the gondola and the ascent vehicle; the ship itself is very nearly the least of it.',
+    num: '30 700 : 1', numlab: 'inflated to packed'
+  },
+  {
+    step: 'Inflate', where: 'at Venus, 72 → 52 km',
+    head: 'Seven minutes from probe to ship',
+    body: 'Helium generation starts at 72 km under a descent parachute and the envelope is full by 52 km. Then ten minutes of settling, the inflation hardware is cut away, and the vehicle trims into the band. The helium — 6.8 t of it — is the one consumable that has to come from Earth, because Venus has none worth extracting.',
+    num: '6.8 t', numlab: 'of helium, shipped'
+  },
+  {
+    step: 'Fill', where: 'at Venus, eight years',
+    head: 'The air the crew breathes is made before they leave',
+    body: 'The lower hull holds 31 500 m³ of breathable air — about 33.6 t of gas. You cannot ship that; it is heavier than the payload. So the Phase 2 hull, on station from 2034, makes it: oxygen by solid-oxide electrolysis of CO₂, nitrogen stripped from the 3.5% of the atmosphere that is already N₂. Over the 2 912 days between Phase 2 arriving and Phase 4 launching, that is 11.5 kg a day, and about 240 m³ of Venus’ air processed daily. The crew arrives to a hull that is already inflated, already breathable and already power-positive.',
+    num: '11.5 kg/day', numlab: 'for eight years'
+  }
+];
+
+PHOS.LIFT_NOTE = {
+  heOnly: 46.2,
+  withAir: 63.1,
+  airMass: 33.6
+};
+
+/* ============================================================
+   LIFE ALOFT — the lap cycle and what it is like
+   ============================================================ */
+
+/* derived — scripts/lapcycle.py. Night is measured against the Sun:
+   Venus' retrograde rotation runs the same way as the wind. */
+PHOS.LAP = [
+  { km: 50, wind: 60, lapDays: 6.96, nightH: 83.5, storageKwh: 668, lift: 66.8 },
+  { km: 51, wind: 67, lapDays: 6.27, nightH: 75.2, storageKwh: 602, lift: 61.8 },
+  { km: 52, wind: 75, lapDays: 5.63, nightH: 67.6, storageKwh: 541, lift: 54.3 },
+  { km: 53, wind: 82, lapDays: 5.17, nightH: 62.1, storageKwh: 497, lift: 49.0 },
+  { km: 54, wind: 90, lapDays: 4.73, nightH: 56.8, storageKwh: 454, lift: 44.1 },
+  { km: 55, wind: 95, lapDays: 4.49, nightH: 53.9, storageKwh: 431, lift: 38.6 }
+];
+
+PHOS.EXPERIENCE = [
+  {
+    k: 'Weight', v: '0.904 g',
+    d: 'You walk. Nothing floats, nothing has to be velcroed down, and the fluid shift, the puffy face and the bone loss that define a Mars transit simply do not happen. Of everything on this page, this is the part a returning crew would notice most.'
+  },
+  {
+    k: 'The view', v: 'a few hundred metres',
+    d: 'You are inside the cloud, not above it. Visibility is roughly that of heavy fog, there is no horizon, and the surface is never visible — 50 km of haze below smears anything smaller than about 100 km across. Venus is the destination you go to and never see.'
+  },
+  {
+    k: 'The light', v: 'bright overcast',
+    d: 'Diffuse, yellowish-white, shadowless, and bright enough to read by. Above the hull there is 2 601 W/m² of sunlight; the clouds scatter about three-quarters of it straight back to space, and what reaches the band arrives from every direction at once.'
+  },
+  {
+    k: 'The sound', v: 'quiet',
+    d: 'The ship moves with the air, so relative wind is nearly zero and there is no slipstream noise at all. What you hear is fans, pumps and the electrolyser — and, in turbulence, the envelope working above you.'
+  },
+  {
+    k: 'The weather', v: 'real',
+    d: 'VEGA’s balloons met downdrafts of up to 3.5 m/s that pushed them 2.5 km below float altitude, in turbulent episodes lasting about an hour. The band is not still air. The ship rides it; the crew straps in.'
+  },
+  {
+    k: 'Going outside', v: 'not a spacewalk',
+    d: 'Outside the hull it is one atmosphere and about 60 °C. There is no pressure differential, so there is no pressure suit — an external job needs a fluoropolymer oversuit, a cooling garment and a closed breathing loop. It is closer to a hazardous-materials entry than to an EVA, which is why hull maintenance can be routine rather than the event of the mission.'
+  },
+  {
+    k: 'The airlock', v: 'a wash-down',
+    d: 'The hazard on the way back in is not vacuum but carry-over: concentrated sulfuric acid on the suit. The lock is a rinse bay — ISRU water, then neutralisation, then the inner hatch.'
+  },
+  {
+    k: 'The clock', v: 'yours to choose',
+    d: 'Carried by the wind, the ship laps Venus in 4.5 to 7 days depending on float altitude, so “day” and “night” last dozens of hours. The crew keeps a 24-hour clock on artificial light and treats the sun outside as weather.'
+  }
+];
+
+PHOS.CREW_DETAIL = [
+  {
+    role: 'Commander', station: 'Hesperus · Venus orbit', days: 459,
+    duties: ['Holds the return asset and the abort authority', 'Flies the trans-Earth injection', 'Never enters the atmosphere'],
+    why: 'Someone has to own the decision to leave, and they cannot be 50 km down inside a balloon when they make it.'
+  },
+  {
+    role: 'Flight engineer', station: 'Hesperus · Venus orbit', days: 459,
+    duties: ['Keeps the transit habitat alive through a 30-day loiter', 'Relays comms for the atmospheric crew', 'Second pilot for rendezvous'],
+    why: 'HAVOC left the transit vehicle empty for the whole atmospheric phase. A crewed ride home is worth two seats.'
+  },
+  {
+    role: 'Aeronaut — systems', station: 'Phosphorus · 50–54 km', days: 30,
+    duties: ['Flies the ship: buoyancy, ballonets, altitude, thermal', 'Runs the electrolyser and the acid harvest', 'External maintenance in the oversuit'],
+    why: 'Buoyancy control and thermal control are the same system, and somebody has to fly it hour by hour.'
+  },
+  {
+    role: 'Aeronaut — science', station: 'Phosphorus · 50–54 km', days: 30,
+    duties: ['Analytical chemist and astrobiologist', 'Runs the wet lab, the culture bay and the isotope suite', 'Chooses where the sondes go'],
+    why: 'The reason the mission is worth flying at all, and the one job that cannot be done from orbit.'
+  }
 ];
