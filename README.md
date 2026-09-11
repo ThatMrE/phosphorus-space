@@ -136,7 +136,10 @@ assets/styles.css       design tokens and components
 assets/data.js          every displayed number, in one place
 assets/trajectory.js    generated — heliocentric geometry for the orbit plot
 assets/mission.js       scroll engine, canvas and SVG renderers
-assets/acts.js          the three acts: orbital assembly, departure/cruise/arrival
+assets/acts3d.js        the three acts in WebGL: Starship launches and orbital assembly,
+                        departure, cruise and the aerobraking pass, entry and inflation,
+                        plus the labeled 3D cutaway of the ship
+assets/acts.js          the same three acts drawn in 2D canvas — the fallback when WebGL is off
 assets/models.js        generated — OBJ text for the 3D viewer
 assets/viewer.js        the 3D fleet viewer (drag to turn, cutaway, model switcher)
 assets/vendor/          three.js r128 (MIT — license alongside)
@@ -146,9 +149,9 @@ scripts/*.py            the orbital mechanics and the model generator
 
 ### Sections
 
-Why Venus (with the Venus/Mars ledger) · **Act 01 — getting ready**, the stack
+Why Venus (with the Venus/Mars ledger) · **Act 01 — getting ready**, Starship flights and the stack
 assembling in orbit · **Act 02 — the trip**, one camera from leaving Earth through
-the computed transfer to braking at Venus · **Act 03 — going down**, the descent
+the computed transfer to the aerobraking pass at Venus · **Act 03 — going down**, the descent
 through the atmosphere to the floor · entry and inflation · the ship · **the fleet in
 3D** · how it floats · life up there · the crew · what we'd learn · the program and
 launch windows · the fleet · the bill · what could go wrong · so.
@@ -158,7 +161,19 @@ launch windows · the fleet · the bill · what could go wrong · so.
 `scripts/build_models.py` generates every model from the plan's own dimensions —
 the 129 × 34 m hull with its helium cells and breathable-air volume, the 180 m³
 transit habitat with wings and tanks, a two-stage ascent vehicle sized for ~40 t of
-LOX/methane, and the assembled orbital stack. A 1.8 m person stands beside each one.
+LOX/methane, the assembled orbital stack, the launch vehicle (a 9 m stainless
+ship on a 71 m booster, public dimensions only) and the direct-entry vehicle (a
+12.8 m 70° sphere-cone heat shield with the packed hull and crew module inside).
+A 1.8 m person stands beside each one.
+
+The acts use the same models. Act 01 splits the stack OBJ into its six deliveries
+and flies each one up on Starship; Act 02 flies the stack out of Earth orbit,
+along the real Lambert arc, and through an aerobraking pass at Venus with Hesperus
+and the entry vehicle on their separate paths; Act 03 lays a transparent WebGL
+layer over the 2D atmosphere so the entry vehicle, chute and inflating hull line
+up with the altitude scale. Earth and Venus are procedural (value-noise textures
+built at load time). Every act keeps its 2D renderer as the fallback when WebGL
+is unavailable.
 No external assets: online model libraries were not reachable from the build
 environment, and nothing that exists elsewhere is this specific vehicle anyway.
 

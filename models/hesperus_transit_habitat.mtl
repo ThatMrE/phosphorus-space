@@ -110,3 +110,27 @@ Ks 0.10 0.10 0.10
 Ns 18
 d 1.00
 # suspension
+
+newmtl steel
+Kd 0.740 0.740 0.770
+Ka 0.222 0.222 0.231
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# stainless steel
+
+newmtl tile
+Kd 0.130 0.120 0.150
+Ka 0.039 0.036 0.045
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# ablative heat shield
+
+newmtl chute
+Kd 0.950 0.910 0.820
+Ka 0.285 0.273 0.246
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# supersonic parachute

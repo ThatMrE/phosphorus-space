@@ -95,7 +95,8 @@
 <section class="stage act" id="act1" data-rail="01 · Getting ready">
   <div class="stage__track">
     <div class="stage__viz">
-      <canvas id="assemblyCanvas" aria-label="The spacecraft assembling in Earth orbit, one delivery at a time"></canvas>
+      <canvas id="assemblyCanvas" aria-label="Starship launches carry the pieces of the spacecraft to Earth orbit, where they lock together one at a time"></canvas>
+      <p class="act__caption" id="aCaption" aria-live="polite"></p>
       <p class="act__badge"><span>01</span> Getting ready</p>
     </div>
 
@@ -104,8 +105,9 @@
         <div class="stage__card">
           <h3>Nothing gets built on the ground.</h3>
           <p>
-            Six deliveries go up separately and lock together in orbit. No single piece
-            is bigger than something we already know how to launch.
+            Six Starship flights carry the pieces up separately, and they lock together
+            in orbit. Nothing here is bigger than a 9-meter payload bay, and nothing
+            heavier than one launch.
           </p>
         </div>
       </div>
@@ -156,7 +158,8 @@
 <section class="stage act" id="act2" data-rail="02 · The trip">
   <div class="stage__track">
     <div class="stage__viz">
-      <canvas id="journeyCanvas" aria-label="Leaving Earth, crossing to Venus on the computed transfer, and braking into orbit"></canvas>
+      <canvas id="journeyCanvas" aria-label="Leaving Earth, crossing to Venus on the computed transfer, and aerobraking through the upper atmosphere into orbit"></canvas>
+      <div class="act__fade" aria-hidden="true"></div>
       <p class="act__badge"><span>02</span> The trip</p>
       <div class="journey__hud" role="status" aria-live="polite" aria-atomic="true">
         <div class="readout__row">
@@ -198,28 +201,29 @@
       </div>
 
       <div class="stage__step">
-        <div class="stage__card stage__card--ember">
-          <h3>Venus does the braking.</h3>
-          <p>
-            You arrive at 11.3&nbsp;km/s and let the atmosphere take it, not the engines.
-            The thick air that makes the surface unlivable is the same air that gets
-            you there cheaply.
-          </p>
-        </div>
-      </div>
-
-      <div class="stage__step">
         <div class="stage__card">
           <h3>Then the stack splits.</h3>
           <p>
-            Two crew stay in orbit with the ship that takes everyone home. Two fall
-            toward the clouds.
+            Four hours out, the airship lets go. Two crew stay with Hesperus, the ship
+            that takes everyone home. Two ride the airship in direct.
           </p>
         </div>
         <aside class="benefit">
           <b>Nobody is ever alone on a vehicle.</b>
           The ride home stays crewed and maintained the entire month.
         </aside>
+      </div>
+
+      <div class="stage__step">
+        <div class="stage__card stage__card--ember">
+          <h3>Venus does the braking.</h3>
+          <p>
+            Hesperus hits the top of the air at 11.3&nbsp;km/s and skims through it at
+            about 110&nbsp;km, wrapped in plasma for a few minutes. That one pass sheds
+            the speed an engine would have needed tons of propellant for, and it comes
+            out the other side in orbit.
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -808,8 +812,9 @@
 <script src="assets/trajectory.js"></script>
 <script src="assets/models.js"></script>
 <script src="assets/acts.js"></script>
-<script src="assets/mission.js"></script>
 <script src="assets/vendor/three.min.js"></script>
+<script src="assets/acts3d.js"></script>
+<script src="assets/mission.js"></script>
 <script src="assets/viewer.js"></script>
 </body>
 </html>

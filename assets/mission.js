@@ -310,7 +310,7 @@
     [0.85, 32], [0.93, 14], [1.00, 0]
   ];
 
-  function descentStage() {
+  function descentStage(ship3d) {
     var stage = $('#descent');
     if (!stage) return;
     var track = $('.stage__track', stage);
@@ -411,11 +411,14 @@
         ctx.fillText('FLOAT BAND  50 – 54 km', 18, yb - 9);
       }
 
-      /* the airship, parked at 52 km */
+      /* the airship, parked at 52 km — in three dimensions when WebGL is up */
       var ys = yOf(52);
-      if (ys > -120 && ys < h + 120) {
+      var shipLen = Math.min(w * 0.34, 260);
+      if (ship3d) {
+        ship3d(alt, w, h, { span: SPAN, x: 0.62, len: shipLen });
+      } else if (ys > -120 && ys < h + 120) {
         var scaleF = clamp(1 - Math.abs(52 - alt) / 26, 0.15, 1);
-        drawShip(ctx, w * 0.62, ys, Math.min(w * 0.34, 260), scaleF);
+        drawShip(ctx, w * 0.62, ys, shipLen, scaleF);
       }
 
       /* the surface */
@@ -1327,11 +1330,14 @@
     buildCost();
     buildRisks();
     buildSources();
-    cutaway();
+    /* three dimensions where WebGL is available; the 2D renderers stay as the fallback */
+    var three = null;
+    try { three = window.PHOS && PHOS.ACTS3D ? PHOS.ACTS3D.init(onTick, trackProgress) : null; } catch (e) { three = null; }
+    if (!three || !three.cutaway) cutaway();
     liftCalc();
-    descentStage();
+    descentStage(three && three.descent);
     ediStage();
-    if (PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
+    if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
     rail();
     reveals();
 

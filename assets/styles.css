@@ -1106,12 +1106,48 @@ input[type="range"]::-moz-range-thumb {
    ============================================================ */
 
 .act .stage__viz { background: var(--void); }
-#assemblyCanvas, #journeyCanvas {
+#assemblyCanvas, #journeyCanvas, .act3d {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   display: block;
+}
+.act__fade { position: absolute; inset: 0; background: var(--void); opacity: 0; pointer-events: none; z-index: 2; }
+.act__caption {
+  position: absolute; left: var(--gutter); bottom: clamp(1.2rem, 4vh, 2.4rem); z-index: 4; margin: 0;
+  font-family: var(--f-mono); font-size: var(--step--1); color: var(--cream);
+  letter-spacing: 0.04em; padding: 0.55rem 0.8rem;
+  background: rgba(10, 9, 18, 0.72); border-left: 2px solid var(--aqua);
+  max-width: min(60vw, 30rem);
+}
+.act__caption.is-final { border-left-color: var(--sulfur); }
+.act__caption:empty { display: none; }
+.descent__3d { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+/* the ship, cut away in three dimensions */
+.cut3d { position: relative; width: 100%; aspect-ratio: 1440 / 600; max-height: 78vh; min-height: 0; overflow: hidden; border: 1px solid var(--line); background: var(--void-2); }
+.cut3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.cut3d canvas:active { cursor: grabbing; }
+.cut3d__lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.cut3d__label {
+  position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform;
+  display: flex; flex-direction: column; gap: 0.15rem;
+  background: rgba(10, 9, 18, 0.72); padding: 0.35rem 0.55rem; max-width: 15rem;
+}
+.cut3d__label b { font-family: var(--f-sans); font-weight: 600; font-size: var(--step--1); color: var(--cream); }
+.cut3d__label span { font-family: var(--f-mono); font-size: var(--step--2); }
+.cut3d__scale {
+  position: absolute; left: 50%; bottom: 0.6rem; transform: translateX(-50%); margin: 0;
+  font-family: var(--f-mono); font-size: var(--step--2); color: var(--cream-dim); white-space: nowrap; pointer-events: none;
+}
+@media (max-width: 760px) {
+  .cut3d { aspect-ratio: 4 / 4.2; }
+  .cut3d__label { max-width: 38%; padding: 0.25rem 0.4rem; }
+  .cut3d__label b { font-size: var(--step--2); }
+  .cut3d__label span { font-size: 0.62rem; }
+  .cut3d__scale { display: none; }
+  .act__caption { max-width: calc(100vw - 2 * var(--gutter)); bottom: 6.5rem; }
 }
 
 .act__badge {

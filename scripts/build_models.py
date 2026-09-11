@@ -34,6 +34,9 @@ MATERIALS = {
     'vesper':   {'rgb': (0.91, 0.70, 0.23), 'alpha': 1.00, 'note': 'ascent vehicle'},
     'human':    {'rgb': (0.95, 0.91, 0.82), 'alpha': 1.00, 'note': '1.8 m person, for scale'},
     'line':     {'rgb': (0.60, 0.58, 0.66), 'alpha': 1.00, 'note': 'suspension'},
+    'steel':    {'rgb': (0.74, 0.74, 0.77), 'alpha': 1.00, 'note': 'stainless steel'},
+    'tile':     {'rgb': (0.13, 0.12, 0.15), 'alpha': 1.00, 'note': 'ablative heat shield'},
+    'chute':    {'rgb': (0.95, 0.91, 0.82), 'alpha': 1.00, 'note': 'supersonic parachute'},
 }
 
 
@@ -291,6 +294,75 @@ def hesperus(m=None, at=(0, 0, 0), prefix=''):
     return m
 
 
+def starship(m=None, at=(0, 0, 0), prefix='', booster=True):
+    """The launch vehicle: a 9 m stainless ship (52 m) on a 71 m booster.
+    Public dimensions only; nothing here is proprietary geometry."""
+    own = m is None
+    if own:
+        m = Mesh('starship')
+    x, y, z = at
+    R = 4.5
+    ys = y
+    if booster:
+        m.group(prefix + 'booster', 'steel')
+        m.cylinder((x, y, z), (x, y + 71, z), R, n=40)
+        m.group(prefix + 'hot_stage_ring', 'truss')
+        m.cylinder((x, y + 71, z), (x, y + 72.8, z), R, n=40)
+        m.group(prefix + 'grid_fins', 'truss')
+        for sx, sz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            cx, cz = x + sx * (R + 1.0), z + sz * (R + 1.0)
+            m.box((cx, y + 67.5, cz), (2.0 if sx else 0.3, 3.2, 2.0 if sz else 0.3))
+        m.group(prefix + 'booster_engines', 'engine')
+        for ring, n in ((1.25, 3), (2.65, 10), (3.95, 20)):
+            for k in range(n):
+                th = 2 * math.pi * k / n
+                ex, ez = x + ring * math.cos(th), z + ring * math.sin(th)
+                m.cylinder((ex, y, ez), (ex, y - 1.8, ez), 0.42, 0.62, n=10)
+        ys = y + 72.8
+    m.group(prefix + 'ship', 'steel')
+    m.cylinder((x, ys, z), (x, ys + 36, z), R, n=40)
+    m.group(prefix + 'nose', 'steel')
+    for (y0, r0), (y1, r1) in (((36, R), (40, 4.25)), ((40, 4.25), (45, 3.45)),
+                               ((45, 3.45), (49, 2.15)), ((49, 2.15), (52, 0.35))):
+        m.cylinder((x, ys + y0, z), (x, ys + y1, z), r0, r1, n=40)
+    m.group(prefix + 'aft_flaps', 'steel')
+    for sz in (-1, 1):
+        m.box((x, ys + 7.5, z + sz * (R + 1.7)), (0.5, 13.0, 3.4))
+    m.group(prefix + 'forward_flaps', 'steel')
+    for sz in (-1, 1):
+        m.box((x, ys + 43.5, z + sz * (3.6 + 1.2)), (0.4, 7.0, 2.4))
+    m.group(prefix + 'raptors', 'engine')
+    for k in range(3):
+        th = math.pi / 2 + k * 2 * math.pi / 3
+        ex, ez = x + 1.3 * math.cos(th), z + 1.3 * math.sin(th)
+        m.cylinder((ex, ys, ez), (ex, ys - 2.3, ez), 0.55, 0.78, n=14)
+    for k in range(3):
+        th = math.pi / 6 + k * 2 * math.pi / 3
+        ex, ez = x + 3.1 * math.cos(th), z + 3.1 * math.sin(th)
+        m.cylinder((ex, ys, ez), (ex, ys - 3.2, ez), 0.8, 1.25, n=14)
+    if own:
+        human(m, at=(x + 9, y, z))
+    return m
+
+
+def entry_vehicle():
+    """The direct-entry vehicle: a 12.8 m 70-degree sphere-cone heat shield,
+    a backshell, and inside it the packed hull and the two-person crew module."""
+    m = Mesh('entry_vehicle')
+    m.group('heatshield', 'tile')
+    m.cylinder((0, 0, 0), (0, -1.75, 0), 6.4, 1.6, n=48)
+    m.ellipsoid((0, -1.75, 0), (1.6, 0.7, 1.6), nu=24, nv=8)
+    m.group('backshell', 'shell')
+    m.cylinder((0, 0, 0), (0, 7.5, 0), 6.4, 3.2, n=48)
+    m.cylinder((0, 7.5, 0), (0, 8.2, 0), 3.2, 2.4, n=40)
+    m.group('packed_hull', 'hull')
+    m.cylinder((0, 0.6, 0), (0, 6.8, 0), 2.3, 1.8, n=28)
+    m.group('crew_module', 'crew')
+    m.box((0, 2.9, 0), (8.0, 4.4, 4.4))
+    human(m, at=(9, -1.75, 0))
+    return m
+
+
 def stack():
     """The assembled stack as it leaves Earth orbit: Hesperus on top of a spine,
     the folded airship in its aeroshell, Vesper at the bottom."""
@@ -323,7 +395,7 @@ def write(mesh):
 
 
 if __name__ == '__main__':
-    meshes = [airship(), hesperus(), vesper(), stack()]
+    meshes = [airship(), hesperus(), vesper(), stack(), starship(), entry_vehicle()]
     manifest = [write(mm) for mm in meshes]
     for row in manifest:
         print('%-28s %6d verts %7d tris  %s m' % (row['name'], row['verts'], row['tris'], row['size_m']))

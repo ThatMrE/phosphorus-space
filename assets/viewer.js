@@ -19,7 +19,11 @@
     { key: 'vesper_ascent_vehicle',    label: 'The ride back up', name: 'Vesper',
       human: 'Twenty meters tall. It has to leave from a balloon.' },
     { key: 'assembled_stack',          label: 'Leaving Earth',    name: 'The stack',
-      human: 'Everything that crosses to Venus, bolted together in orbit.' }
+      human: 'Everything that crosses to Venus, bolted together in orbit.' },
+    { key: 'starship',                 label: 'The launch',       name: 'Starship',
+      human: 'The launch vehicle, booster and all. Six flights put the stack in orbit.' },
+    { key: 'entry_vehicle',            label: 'The way in',       name: 'Entry vehicle',
+      human: 'A 12.8-meter heat shield with a folded 129-meter ship and two people inside.' }
   ];
 
   function parseOBJ(text) {
@@ -121,7 +125,8 @@
       var size = box.getSize(new THREE.Vector3());
       var center = box.getCenter(new THREE.Vector3());
       obj.position.set(-center.x, -box.min.y, -center.z);
-      radius = Math.max(size.x, size.y, size.z) * 1.35;
+      /* tall vehicles need more room than wide ones in a 16:10 frame */
+      radius = Math.max(size.x, size.y * 1.45, size.z) * 1.35;
       ground.scale.set(radius * 0.55, radius * 0.55, 1);
       camera.lookTarget = new THREE.Vector3(0, size.y * 0.5, 0);
       return size;
@@ -131,7 +136,8 @@
       active = i;
       var v = VEHICLES[i];
       if (current) scene.remove(current);
-      current = buildObject(THREE, parseOBJ(PHOS.MODELS[v.key]));
+      var G3 = PHOS.G3;
+      current = G3 ? G3.buildObject(THREE, G3.parseOBJ(PHOS.MODELS[v.key])) : buildObject(THREE, parseOBJ(PHOS.MODELS[v.key]));
       scene.add(current);
       var size = fit(current);
       applyCut();
