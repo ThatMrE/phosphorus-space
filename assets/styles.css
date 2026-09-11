@@ -1,14 +1,14 @@
 /* ============================================================
    PROJECT PHOSPHORUS
    A deliberate single-theme design: the night side of Venus.
-   Every colour is painted explicitly; nothing is inherited
+   Every color is painted explicitly; nothing is inherited
    from the host. color-scheme is pinned so UI chrome agrees.
    ============================================================ */
 
 :root {
   color-scheme: dark;
 
-  /* Ground — violet-biased black, not neutral grey */
+  /* Ground — violet-biased black, not neutral gray */
   --void:        #0A0912;
   --void-2:      #0E0C18;
   --deep:        #141223;
@@ -464,7 +464,10 @@ section { position: relative; }
 .stage__step {
   min-height: 88svh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.9rem;
   width: 100%;
   max-width: var(--shell);
   margin-inline: auto;
@@ -898,7 +901,7 @@ input[type="range"]::-moz-range-thumb {
 @media (min-width: 1000px) {
   /* keep the plot clear of the narrative cards */
   #orbitSvg svg { max-height: 84%; }
-  #voyage .stage__card { max-width: 30rem; }
+  #act2 .stage__card { max-width: 30rem; }
 }
 
 @media (max-width: 760px) {
@@ -909,7 +912,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 0.7rem var(--gutter) 0.8rem;
   }
   .voyage__readout .readout__v { font-size: var(--step-0); }
-  #voyage .stage__step { align-items: flex-start; padding-top: 5vh; }
+  #act2 .stage__step { align-items: flex-start; padding-top: 5vh; }
   #orbitSvg { align-items: flex-start; padding-top: 3vh; padding-bottom: 7.5rem; }
 }
 
@@ -1074,3 +1077,158 @@ input[type="range"]::-moz-range-thumb {
 .cw__duties li { font-size: var(--step--1); color: var(--cream-2); line-height: 1.5; }
 .cw__duties li::marker { color: var(--cream-faint); }
 .cw__why { font-size: var(--step--1); color: var(--cream-dim); font-style: italic; max-width: 60ch; }
+
+
+/* ============================================================
+   THE THREE ACTS
+   ============================================================ */
+
+.act .stage__viz { background: var(--void); }
+#assemblyCanvas, #journeyCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.act__badge {
+  position: absolute;
+  top: clamp(1rem, 3vh, 2rem);
+  left: var(--gutter);
+  z-index: 4;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-family: var(--f-mono);
+  font-size: var(--step--2);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cream-dim);
+  margin: 0;
+}
+.act__badge span {
+  font-family: var(--f-display);
+  font-size: var(--step-2);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--sulfur);
+}
+
+/* the benefit chips that layer in as the story moves */
+.benefit {
+  pointer-events: auto;
+  max-width: 30rem;
+  border-left: 2px solid var(--aqua);
+  background: rgba(10, 9, 18, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 0.85rem 1.1rem 0.95rem;
+  font-size: var(--step--1);
+  line-height: 1.55;
+  color: var(--cream-dim);
+}
+.benefit b {
+  display: block;
+  font-family: var(--f-display);
+  font-weight: 600;
+  font-size: var(--step-0);
+  color: var(--aqua);
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.01em;
+}
+.benefit--stack { border-left-color: var(--sulfur); }
+.benefit--stack b { color: var(--sulfur); }
+
+/* the day / place readout on act 02 */
+.journey__hud {
+  position: absolute;
+  right: var(--gutter);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 12rem;
+  max-width: 16rem;
+  background: rgba(10, 9, 18, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  padding: 1rem 1.15rem 1.1rem;
+}
+.journey__note {
+  font-size: var(--step--1);
+  color: var(--cream-dim);
+  line-height: 1.5;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 0.7rem;
+  margin: 0;
+}
+.readout__v--sm { font-size: var(--step-0) !important; }
+
+@media (max-width: 760px) {
+  .journey__hud {
+    right: 0; left: 0; top: auto; bottom: 0;
+    transform: none;
+    max-width: none;
+    border-inline: 0; border-bottom: 0;
+    flex-direction: row; flex-wrap: wrap; align-items: baseline;
+    gap: 0.4rem 1.4rem;
+    padding: 0.7rem var(--gutter) 0.85rem;
+  }
+  .journey__note { border-top: 0; padding-top: 0; flex: 1 1 100%; }
+  #act2 .stage__step { align-items: flex-start; padding-top: 6vh; }
+  .act__badge { top: 0.8rem; }
+  .benefit { max-width: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .journey__hud { position: static; transform: none; margin: 1rem auto 0; }
+  .act__badge { position: static; margin-bottom: 1rem; }
+}
+
+
+/* ============================================================
+   THE FLEET IN 3D
+   ============================================================ */
+
+.f3d { border: 1px solid var(--line); background: var(--void-2); overflow: hidden; }
+.f3d__top {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  gap: 0.6rem 1rem; padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--line-soft);
+}
+.f3d__pick, .f3d__tools { display: flex; flex-wrap: wrap; gap: 1px; background: var(--line); }
+.f3d__btn {
+  font-family: var(--f-mono); font-size: var(--step--1);
+  background: var(--void); color: var(--cream-dim);
+  border: 0; padding: 0.5rem 0.85rem; cursor: pointer;
+  transition: background .2s ease, color .2s ease;
+}
+.f3d__btn:hover { color: var(--cream); background: var(--deep); }
+.f3d__btn.is-on, .f3d__cut[aria-pressed="true"] { background: var(--aqua); color: var(--void); font-weight: 500; }
+.f3d__stage { position: relative; width: 100%; aspect-ratio: 16 / 10; min-height: 0; max-height: 70vh; background:
+  radial-gradient(ellipse at 50% 60%, #14122A 0%, var(--void) 70%); }
+.f3d__stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.f3d__stage canvas:active { cursor: grabbing; }
+.f3d__fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 2rem; text-align: center; color: var(--cream-dim); }
+.f3d__label {
+  position: absolute; left: clamp(0.9rem, 3vw, 1.6rem); bottom: clamp(0.9rem, 3vw, 1.4rem);
+  max-width: min(26rem, 80%); pointer-events: none;
+  display: flex; flex-direction: column; gap: 0.2rem;
+}
+.f3d__name { font-family: var(--f-display); font-size: var(--step-2); font-weight: 600; color: var(--cream); letter-spacing: -0.02em; }
+.f3d__dims { font-family: var(--f-mono); font-size: var(--step--1); color: var(--sulfur); }
+.f3d__human { font-size: var(--step--1); color: var(--cream-2); line-height: 1.45; }
+.f3d__foot {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+  gap: 0.8rem 2rem; padding: 1rem 0.9rem 1.1rem; border-top: 1px solid var(--line-soft);
+}
+.f3d__foot .note { max-width: 62ch; }
+.f3d__dl {
+  font-family: var(--f-mono); font-size: var(--step--1); white-space: nowrap;
+  color: var(--aqua); border: 1px solid var(--aqua-deep); padding: 0.55rem 0.9rem;
+  text-decoration: none;
+}
+.f3d__dl:hover { background: var(--aqua-wash); }

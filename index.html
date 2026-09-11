@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Project Phosphorus</title>
-<meta name="description" content="A complete, costed mission plan for a crewed floating habitat in the clouds of Venus — with the trajectories computed, the materials named, and the risks stated plainly.">
+<meta name="description" content="A crewed mission to the clouds of Venus — built in orbit, flown in four months, and lived in fifty kilometers up where the air is room temperature.">
 <meta name="theme-color" content="#0A0912">
 <meta property="og:title" content="Project Phosphorus">
-<meta property="og:description" content="Venus is 459 days round trip. Mars is 990. A complete mission plan for the cloud deck at 50 kilometres.">
+<meta property="og:description" content="Fifty kilometers above Venus it's room temperature, one atmosphere, and nine-tenths of Earth gravity. Here's how we'd get there.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='%23E8B33A'/%3E%3Cellipse cx='16' cy='13' rx='13' ry='4' fill='%23F2E8D0' opacity='.45'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,13 +20,13 @@
 <div class="rail" aria-hidden="true">
   <span class="rail__mark">PHOSPHORUS</span>
   <div class="rail__track"><div class="rail__fill"></div></div>
-  <span class="rail__readout" id="railReadout">The argument</span>
+  <span class="rail__readout" id="railReadout">The idea</span>
 </div>
 
 <div class="page">
 
 <!-- ============================ HERO ============================ -->
-<header class="hero" data-rail="The argument">
+<header class="hero" data-rail="The idea">
   <div class="hero__sky"><canvas id="heroSky" aria-hidden="true"></canvas></div>
   <div class="hero__glow" aria-hidden="true"></div>
   <div class="shell hero__inner">
@@ -36,98 +36,202 @@
       <span class="t2">Phosphorus</span>
     </h1>
     <p class="hero__sub">
-      A crewed mission plan for the only place off Earth where a person could stand
-      at <b>one atmosphere</b>, in <b>shirt sleeves</b>, at <b>room temperature</b>,
-      under more radiation shielding than they get at sea level.
-      It is fifty kilometres above the surface of Venus.
+      Fifty kilometers above Venus it is <b>room temperature</b>, <b>one atmosphere</b>,
+      and nine-tenths of Earth gravity. You could stand there in a t-shirt.
+      Here is how we would go.
     </p>
     <dl class="hero__strip" id="heroStats"></dl>
-    <p class="scroll-cue"><i></i> Scroll to fly the mission</p>
+    <p class="scroll-cue"><i></i> Scroll to fly it</p>
   </div>
 </header>
 
-<!-- ============================ ARGUMENT ============================ -->
-<section class="band band--flush" data-rail="The argument">
+<!-- ============================ THE CASE ============================ -->
+<section class="band band--flush" data-rail="The idea">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">01 · The case</p>
-      <h2>We have been aiming at the wrong planet for sixty years.</h2>
+      <p class="eyebrow">Why Venus</p>
+      <h2>We wrote off a whole planet because we only looked at the floor.</h2>
     </div>
 
     <div class="prose col reveal">
       <p>
-        Venus is the nearest planet to Earth — not sometimes, but always. It is the closest
-        thing we have to a twin: 95% of Earth&rsquo;s diameter, 90% of its surface gravity, formed
-        from the same neighbourhood of the same disc. And for most of the twentieth century it
-        was the obvious destination. The Soviet Union threw more hardware at Venus than at
-        anywhere else in the solar system.
+        In 1967 our probes came back with the number that ended the conversation:
+        the surface of Venus is 860&nbsp;°F under ninety-two atmospheres. So we turned
+        around and walked toward Mars, and we have been walking that way ever since.
       </p>
       <p>
-        Then, in 1967, <em>Venera 4</em> and <em>Mariner 5</em> came back with the number that
-        ended the conversation: the surface is roughly 460&nbsp;°C under ninety-two atmospheres
-        of carbon dioxide. Venus became the hell planet, and the crewed-spaceflight community
-        turned around and walked toward Mars.
-      </p>
-      <p>
-        That was a reasonable reaction to a surface. It was the wrong reaction to a planet.
-        Because Venus has something Mars does not: <strong>altitude</strong>. Fifty kilometres
-        up, above almost all of that crushing atmosphere, the pressure is one bar, the
-        temperature is survivable, the gravity is nine-tenths of Earth&rsquo;s, and the air
-        overhead stops more radiation than Earth&rsquo;s own.
+        That was the right reaction to a surface and the wrong reaction to a planet.
+        Venus has something Mars does not — <strong>altitude</strong>. Climb fifty
+        kilometers and you are above almost all of that crushing air. What is left is
+        the most Earth-like place in the solar system that is not Earth.
       </p>
       <blockquote class="pull">
-        Because Venus has an atmosphere of 95% CO₂, a spacecraft filled with normal air would
-        have an effect similar to helium on Venus. A properly designed spacecraft could float
-        on top of the clouds.
+        A spacecraft filled with normal air would have an effect similar to helium on
+        Venus. A properly designed spacecraft could float on top of the clouds.
         <cite>Elliot Roth — “We’re Going the Wrong Way”</cite>
       </blockquote>
       <p>
-        That single physical fact — <strong>breathable air is a lifting gas on Venus</strong> —
-        is the hinge the entire architecture turns on. It means a habitat there is not a
-        pressure vessel. It is a balloon that happens to be full of the thing you breathe.
+        That is the whole trick. <strong>The air you breathe is a lifting gas there.</strong>
+        Your habitat is not a pressure vessel fighting the vacuum. It is a balloon full
+        of the stuff in your lungs.
       </p>
-      <p class="note">
-        What follows is a complete mission plan: a five-phase programme, a specific launch date,
-        a specific vehicle, the materials it is made of, the people aboard it, what it costs,
-        and — in the last section — the three things most likely to kill it.
-        Every trajectory number on this page was computed for it, and the code is in the repository.
+    </div>
+
+    <div class="ledger reveal" id="ledger" style="margin-top: clamp(2.5rem, 6vw, 4rem)"></div>
+
+    <div style="margin-top: clamp(2.5rem, 6vw, 4rem)" class="reveal">
+      <p class="eyebrow eyebrow--dim">Round trip — same math, both planets</p>
+      <div class="bars" id="durationBars"></div>
+      <p class="note" style="margin-top:1.4rem; max-width:58ch">
+        Both numbers come out of the same trajectory solver, run over the same years.
+        Venus gets you home in fifteen months. Mars takes almost three years — and that
+        is the <em>short</em> option, the one where you barely land.
       </p>
     </div>
   </div>
 </section>
 
-<!-- ============================ LEDGER ============================ -->
-<section class="band" data-rail="Venus vs Mars">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">02 · The ledger</p>
-      <h2>Venus against Mars, on eleven numbers that matter to a crew.</h2>
-      <div class="sec-head__meta">
-        <span>Two of them favour Mars. One of them very nearly settles the argument against Venus.</span>
+<!-- ============================ ACT 01 — PREPARATION ============================ -->
+<section class="stage act" id="act1" data-rail="01 · Getting ready">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="assemblyCanvas" aria-label="The spacecraft assembling in Earth orbit, one delivery at a time"></canvas>
+      <p class="act__badge"><span>01</span> Getting ready</p>
+    </div>
+
+    <div class="stage__steps">
+      <div class="stage__step">
+        <div class="stage__card">
+          <h3>Nothing gets built on the ground.</h3>
+          <p>
+            Six deliveries go up separately and lock together in orbit. No single piece
+            is bigger than something we already know how to launch.
+          </p>
+        </div>
+      </div>
+
+      <div class="stage__step">
+        <div class="stage__card stage__card--aqua">
+          <h3>Hesperus is home for fifteen months.</h3>
+          <p>
+            Four people live here on the way out and the way back. It never touches an
+            atmosphere except to slow down.
+          </p>
+        </div>
+        <aside class="benefit">
+          <b>Venus is always the closest planet.</b>
+          38 million km at its nearest. Mars never gets closer than 55.
+        </aside>
+      </div>
+
+      <div class="stage__step">
+        <div class="stage__card">
+          <h3>The cloud ship rides up folded.</h3>
+          <p>
+            A 129-meter hull — longer than a 747 — packs into about two and a half cubic
+            meters. The shell around it is sized by the crew cabin, not the ship.
+          </p>
+        </div>
+        <aside class="benefit">
+          <b>The habitat is the balloon.</b>
+          Breathable air floats on Venus the way helium floats here. Same volume, two jobs.
+        </aside>
+      </div>
+
+      <div class="stage__step">
+        <div class="stage__card stage__card--ember">
+          <h3>The ride home is already waiting.</h3>
+          <p>
+            Vesper gets sent to Venus in 2038 and checked out there — four years before
+            anybody boards anything. Nobody leaves Earth until the way back is parked
+            and working.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ACT 02 — THE TRIP ============================ -->
+<section class="stage act" id="act2" data-rail="02 · The trip">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="journeyCanvas" aria-label="Leaving Earth, crossing to Venus on the computed transfer, and braking into orbit"></canvas>
+      <p class="act__badge"><span>02</span> The trip</p>
+      <div class="journey__hud" role="status" aria-live="polite" aria-atomic="true">
+        <div class="readout__row">
+          <span class="readout__k">Day</span>
+          <span class="readout__v"><span id="jDay">0</span><small> / 124</small></span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Where</span>
+          <span class="readout__v readout__v--sm" id="jPhase">Leaving Earth</span>
+        </div>
+        <p class="journey__note" id="jNote">One burn, and you are on your way.</p>
       </div>
     </div>
 
-    <div class="ledger reveal" id="ledger"></div>
+    <div class="stage__steps">
+      <div class="stage__step">
+        <div class="stage__card stage__card--aqua">
+          <h3>July 27, 2042. One burn.</h3>
+          <p>
+            3.5&nbsp;km/s out of low Earth orbit and the trip is committed. The window
+            stays open for five months; this is just the cheapest day inside it.
+          </p>
+        </div>
+      </div>
 
-    <div style="margin-top: clamp(3rem, 7vw, 5rem)" class="reveal">
-      <p class="eyebrow eyebrow--dim">Round-trip duration — both planets, same solver, same epoch</p>
-      <div class="bars" id="durationBars"></div>
-      <p class="note" style="margin-top:1.6rem; max-width:62ch">
-        These four itineraries came out of the same patched-conic Lambert search, run over
-        2039&ndash;2047 for both planets. Venus gets a crew home in fifteen months.
-        Mars, at its best, takes two years and eight months — and that is the
-        <em>short</em> option, the one where you barely land.
-      </p>
+      <div class="stage__step">
+        <div class="stage__card">
+          <h3>Four months, not eight.</h3>
+          <p>
+            You get there before your body has really finished forgetting Earth. And
+            the sun gets brighter the whole way in, so power and heat both get easier
+            instead of harder.
+          </p>
+        </div>
+        <aside class="benefit">
+          <b>Fifteen months, door to door.</b>
+          The same trip to Mars is closer to thirty-three.
+        </aside>
+      </div>
+
+      <div class="stage__step">
+        <div class="stage__card stage__card--ember">
+          <h3>Venus does the braking.</h3>
+          <p>
+            You arrive at 11.3&nbsp;km/s and let the atmosphere take it, not the engines.
+            The thick air that makes the surface unlivable is the same air that gets
+            you there cheaply.
+          </p>
+        </div>
+      </div>
+
+      <div class="stage__step">
+        <div class="stage__card">
+          <h3>Then the stack splits.</h3>
+          <p>
+            Two crew stay in orbit with the ship that takes everyone home. Two fall
+            toward the clouds.
+          </p>
+        </div>
+        <aside class="benefit">
+          <b>Nobody is ever alone on a vehicle.</b>
+          The ride home stays crewed and maintained the entire month.
+        </aside>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ============================ DESCENT STAGE ============================ -->
-<section class="stage" id="descent" data-rail="The band">
+<!-- ============================ ACT 03 — THE DESCENT ============================ -->
+<section class="stage act" id="descent" data-rail="03 · Going down">
   <div class="stage__track">
     <div class="stage__viz">
       <div class="descent">
         <canvas id="descentCanvas" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+        <p class="act__badge"><span>03</span> Going down</p>
         <div class="descent__scale" id="dScale" aria-hidden="true">
           <div class="descent__marker" id="dMarker"></div>
         </div>
@@ -137,7 +241,7 @@
             <span class="readout__v" id="dAlt">100.0<small> km</small></span>
           </div>
           <div class="readout__row">
-            <span class="readout__k">Temperature</span>
+            <span class="readout__k">Outside</span>
             <span class="readout__v" id="dTemp">-98<small> °C</small></span>
           </div>
           <div class="readout__row">
@@ -153,8 +257,8 @@
             <span class="readout__v" id="dShield">0<small> g/cm²</small></span>
           </div>
           <div class="readout__row">
-            <span class="readout__k">Zone</span>
-            <span class="readout__v" id="dZone" style="font-size:var(--step--1)">Vacuum</span>
+            <span class="readout__k">Where you are</span>
+            <span class="readout__v readout__v--sm" id="dZone">Vacuum</span>
           </div>
         </div>
       </div>
@@ -163,72 +267,60 @@
     <div class="stage__steps">
       <div class="stage__step">
         <div class="stage__card">
-          <p class="eyebrow">03 · The descent</p>
-          <h3>One hundred kilometres above Venus, falling.</h3>
+          <h3>Keep scrolling. You are falling.</h3>
           <p>
-            Keep scrolling. You are dropping through the atmosphere of Venus, and the
-            instrument panel on the right is reading the real thing — temperature, pressure,
-            how much lift a cubic metre of breathable air would generate, and how much
-            atmosphere is stacked overhead absorbing cosmic rays.
+            The panel on the right is reading the real atmosphere — temperature,
+            pressure, how much a cubic meter of breathable air would lift, and how much
+            air is stacked overhead soaking up cosmic rays.
           </p>
         </div>
       </div>
+
       <div class="stage__step">
         <div class="stage__card">
-          <h3>Seventy kilometres. The haze.</h3>
+          <h3>Sixty kilometers. Cloud tops.</h3>
           <p>
-            This is the top of the cloud world — sub-micron droplets and the ultraviolet-dark
-            streaks that make Venus look mottled from orbit. Still near-vacuum by our standards.
-            Nothing floats here.
+            Fourteen degrees, a fifth of an atmosphere, and winds near 220&nbsp;mph. The
+            whole sky here laps the planet roughly sixty times for every one turn Venus makes.
           </p>
         </div>
       </div>
-      <div class="stage__step">
-        <div class="stage__card">
-          <h3>Sixty kilometres. Cloud tops.</h3>
-          <p>
-            Minus ten degrees, a fifth of an atmosphere. The winds here are moving at around
-            100&nbsp;m/s — the whole atmosphere super-rotates, lapping the solid planet roughly
-            sixty times for every one of its rotations.
-          </p>
-        </div>
-      </div>
+
       <div class="stage__step">
         <div class="stage__card stage__card--aqua">
-          <p class="eyebrow eyebrow--aqua">Arrival</p>
-          <h3>Fifty-four to fifty kilometres. The band.</h3>
+          <p class="eyebrow eyebrow--aqua">Stop here</p>
+          <h3>Fifty-four to fifty kilometers.</h3>
           <p>
-            Stop here. Pressure between half an atmosphere and just over one. Temperature from
-            room temperature at the top of the band to a hot afternoon in the Gulf at the
-            bottom. Roughly nine-tenths of Earth gravity. And the column of atmosphere overhead
-            at 50&nbsp;km is <strong>1&nbsp;200&nbsp;g/cm²</strong> — more than the
-            1&nbsp;033&nbsp;g/cm² you live under at sea level, and fifty-seven times what a
-            Mars colonist would have.
+            Room temperature at the top of the band, a hot afternoon at the bottom.
+            About one atmosphere. Nine-tenths of Earth gravity. This four-kilometer
+            slice is where the entire mission happens.
           </p>
-          <p class="note">
-            This four-kilometre band is where the entire mission takes place.
+        </div>
+        <aside class="benefit benefit--stack">
+          <b>More cover than you get at sea level.</b>
+          1,200&nbsp;g/cm² of air overhead at 50&nbsp;km, against 1,033 at a beach on Earth —
+          and 21 on the surface of Mars.
+        </aside>
+      </div>
+
+      <div class="stage__step">
+        <div class="stage__card stage__card--ember">
+          <h3>Below the band it turns on you fast.</h3>
+          <p>
+            234&nbsp;°F at 45&nbsp;km. 435&nbsp;°F and ten atmospheres at 30. There is more
+            lift down there than anywhere — the air only gets denser — but nothing you
+            can build survives long enough to use it.
           </p>
         </div>
       </div>
+
       <div class="stage__step">
         <div class="stage__card stage__card--ember">
-          <h3>Below the band, everything gets worse fast.</h3>
+          <h3>And the floor is the floor.</h3>
           <p>
-            At 45&nbsp;km it is 112&nbsp;°C. At 30&nbsp;km, 224&nbsp;°C and ten atmospheres.
-            The lift available goes <em>up</em> all the way down — the air only gets denser —
-            but nothing you can build survives to use it.
-          </p>
-        </div>
-      </div>
-      <div class="stage__step">
-        <div class="stage__card stage__card--ember">
-          <p class="eyebrow" style="color:var(--ember)">The floor</p>
-          <h3>464 °C. Ninety-two atmospheres.</h3>
-          <p>
-            The longest anything has ever survived down here is 127 minutes
-            (<em>Venera 13</em>, 1982). This is why Venus was written off, and it is the honest
-            cost of the plan: <strong>Venus offers an atmosphere and denies a surface.</strong>
-            Anyone who needs solid ground should go to Mars.
+            860&nbsp;°F. Ninety-two atmospheres. The longest anything has ever lasted down
+            here is 127 minutes. <strong>Venus gives you an atmosphere and refuses you a
+            surface</strong> — that is the trade, and it does not get better.
           </p>
         </div>
       </div>
@@ -236,43 +328,160 @@
   </div>
 </section>
 
-<!-- ============================ BUOYANCY ============================ -->
-<section class="band" data-rail="Why air floats">
+<!-- ============================ ARRIVAL / EDI ============================ -->
+<section class="band" id="arrival" data-rail="Becoming a ship">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">04 · The physics</p>
-      <h2>Air floats on Venus for the same reason helium floats on Earth.</h2>
+      <p class="eyebrow">Entry and inflation</p>
+      <h2>Twenty minutes to turn a falling probe into a ship.</h2>
     </div>
 
-    <div class="prose col reveal" style="margin-bottom: clamp(2.5rem, 6vw, 3.5rem)">
+    <div class="edilayout">
+      <div class="edi-graphic reveal">
+        <div id="ediSvg"></div>
+        <p class="note" style="margin-top:0.8rem">Altitude against sequence. Each step carries its own clock.</p>
+      </div>
+      <div>
+        <p class="prose reveal" style="margin-bottom:1.5rem; color:var(--cream-2)">
+          Every piece of this has flown before — Venera did the entry, VEGA inflated
+          balloons at 54&nbsp;km in 1985 and flew them for two days, HIAD has flown the
+          decelerator. Never all at once, and never this big.
+        </p>
+        <div id="ediList"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ THE SHIP ============================ -->
+<section class="band" data-rail="The ship">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">The ship</p>
+      <h2>A hundred and twenty-nine meters of hull, and not one pressure bulkhead.</h2>
+      <div class="sec-head__meta">
+        <span>129 m × 34 m</span><span>77,500 m³</span><span>crew of 2</span><span>floats at 50–54 km</span>
+      </div>
+    </div>
+
+    <div class="reveal" id="shipSvg" style="margin-bottom: clamp(2.5rem, 6vw, 4rem)"></div>
+
+    <div class="two">
+      <div class="prose reveal">
+        <h3 style="font-size:var(--step-1); margin-bottom:0.4rem">Two gases, two jobs</h3>
+        <p>
+          Sealed helium cells do most of the lifting, because helium is three times
+          better at it. But helium is the one thing Venus cannot give you, so the rest
+          of the hull is simply the house — open to the outside air pressure and full of
+          the stuff you breathe.
+        </p>
+        <p>
+          That volume earns its keep twice. It lifts, and it is where you live. And
+          because the pressure inside matches the pressure outside, the skin never has
+          to hold anything back. It only has to keep its shape, keep acid out, and keep
+          helium in.
+        </p>
+        <h3 style="font-size:var(--step-1); margin:1.2rem 0 0.4rem">Altitude is the thermostat</h3>
+        <p>
+          At 50&nbsp;km it is 167&nbsp;°F outside. You cannot dump heat into that, so the
+          ship does not try — it climbs toward 54&nbsp;km through the day where it is
+          100&nbsp;°F, and sinks at night where the lift is best.
+          <strong>Flying it and cooling it are the same job.</strong>
+        </p>
+      </div>
+
+      <div class="reveal">
+        <p class="eyebrow" style="margin-bottom:1rem">The skin, outside in</p>
+        <div class="laminate" id="laminate"></div>
+      </div>
+    </div>
+
+    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
+      <p class="eyebrow" style="margin-bottom:1rem">How it gets made</p>
+      <div class="builds" id="build"></div>
+      <p class="note" style="margin-top:1.6rem; max-width:64ch">
+        That last step is why the program is shaped the way it is. Thirty-four tons of
+        breathable air is more than the ship can carry, so it has to be made on site —
+        and making it takes years. The 2034 flight is not a rehearsal that happens to go
+        first. It is the start of something that has to finish before 2042 is even possible.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ THE FLEET IN 3D ============================ -->
+<section class="band" data-rail="In three dimensions">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">In three dimensions</p>
+      <h2>Turn it over in your hands.</h2>
+      <div class="sec-head__meta">
+        <span>Built from the plan&rsquo;s own dimensions</span>
+        <span>Drag to turn</span>
+        <span>Download the design files</span>
+      </div>
+    </div>
+
+    <div class="f3d reveal" id="fleet3d">
+      <div class="f3d__top">
+        <div class="f3d__pick" role="group" aria-label="Choose a vehicle"></div>
+        <div class="f3d__tools">
+          <button type="button" class="f3d__btn f3d__cut" aria-pressed="true">Cutaway on</button>
+          <button type="button" class="f3d__btn f3d__in" aria-label="Zoom in">+</button>
+          <button type="button" class="f3d__btn f3d__out" aria-label="Zoom out">−</button>
+        </div>
+      </div>
+      <div class="f3d__stage">
+        <canvas aria-label="Interactive 3D model of the selected vehicle"></canvas>
+        <p class="f3d__fallback" hidden>Your browser could not start WebGL, so the model will not draw here. The design files below open in any 3D program.</p>
+        <div class="f3d__label">
+          <p class="f3d__name">Phosphorus</p>
+          <p class="f3d__dims num">129 × 46 × 34 m</p>
+          <p class="f3d__human">Longer than a 747. That dot by the gondola is a person.</p>
+        </div>
+      </div>
+      <div class="f3d__foot">
+        <p class="note">
+          These are not artist renders. Each model is generated by
+          <code>scripts/build_models.py</code> straight from the numbers on this page —
+          the 129 × 34 m hull, the 180 m³ cabin, a two-stage ascent vehicle sized for
+          40 tons of propellant — and the 1.8 m figure standing beside each one is there so
+          the size lands. They open in Blender or anything that reads OBJ.
+        </p>
+        <a class="f3d__dl" href="models/phosphorus_airship.obj" download="phosphorus_airship.obj">Download this model (.obj)</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ HOW IT FLOATS ============================ -->
+<section class="band" data-rail="How it floats">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">How it floats</p>
+      <h2>Air floats on Venus for the same reason helium floats here.</h2>
+    </div>
+
+    <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
       <p>
-        Venus&rsquo; atmosphere is 96.5% carbon dioxide, which has a mean molar mass of about
-        <span class="num">43.5&nbsp;g/mol</span>. Breathable air is
-        <span class="num">29.0&nbsp;g/mol</span>. At the same temperature and pressure, the
-        lighter gas floats — exactly as helium (<span class="num">4.0&nbsp;g/mol</span>)
-        floats in Earth&rsquo;s <span class="num">29.0&nbsp;g/mol</span> air.
+        Venus air is mostly carbon dioxide and weighs about 43.5&nbsp;g/mol. What you
+        breathe weighs 29. The lighter gas rises — same physics, different planet.
       </p>
       <p>
-        At 50&nbsp;km the numbers work out to <strong>0.534&nbsp;kg of lift per cubic
-        metre</strong> of breathable air — around 60% of what helium gives you on Earth.
-        That is not a curiosity. It means the habitat volume is <em>also</em> the lift volume,
-        and it means the inside and the outside of the hull are at the same pressure.
-      </p>
-      <p>
-        <strong>There is no explosive decompression on Venus.</strong> A puncture is not a
-        blowout; it is a slow exchange of gases across a hole, and you have hours, not seconds.
-        No other off-world habitat concept has that property. Every Mars, lunar or orbital
-        habitat is a pressure vessel holding one atmosphere against nothing, forever.
+        <strong>So there is no explosive decompression on Venus.</strong> A puncture is
+        not a blowout, it is a slow trade of gas through a hole, and you have hours
+        instead of seconds. No other habitat we have ever designed off Earth has that
+        property.
       </p>
     </div>
 
     <div class="calc reveal">
       <div class="calc__control">
-        <p class="eyebrow eyebrow--aqua">Fly the hull — 77 500 m³, 20.6 t of structure</p>
+        <p class="eyebrow eyebrow--aqua">Fly the hull — 77,500 m³, 20.6 t of structure</p>
         <p class="calc__alt"><span id="cAlt">52.0</span><small>KM</small></p>
-        <label for="altRange" class="note">Float altitude — drag to trade lift against heat</label>
+        <label for="altRange" class="note">Drag to trade lift against heat</label>
         <input type="range" id="altRange" min="440" max="650" value="520" step="1"
-               aria-label="Float altitude in kilometres" aria-valuetext="52.0 kilometres">
+               aria-label="Float altitude in kilometers" aria-valuetext="52.0 kilometers">
         <div class="calc__scale"><span>44 km</span><span>50</span><span>55</span><span>60</span><span>65 km</span></div>
         <p class="calc__verdict" id="cVerdict">Nominal. Shirt-sleeve pressure, workable heat, 47 t of useful lift.</p>
       </div>
@@ -285,379 +494,53 @@
       </dl>
     </div>
 
-    <p class="note reveal" style="margin-top:2rem; max-width:70ch">
-      Drag the slider. The trade is the whole design problem in one control: go low for lift and
-      cook, go high for comfort and run out of payload. The band from 50 to 54&nbsp;km is where
-      both curves are tolerable at once — which is why every serious Venus aerostat study, from
-      Landis&rsquo; 2003 paper to NASA Langley&rsquo;s HAVOC, lands on the same four kilometres.
+    <p class="note reveal" style="margin-top:2rem; max-width:64ch">
+      Go low for lift and you cook. Go high for comfort and you run out of payload.
+      Fifty to fifty-four kilometers is where both curves are livable at once — which is
+      why every serious study of this lands on the same four kilometers.
     </p>
   </div>
 </section>
 
-<!-- ============================ PROGRAMME ============================ -->
-<section class="band" data-rail="The programme">
+<!-- ============================ LIFE UP THERE ============================ -->
+<section class="band" data-rail="Life up there">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">05 · The programme</p>
-      <h2>Five phases, twenty years, and nobody launches until the ride home is already parked.</h2>
-      <div class="sec-head__meta">
-        <span>2026 → 2055</span>
-        <span>Crewed flight in 2042</span>
-        <span>$44.4 bn total</span>
-      </div>
-    </div>
-    <div class="phases" id="phases"></div>
-  </div>
-</section>
-
-<!-- ============================ VOYAGE STAGE ============================ -->
-<section class="stage" id="voyage" data-rail="The voyage">
-  <div class="stage__track">
-    <div class="stage__viz">
-      <div id="orbitSvg"></div>
-      <div class="voyage__readout" role="status" aria-live="polite" aria-atomic="true">
-        <div class="readout__row">
-          <span class="readout__k">Mission day</span>
-          <span class="readout__v"><span id="vDay">0</span><small> / 459</small></span>
-        </div>
-        <div class="readout__row">
-          <span class="readout__k">Date</span>
-          <span class="readout__v" id="vDate" style="font-size:var(--step-0)">27 Jul 2042</span>
-        </div>
-        <div class="readout__row">
-          <span class="readout__k">Range to Earth</span>
-          <span class="readout__v"><span id="vDist">0</span><small> M km</small></span>
-        </div>
-        <div class="readout__row">
-          <span class="readout__k">Phase</span>
-          <span class="readout__v" id="vPhase" style="font-size:var(--step-0)">Departure</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="stage__steps">
-      <div class="stage__step">
-        <div class="stage__card stage__card--aqua">
-          <p class="eyebrow eyebrow--aqua">06 · The voyage</p>
-          <h3>27 July 2042. Trans-Venus injection.</h3>
-          <p>
-            Four crew depart a 400&nbsp;km parking orbit on a burn of
-            <span class="num">3.50&nbsp;km/s</span>. Departure energy C₃ is
-            <span class="num">7.08&nbsp;km²/s²</span> — comfortably inside what a
-            Starship-class stack throws. The window is open for five months; this is the
-            cheapest day inside it.
-          </p>
-        </div>
-      </div>
-      <div class="stage__step">
-        <div class="stage__card stage__card--aqua">
-          <h3>124 days inward.</h3>
-          <p>
-            Four months, not eight. Venus is close, and the trip is short enough that the crew
-            arrives without the bone and immune deficits that define a Mars transit.
-            They also arrive with more sunlight than they left with — power and thermal both
-            get easier the whole way in.
-          </p>
-        </div>
-      </div>
-      <div class="stage__step">
-        <div class="stage__card">
-          <p class="eyebrow">28 November 2042</p>
-          <h3>Arrival. The stack splits.</h3>
-          <p>
-            Approach speed at the atmospheric interface is
-            <span class="num">11.29&nbsp;km/s</span>. The transit habitat aerocaptures into a
-            300&nbsp;km orbit carrying two crew; the airship separates four hours earlier and
-            enters direct, carrying the other two.
-          </p>
-        </div>
-      </div>
-      <div class="stage__step">
-        <div class="stage__card">
-          <h3>Thirty days aloft.</h3>
-          <p>
-            Carried by the super-rotating winds, the airship laps the entire planet roughly
-            every five days — about six circumnavigations in a month, each with a
-            fifty-hour night in the middle of it.
-          </p>
-        </div>
-      </div>
-      <div class="stage__step">
-        <div class="stage__card stage__card--ember">
-          <p class="eyebrow" style="color:var(--ember)">The catch</p>
-          <h3>The return goes the long way out.</h3>
-          <p>
-            Leaving Venus on 28 December 2042 buys a 305-day return — but look at the
-            trajectory: it swings out past Earth&rsquo;s orbit to
-            <span class="num">1.32&nbsp;AU</span> before falling back in. The crew arrives
-            travelling at <span class="num">8.67&nbsp;km/s</span> relative to Earth, which is
-            an entry speed of <span class="num">14.06&nbsp;km/s</span>.
-          </p>
-          <p class="note">
-            Apollo 10 came home at 11.07&nbsp;km/s. This is the hardest number in the plan,
-            and it is dealt with honestly in the risk register below.
-          </p>
-        </div>
-      </div>
-      <div class="stage__step">
-        <div class="stage__card">
-          <p class="eyebrow">29 October 2043</p>
-          <h3>Home. 459 days, door to door.</h3>
-          <p>
-            Fifteen months. The same search run against Mars returns 990 days for a short stay
-            and 1&nbsp;020 for a long one.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================ WINDOWS ============================ -->
-<section class="band" data-rail="The windows">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">07 · The windows</p>
-      <h2>Every chance to go, between now and 2050.</h2>
-      <div class="sec-head__meta">
-        <span>Earth → Venus departure opportunities</span>
-        <span>Synodic period 583.92 d</span>
-      </div>
-    </div>
-
-    <div class="tablewrap reveal">
-      <table>
-        <caption>
-          Minimum-energy solution in each window, from a patched-conic Lambert search on JPL
-          approximate planetary elements. C₃ is departure energy; V∞ is hyperbolic excess
-          speed on arrival at Venus. Code: <code>scripts/porkchop.py</code>.
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">Window open</th>
-            <th scope="col">Best departure</th>
-            <th scope="col">Arrival</th>
-            <th scope="col">Transit</th>
-            <th scope="col">C₃ km²/s²</th>
-            <th scope="col">V∞ km/s</th>
-            <th scope="col" style="text-align:left">Assigned to</th>
-          </tr>
-        </thead>
-        <tbody id="windowRows"></tbody>
-      </table>
-    </div>
-
-    <p class="note reveal" style="margin-top:1.6rem; max-width:68ch">
-      A window opens every 584 days — roughly every nineteen months. Mars opens every 780.
-      Over a twenty-year programme that is thirteen chances to launch instead of nine, and
-      thirteen chances to bring somebody home early.
-    </p>
-  </div>
-</section>
-
-<!-- ============================ FLEET ============================ -->
-<section class="band" data-rail="The fleet">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">08 · The fleet</p>
-      <h2>Four vehicles. Only one of them ever touches the clouds.</h2>
-    </div>
-    <div class="fleet reveal" id="fleet"></div>
-  </div>
-</section>
-
-<!-- ============================ ARRIVAL / EDI ============================ -->
-<section class="band" id="arrival" data-rail="Arrival">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">09 · Entry, descent and inflation</p>
-      <h2>From 11.29 km/s to floating, in about twenty minutes.</h2>
-      <div class="sec-head__meta">
-        <span>Entry interface 125 km</span>
-        <span>Flight-path angle −10°</span>
-        <span>Heat load ~18 kJ/cm²</span>
-      </div>
-    </div>
-
-    <div class="edilayout">
-      <div class="edi-graphic reveal">
-        <div id="ediSvg"></div>
-        <p class="note" style="margin-top:0.8rem">
-          Altitude against sequence — not to a linear time scale. Each beat is labelled with
-          its own elapsed time.
-        </p>
-      </div>
-      <div>
-        <p class="prose" style="margin-bottom:1.5rem; color:var(--cream-2)">
-          This is the sequence that turns a falling probe into a ship. It has been flown in
-          pieces — Venera and VEGA did the entry, VEGA inflated balloons at 54&nbsp;km in 1985
-          and flew them for 46 hours, HIAD has flown the inflatable decelerator — but never in
-          one stack, and never at this scale.
-        </p>
-        <div id="ediList"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================ HABITAT ============================ -->
-<section class="band" data-rail="The habitat">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">10 · The habitat</p>
-      <h2>A hundred and twenty-nine metres of hull, and not one pressure bulkhead.</h2>
-      <div class="sec-head__meta">
-        <span>129 m × 34 m</span><span>77 500 m³</span><span>crew of 2</span><span>float 50–54 km</span>
-      </div>
-    </div>
-
-    <div class="reveal" id="shipSvg" style="margin-bottom: clamp(2.5rem, 6vw, 4rem)"></div>
-
-    <div class="two">
-      <div class="prose reveal">
-        <h3 style="font-size:var(--step-1); margin-bottom:0.4rem">Why the lift is split two ways</h3>
-        <p>
-          Sealed helium cells carry <span class="num">66.8&nbsp;t</span> of the lift because
-          helium is three times better at it. But helium is the one consumable Venus cannot
-          supply, so the rest of the hull — <span class="num">31&nbsp;500&nbsp;m³</span> of it —
-          is simply the habitat, open to ambient pressure and full of breathable air.
-        </p>
-        <p>
-          That volume earns its keep twice: it carries <span class="num">16.8&nbsp;t</span> of
-          lift <em>and</em> it is where the crew lives. And because it is at ambient pressure,
-          the envelope around it never has to hold a pressure differential. It only has to hold
-          a shape, keep acid out, and keep helium in.
-        </p>
-        <h3 style="font-size:var(--step-1); margin:1.2rem 0 0.4rem">Altitude is the thermostat</h3>
-        <p>
-          At 50&nbsp;km the outside air is 75&nbsp;°C. You cannot radiate heat into that, so
-          the vehicle does not try. It climbs toward 54&nbsp;km through the day side, where it
-          is 38&nbsp;°C and the sun is strongest, and sinks toward 50&nbsp;km at night, where
-          the lift is greatest and the batteries are lightest.
-          <strong>Buoyancy control and thermal control are the same system.</strong>
-        </p>
-      </div>
-
-      <div class="reveal">
-        <p class="eyebrow" style="margin-bottom:1rem">The envelope, outside in</p>
-        <div class="laminate" id="laminate"></div>
-        <p class="note" style="margin-top:1.2rem">
-          Target areal density ~200&nbsp;g/m². Over roughly 11&nbsp;100&nbsp;m² of envelope
-          that is about 2.2&nbsp;t of skin — the rest of the 20.6&nbsp;t structural allowance
-          goes to tendons, fittings, suspension and the solar crown.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============================ CONSTRUCTION ============================ -->
-<section class="band" data-rail="Building it">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">11 · Construction</p>
-      <h2>How you build a hundred-and-twenty-nine-metre ship and fit it inside an aeroshell.</h2>
-      <div class="sec-head__meta">
-        <span>69 gores</span><span>9.4 km of welded seam</span><span>30 700 : 1 packed</span><span>8 years of air-making</span>
-      </div>
-    </div>
-
-    <div class="builds reveal" id="build"></div>
-
-    <div class="prose col reveal" style="margin-top: clamp(2.5rem, 6vw, 3.5rem)">
-      <h3 style="font-size:var(--step-1); margin-bottom:0.4rem">Why the phases are shaped the way they are</h3>
-      <p>
-        That last step is the reason Phase 2 exists. Thirty-three tonnes of breathable air is
-        more than the airship&rsquo;s entire useful payload, so it can never be carried — it has
-        to be manufactured on station, and manufacturing it takes years at any sane power budget.
-      </p>
-      <p>
-        Which means the programme is not really &ldquo;send a hull, then send a crew&rdquo;. It is
-        <strong>send a hull and let it breathe in for eight years</strong>. The 2034 window is not
-        a rehearsal that happens to come first; it is the start of a process that has to finish
-        before 2042 is flyable at all.
-      </p>
-      <p class="note">
-        Until that fill is complete the ship still flies — the helium cells alone lift
-        <span class="num">66.8&nbsp;t</span>, leaving about <span class="num">46&nbsp;t</span>
-        of useful load after structure. The air volume is what takes it to
-        <span class="num">63&nbsp;t</span> and turns the lower hull from a shape-keeping
-        ballonet into somewhere a person can stand.
-      </p>
-    </div>
-  </div>
-</section>
-
-<!-- ============================ LIFE IN THE CLOUDS ============================ -->
-<section class="band" data-rail="Life in the clouds">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">12 · Life in the clouds</p>
-      <h2>Thirty days at nine-tenths of a gravity, inside a cloud you can never see out of.</h2>
+      <p class="eyebrow">Life up there</p>
+      <h2>Thirty days at nine-tenths of a gravity, inside a cloud you never see out of.</h2>
     </div>
 
     <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
       <p>
-        The ship does not fly anywhere. It is carried — the whole atmosphere super-rotates, and
-        at the float band that means 60 to 95&nbsp;m/s of free westward travel. The crew
-        circumnavigates a planet roughly once a working week without spending a watt on propulsion.
+        You do not fly the ship anywhere. The whole sky is moving, and you move with it —
+        a full lap of the planet about once a working week, for free.
       </p>
       <p>
-        The price of that ride is the night, and the length of the night is a choice. Venus&rsquo;
-        own day is 117 Earth days long, so the only thing setting sunrise is the ship&rsquo;s own
-        motion. Float low and you get more lift, a slower lap and a longer darkness; float high
-        and the reverse. <strong>Altitude sets the length of your day.</strong>
+        What that costs you is the night, and how long the night lasts is your choice.
+        Float low for more lift and a longer darkness; float high and the reverse.
+        <strong>Altitude sets the length of your day.</strong>
       </p>
     </div>
 
     <div class="lap reveal">
       <div class="lap__head">
-        <p class="eyebrow eyebrow--aqua">One lap of Venus, at your chosen float altitude</p>
+        <p class="eyebrow eyebrow--aqua">One lap of Venus, at your chosen altitude</p>
         <div style="display:flex; align-items:center; gap:0.8rem">
           <span class="lap__pick-l">Float km</span>
-          <div class="lap__pick" id="lapPick" role="group" aria-label="Float altitude in kilometres"></div>
+          <div class="lap__pick" id="lapPick" role="group" aria-label="Float altitude in kilometers"></div>
         </div>
       </div>
       <div id="lapSvg"></div>
       <dl class="lap__out">
         <div class="lap__cell"><dt>Lap</dt><dd><span id="lLap">5.6</span><span>days</span></dd></div>
         <div class="lap__cell"><dt>Night</dt><dd><span id="lNight">68</span><span>hours</span></dd></div>
-        <div class="lap__cell"><dt>Storage needed</dt><dd><span id="lStore">541</span><span>kWh</span></dd></div>
+        <div class="lap__cell"><dt>Battery</dt><dd><span id="lStore">541</span><span>kWh</span></dd></div>
         <div class="lap__cell"><dt>Wind</dt><dd><span id="lWind">75</span><span>m/s</span></dd></div>
         <div class="lap__cell"><dt>Helium lift</dt><dd><span id="lLift">54.3</span><span>t</span></dd></div>
       </dl>
       <p class="note" style="margin-top:1rem">
-        Storage assumes an 8&nbsp;kW average habitat load carried straight through the dark.
-        Battery mass is the second-heaviest thing on the ship after the ascent vehicle, which is
-        why those two hundred kilowatt-hours between 50 and 55&nbsp;km are a real design argument
-        and not a detail.
-      </p>
-    </div>
-
-    <div class="reveal" style="margin-top: clamp(2.5rem, 6vw, 3.5rem)">
-      <dl class="factgrid">
-        <div class="fact"><dt>One lap of Venus</dt><dd>4.5 – 7.0 d</dd></div>
-        <div class="fact"><dt>Distance per lap</dt><dd>38 340 km</dd></div>
-        <div class="fact"><dt>Night length</dt><dd>54 – 83 h</dd></div>
-        <div class="fact"><dt>Laps in 30 days</dt><dd>4 – 7</dd></div>
-        <div class="fact"><dt>Solar constant</dt><dd>2 601 W/m²</dd></div>
-        <div class="fact"><dt>vs Earth surface</dt><dd>+40%</dd></div>
-      </dl>
-      <p class="note" style="margin-top:1.2rem; max-width:72ch">
-        Lap and night are measured against the Sun rather than the ground: Venus&rsquo; retrograde
-        rotation runs the same way as the wind, so the two rates add and the solar cycle comes out
-        slightly shorter than the lap over the surface.
-      </p>
-    </div>
-
-    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
-      <p class="eyebrow" style="margin-bottom:1rem">Closing the loops</p>
-      <div class="loops" id="loops"></div>
-      <p class="note" style="margin-top:1.2rem; max-width:72ch">
-        Each loop has been demonstrated somewhere. MOXIE ran the oxygen reaction on Mars in 2021;
-        NASA&rsquo;s EVE study ran the same solid-oxide cells on simulated Venus atmosphere to make
-        lift gas. None of them has been run together, at scale, in acid — which is what Phase 1 and
-        Phase 2 are for.
+        Those two hundred kilowatt-hours between 50 and 55&nbsp;km are real weight.
+        Batteries are the second-heaviest thing on the ship.
       </p>
     </div>
 
@@ -665,108 +548,151 @@
       <p class="eyebrow" style="margin-bottom:1rem">What it is actually like</p>
       <div class="experience" id="experience"></div>
     </div>
+
+    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
+      <p class="eyebrow" style="margin-bottom:1rem">Everything you need is already outside</p>
+      <div class="loops" id="loops"></div>
+      <p class="note" style="margin-top:1.2rem; max-width:64ch">
+        Each of these has worked somewhere. MOXIE made oxygen on Mars in 2021. Nobody
+        has run them all together, at size, in acid — which is exactly what the early
+        flights are for.
+      </p>
+    </div>
   </div>
 </section>
 
-<!-- ============================ CREW ============================ -->
+<!-- ============================ THE CREW ============================ -->
 <section class="band" data-rail="The crew">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">13 · The crew</p>
-      <h2>Four people, two stations, and nobody ever alone aboard a vehicle.</h2>
-      <div class="sec-head__meta">
-        <span>2 in Venus orbit for 459 days</span>
-        <span>2 in the clouds for 30</span>
-      </div>
+      <p class="eyebrow">The crew</p>
+      <h2>Four people, two stations.</h2>
     </div>
     <div class="crews reveal" id="crewDetail"></div>
-    <p class="note reveal" style="margin-top:1.6rem; max-width:66ch">
-      NASA&rsquo;s HAVOC study sized the atmospheric crew at two and left the transit habitat empty
-      in Venus orbit for the whole month they were gone. This plan spends two more seats to avoid
-      that: the ride home stays crewed and maintained, the descent pair have someone overhead who
-      can help, and no single failure leaves one person as the only human on a vehicle.
+    <p class="note reveal" style="margin-top:1.6rem; max-width:62ch">
+      The NASA study this builds on sent two people down and left the return ship empty
+      overhead for a month. This spends two more seats to avoid that.
     </p>
   </div>
 </section>
 
-<!-- ============================ SCIENCE ============================ -->
-<section class="band" data-rail="The science">
+<!-- ============================ THE SCIENCE ============================ -->
+<section class="band" data-rail="What we'd learn">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">14 · The science</p>
+      <p class="eyebrow">What we&rsquo;d learn</p>
       <h2>Six questions worth sending people for.</h2>
-      <div class="sec-head__meta">
-        <span>What a laboratory at 52 km can do that a falling probe cannot</span>
-      </div>
     </div>
 
     <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
       <p>
-        Venus is the nearest worked example of a planet that went wrong. It is the same size as
-        Earth, made of the same material, at the same distance from the same star — and it is
-        460&nbsp;°C. Whatever separated the two of them is the single most consequential unknown
-        in planetary science, because it is also the thing that decides how to read every
-        Earth-sized exoplanet we will ever find.
-      </p>
-      <p>
-        Every question below is open <em>now</em>, and every one of them is open specifically
-        because the answer is in the clouds and we have never had hands there.
+        Venus is the nearest worked example of a planet that went wrong. Same size as
+        Earth, same material, same star — and it is 860&nbsp;°F. Whatever separated the
+        two of them is also what tells us how to read every Earth-sized planet we will
+        ever find around another sun.
       </p>
     </div>
 
     <div class="questions reveal" id="science"></div>
 
     <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
-      <p class="eyebrow" style="margin-bottom:1rem">What the crew adds</p>
+      <p class="eyebrow" style="margin-bottom:1rem">Why people and not just probes</p>
       <div class="advantages" id="advantage"></div>
     </div>
 
     <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
-      <p class="eyebrow eyebrow--aqua" style="margin-bottom:0.6rem">The sampling ladder</p>
-      <p class="note" style="margin-bottom:1.4rem; max-width:64ch">
-        The ship is the laboratory and the middle rung. Everything above and below it is deployed
-        from the hull — tethered packages that come back, sondes that do not, and one probe that
-        gets about two hours on the surface before the heat takes it.
+      <p class="eyebrow eyebrow--aqua" style="margin-bottom:0.6rem">Where the samples come from</p>
+      <p class="note" style="margin-bottom:1.4rem; max-width:60ch">
+        The ship is the lab and the middle rung. Everything above and below it drops
+        from the hull.
       </p>
       <div class="ladder" id="sampling"></div>
     </div>
   </div>
 </section>
 
-<!-- ============================ COST ============================ -->
+<!-- ============================ THE PROGRAM ============================ -->
+<section class="band" data-rail="The program">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">The program</p>
+      <h2>Five steps, twenty years, and nobody launches until the way back is parked.</h2>
+      <div class="sec-head__meta">
+        <span>2026 → 2055</span><span>People fly in 2042</span><span>$44.4 bn</span>
+      </div>
+    </div>
+    <div class="phases" id="phases"></div>
+
+    <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
+      <p class="eyebrow eyebrow--dim" style="margin-bottom:1rem">Every chance to go, between now and 2050</p>
+      <div class="tablewrap">
+        <table>
+          <caption>Cheapest departure in each window, from the trajectory search in <code>scripts/porkchop.py</code>.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Window open</th>
+              <th scope="col">Best day to leave</th>
+              <th scope="col">Arrive</th>
+              <th scope="col">Transit</th>
+              <th scope="col">C₃ km²/s²</th>
+              <th scope="col">V∞ km/s</th>
+              <th scope="col" style="text-align:left">Flying what</th>
+            </tr>
+          </thead>
+          <tbody id="windowRows"></tbody>
+        </table>
+      </div>
+      <p class="note" style="margin-top:1.4rem; max-width:60ch">
+        A window opens every 584 days. Mars opens every 780. Over twenty years that is
+        four extra chances to go — and four extra chances to bring somebody home early.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ THE FLEET ============================ -->
+<section class="band" data-rail="The fleet">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">The fleet</p>
+      <h2>Four vehicles. Only one ever touches the clouds.</h2>
+    </div>
+    <div class="fleet reveal" id="fleet"></div>
+  </div>
+</section>
+
+<!-- ============================ THE BILL ============================ -->
 <section class="band" data-rail="The bill">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">15 · The bill</p>
-      <h2>Forty-four billion dollars over twenty years, and launch is barely one per cent of it.</h2>
+      <p class="eyebrow">The bill</p>
+      <h2>Forty-four billion over twenty years — and launch is barely one percent of it.</h2>
     </div>
 
     <div class="costgrid">
       <div class="reveal">
-        <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Phase by phase, 2026 dollars</p>
+        <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Step by step</p>
         <div class="costbars" id="costBars"></div>
         <div class="bignum" style="margin-top:2rem">
           <span class="bignum__v">$2.2 bn</span>
-          <span class="bignum__k">per year, averaged over the programme</span>
+          <span class="bignum__k">a year, averaged across the program</span>
         </div>
       </div>
 
       <div class="reveal">
-        <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Against published crewed-Mars estimates</p>
+        <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Against published crewed-Mars numbers</p>
         <div class="compare" id="costCompare"></div>
         <div class="prose" style="margin-top:2rem">
           <p class="note">
-            The crewed flight needs roughly <strong>450&nbsp;t</strong> in low Earth orbit.
-            At the $200–500/kg that a Starship-class vehicle is projected to reach, that is
-            <strong>$90–225&nbsp;million</strong> of launch — around half a per cent of the
-            programme. Launch is not what makes this expensive. The ascent vehicle,
-            the envelope qualification programme and twenty years of standing army are.
+            Getting people to Venus takes about 450 tons in low Earth orbit. At the
+            prices a Starship-class vehicle is aiming for, that is $90–225 million of
+            launch — half a percent of the whole thing. Launch is not what makes this
+            expensive. The ascent vehicle and twenty years of payroll are.
           </p>
           <p class="note">
-            Treat every figure here as order-of-magnitude. They are built bottom-up from
-            analogous programmes, not from a costed work-breakdown structure, and historically
-            such estimates run low. Even tripled, the total sits below the cheapest published
-            number for putting people on Mars.
+            Treat every figure as order-of-magnitude. Estimates like these historically
+            run low. Even tripled, this sits under the cheapest published number for
+            putting people on Mars.
           </p>
         </div>
       </div>
@@ -775,13 +701,13 @@
 </section>
 
 <!-- ============================ RISKS ============================ -->
-<section class="band" data-rail="What could kill it">
+<section class="band" data-rail="What could go wrong">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow" style="color:var(--critical)">16 · The honest column</p>
-      <h2>Seven things that could kill this, in the order they are likely to.</h2>
+      <p class="eyebrow" style="color:var(--critical)">What could go wrong</p>
+      <h2>Seven things that could kill this, roughly in the order they might.</h2>
       <div class="sec-head__meta">
-        <span>No mission plan that omits this section is worth reading.</span>
+        <span>A plan without this section is a brochure.</span>
       </div>
     </div>
     <div class="risks reveal" id="risks"></div>
@@ -789,49 +715,49 @@
 </section>
 
 <!-- ============================ CLOSE ============================ -->
-<section class="band" data-rail="Sources">
+<section class="band" data-rail="So">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">17 · The verdict</p>
-      <h2>Venus is not easier than Mars. It is shorter, closer, warmer and better shielded — and it has no floor.</h2>
+      <p class="eyebrow">So</p>
+      <h2>Venus is not easier than Mars. It is shorter, closer, warmer, better shielded — and it has no floor.</h2>
     </div>
 
     <div class="prose col reveal">
       <p>
-        The case is not that Venus is a paradise. It is that we picked our destination by
-        looking at a surface, and Venus is the one planet where the surface is the worst part
-        of it. Fifty kilometres up, the conditions are better than anywhere else off Earth,
-        by every measure that acts on a human body: pressure, gravity, temperature, radiation,
-        light, and the time it takes to get home.
+        The case was never that Venus is gentle. It is that we picked where to go by
+        looking at a surface, and Venus is the one planet where the surface is the worst
+        part of it. Fifty kilometers up, everything that acts on a human body — pressure,
+        gravity, heat, radiation, light, time away from home — is better than anywhere
+        else we could go.
       </p>
       <p>
-        Against that, two hard problems and one permanent limitation. The ascent vehicle has
-        to launch off a balloon. The return has to survive an Earth entry nobody has flown.
-        And there will never be ground to stand on.
+        Against that: two hard engineering problems and one thing we can never fix. The
+        ride home has to launch off a balloon. The return hits Earth&rsquo;s atmosphere
+        faster than anyone ever has. And there will never be ground to stand on.
       </p>
       <p>
-        Those are engineering problems and a trade, in that order. The Mars plan&rsquo;s problems
-        — nine hundred days of galactic cosmic rays at 0.38&nbsp;g, in a pressure vessel that
-        must not fail once — are physiology problems, and physiology does not yield to funding.
+        Those first two are money and time. Mars&rsquo;s problems — three years of cosmic
+        rays at a third of a gravity, in a pressure vessel that has to never once fail —
+        are biology, and biology does not care how well funded you are.
       </p>
       <p class="lede" style="margin-top:0.6rem">
-        The next window opens on 27 March 2031. It costs $0.9&nbsp;bn to fly a balloon through
-        it and find out whether the envelope survives a Venus year. That is the whole decision.
+        The next window opens March 27, 2031. Flying one balloon through it costs about
+        $900 million and tells us whether the skin survives a Venus year. That is the
+        whole decision.
       </p>
     </div>
 
     <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
-      <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Sources and further reading</p>
+      <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Sources</p>
       <div class="sources" id="sources"></div>
     </div>
 
     <footer class="foot">
       <p class="foot__mark">Project Phosphorus</p>
-      <p class="note" style="max-width:64ch">
-        Trajectories, buoyancy, atmospheric shielding and envelope sizing on this page were
-        computed for it; the Python is in <code>scripts/</code> and every displayed value lives
-        in <code>assets/data.js</code>. Atmospheric profile is VIRA-consistent. The argument it
-        serves is Elliot Roth&rsquo;s.
+      <p class="note" style="max-width:62ch">
+        Every trajectory, lift and shielding number here was computed for this page —
+        the Python is in <code>scripts/</code> and every figure lives in
+        <code>assets/data.js</code>. The argument it serves is Elliot Roth&rsquo;s.
       </p>
       <p class="note">
         <a href="https://thatmre.medium.com/we-re-going-the-wrong-way-ca8fb1a8691a" rel="noopener" target="_blank">We&rsquo;re Going the Wrong Way</a>
@@ -846,6 +772,10 @@
 
 <script src="assets/data.js"></script>
 <script src="assets/trajectory.js"></script>
+<script src="assets/models.js"></script>
+<script src="assets/acts.js"></script>
 <script src="assets/mission.js"></script>
+<script src="assets/vendor/three.min.js"></script>
+<script src="assets/viewer.js"></script>
 </body>
 </html>
