@@ -294,7 +294,6 @@ section { position: relative; }
   gap: 0.35rem;
   min-height: 6.6rem;
 }
-.hero__stat dd { margin-top: auto; }
 .hero__stat dt {
   font-family: var(--f-mono);
   font-size: var(--step--2);
@@ -303,7 +302,9 @@ section { position: relative; }
   color: var(--cream-dim);
 }
 .hero__stat dd {
-  margin: 0;
+  /* auto top margin bottom-aligns the figure, so numbers share a
+     baseline even when a label wraps to two lines */
+  margin: auto 0 0;
   font-family: var(--f-display);
   font-size: var(--step-2);
   font-weight: 600;
