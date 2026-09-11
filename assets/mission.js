@@ -1,0 +1,1216 @@
+/* ============================================================
+   PROJECT PHOSPHORUS — page behaviour
+   No framework, no build step. One rAF loop drives every
+   scroll-linked graphic; everything else is rendered once
+   from assets/data.js.
+   ============================================================ */
+(function () {
+  'use strict';
+
+  var D = window.PHOS || {};
+  var TRAJ = D.TRAJ;
+
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- tiny helpers -------------------------------- */
+
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function svg(tag, attrs) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (var k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function fmt(n, dp) {
+    var s = Math.abs(n) >= 1000 ? Number(n).toLocaleString('en-GB', {
+      minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0
+    }) : Number(n).toFixed(dp || 0);
+    return s.replace(/,/g, ' ');
+  }
+  function dayToDate(iso, offset) {
+    var d = new Date(iso + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + offset);
+    return d.toISOString().slice(0, 10);
+  }
+  function prettyDate(iso) {
+    var M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    var p = iso.split('-');
+    return p[2].replace(/^0/, '') + ' ' + M[+p[1] - 1] + ' ' + p[0];
+  }
+
+  /* Piecewise keyframe map: [[in, out], ...] with in ascending. */
+  function keyed(stops, t) {
+    if (t <= stops[0][0]) return stops[0][1];
+    for (var i = 1; i < stops.length; i++) {
+      if (t <= stops[i][0]) {
+        var a = stops[i - 1], b = stops[i];
+        var f = (t - a[0]) / (b[0] - a[0] || 1);
+        return lerp(a[1], b[1], f);
+      }
+    }
+    return stops[stops.length - 1][1];
+  }
+
+  /* ---------- scroll engine ------------------------------- */
+
+  var ticks = [];
+  var needsFrame = false;
+
+  function onTick(fn) { ticks.push(fn); }
+
+  function frame() {
+    needsFrame = false;
+    var vh = window.innerHeight;
+    var doc = document.documentElement;
+    var total = doc.scrollHeight - vh;
+    var page = total > 0 ? clamp(window.scrollY / total, 0, 1) : 0;
+    doc.style.setProperty('--scroll', page.toFixed(4));
+    for (var i = 0; i < ticks.length; i++) ticks[i](vh, page);
+  }
+
+  function request() {
+    if (!needsFrame) { needsFrame = true; requestAnimationFrame(frame); }
+  }
+
+  /* Progress of a sticky track: 0 when its top reaches the top of the
+     viewport, 1 when its bottom reaches the bottom. */
+  function trackProgress(track) {
+    var r = track.getBoundingClientRect();
+    var span = track.offsetHeight - window.innerHeight;
+    if (span <= 0) return r.top <= 0 ? 1 : 0;
+    return clamp(-r.top / span, 0, 1);
+  }
+
+  /* ---------- starfield ----------------------------------- */
+
+  function starfield(canvas) {
+    var ctx = canvas.getContext('2d');
+    var stars = [];
+    var w = 0, h = 0, dpr = 1;
+
+    function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.clientWidth; h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var n = Math.round(clamp(w * h / 5200, 60, 420));
+      stars = [];
+      for (var i = 0; i < n; i++) {
+        stars.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: Math.random() < 0.86 ? Math.random() * 0.8 + 0.25 : Math.random() * 1.5 + 0.9,
+          a: Math.random() * 0.55 + 0.18,
+          d: Math.random() * 0.55 + 0.25,      /* parallax depth */
+          p: Math.random() * Math.PI * 2       /* twinkle phase */
+        });
+      }
+      draw(0);
+    }
+
+    function draw(t) {
+      ctx.clearRect(0, 0, w, h);
+      var off = (window.scrollY || 0) * 0.12;
+      for (var i = 0; i < stars.length; i++) {
+        var s = stars[i];
+        var y = s.y - off * s.d;
+        y = ((y % h) + h) % h;
+        var tw = REDUCED ? 1 : 0.78 + 0.22 * Math.sin(t * 0.0011 + s.p);
+        ctx.globalAlpha = s.a * tw;
+        ctx.fillStyle = s.r > 1.1 ? '#F2E8D0' : '#CFC7B4';
+        ctx.beginPath();
+        ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    var raf;
+    function loop(t) { draw(t); raf = requestAnimationFrame(loop); }
+
+    size();
+    window.addEventListener('resize', size, { passive: true });
+    if (REDUCED) { onTick(function () { draw(0); }); }
+    else { raf = requestAnimationFrame(loop); }
+  }
+
+  /* ---------- hero stats ---------------------------------- */
+
+  function buildHero() {
+    var wrap = $('#heroStats');
+    if (!wrap) return;
+    var M = D.MISSION;
+    var rows = [
+      ['Round trip', fmt(M.totalDays), 'days'],
+      ['Same trip to Mars', fmt(D.MARS_TRIPS[0].total), 'days'],
+      ['Float altitude', D.FLOAT_BAND.lo + '–' + D.FLOAT_BAND.hi, 'km'],
+      ['Cabin pressure', '1.05', 'atm'],
+      ['Gravity', D.VENUS.gravityG.toFixed(3), 'g'],
+      ['Programme cost', '$' + D.COSTS.total.toFixed(1), 'bn']
+    ];
+    rows.forEach(function (r) {
+      var d = el('div', 'hero__stat');
+      d.appendChild(el('dt', null, r[0]));
+      var dd = el('dd');
+      dd.appendChild(document.createTextNode(r[1]));
+      dd.appendChild(el('small', null, ' ' + r[2]));
+      d.appendChild(dd);
+      wrap.appendChild(d);
+    });
+  }
+
+  /* ---------- ledger -------------------------------------- */
+
+  function buildLedger() {
+    var wrap = $('#ledger');
+    if (!wrap) return;
+    var head = el('div', 'ledger__head');
+    ['', 'Venus', 'Mars', ''].forEach(function (t) { head.appendChild(el('div', null, t)); });
+    wrap.appendChild(head);
+
+    D.LEDGER.forEach(function (row) {
+      var r = el('div', 'ledger__row');
+      r.setAttribute('data-win', row.win);
+      r.appendChild(el('div', 'ledger__metric', row.metric));
+      r.appendChild(el('div', 'ledger__v num', row.venus));
+      r.appendChild(el('div', 'ledger__m num', row.mars));
+      r.appendChild(el('div', 'ledger__note', row.note));
+      wrap.appendChild(r);
+    });
+  }
+
+  function buildBars() {
+    var wrap = $('#durationBars');
+    if (!wrap) return;
+    var M = D.MISSION;
+    var trips = [
+      { name: 'Venus — Phosphorus 1', out: M.outboundDays, stay: M.aloftDays, back: M.returnDays, total: M.totalDays, note: 'depart 2042-07-27' },
+      { name: 'Venus — 2045 backup', out: D.BACKUP_WINDOW.outboundDays, stay: D.BACKUP_WINDOW.aloftDays, back: D.BACKUP_WINDOW.returnDays, total: D.BACKUP_WINDOW.totalDays, note: 'depart 2045-10-24' },
+      { name: 'Mars — short stay', out: D.MARS_TRIPS[0].out, stay: D.MARS_TRIPS[0].stay, back: D.MARS_TRIPS[0].back, total: D.MARS_TRIPS[0].total, note: 'depart 2041-10-19' },
+      { name: 'Mars — long stay', out: D.MARS_TRIPS[1].out, stay: D.MARS_TRIPS[1].stay, back: D.MARS_TRIPS[1].back, total: D.MARS_TRIPS[1].total, note: 'depart 2041-10-20' }
+    ];
+    var max = 1020;
+    trips.forEach(function (t) {
+      var b = el('div', 'bar');
+      var lab = el('div', 'bar__label');
+      var left = el('span'); left.appendChild(el('b', null, t.name));
+      var right = el('span', 'num', fmt(t.total) + ' d  ·  ' + t.note);
+      lab.appendChild(left); lab.appendChild(right);
+      b.appendChild(lab);
+      var track = el('div', 'bar__track');
+      ['out', 'stay', 'back'].forEach(function (k) {
+        var seg = el('div', 'bar__seg bar__seg--' + k);
+        seg.style.width = '0%';
+        seg.setAttribute('data-w', (t[k] / max * 100).toFixed(2) + '%');
+        track.appendChild(seg);
+      });
+      b.appendChild(track);
+      wrap.appendChild(b);
+    });
+
+    var key = el('div', 'bar__key');
+    [['out', 'Outbound'], ['stay', 'On station'], ['back', 'Return']].forEach(function (p) {
+      var s = el('span');
+      var i = el('i');
+      i.style.background = p[0] === 'out' ? 'var(--aqua)' : p[0] === 'stay' ? 'var(--sulfur)' : 'var(--sulfur-deep)';
+      s.appendChild(i); s.appendChild(document.createTextNode(p[1]));
+      key.appendChild(s);
+    });
+    wrap.appendChild(key);
+
+    var fired = false;
+    onTick(function (vh) {
+      if (fired) return;
+      var r = wrap.getBoundingClientRect();
+      if (r.top < vh * 0.85) {
+        fired = true;
+        Array.prototype.forEach.call(wrap.querySelectorAll('.bar__seg'), function (s, i) {
+          setTimeout(function () { s.style.width = s.getAttribute('data-w'); }, REDUCED ? 0 : i * 45);
+        });
+      }
+    });
+  }
+
+  /* ---------- atmospheric interpolation ------------------- */
+
+  var P = D.PROFILE || [];
+
+  function sample(km) {
+    km = clamp(km, P[0].km, P[P.length - 1].km);
+    var lo = P[0], hi = P[P.length - 1];
+    for (var i = 1; i < P.length; i++) {
+      if (km <= P[i].km) { lo = P[i - 1]; hi = P[i]; break; }
+    }
+    var f = (km - lo.km) / (hi.km - lo.km || 1);
+    function logi(a, b) { return Math.exp(lerp(Math.log(Math.max(a, 1e-9)), Math.log(Math.max(b, 1e-9)), f)); }
+    return {
+      km: km,
+      tC: lerp(lo.tC, hi.tC, f),
+      atm: logi(lo.atm, hi.atm),
+      rho: logi(lo.rho, hi.rho),
+      liftAir: logi(lo.liftAir, hi.liftAir),
+      liftHe: logi(lo.liftHe, hi.liftHe),
+      shield: logi(lo.shield, hi.shield)
+    };
+  }
+
+  function zoneOf(km) {
+    if (km >= 90) return ['Vacuum', 'space'];
+    if (km >= 70) return ['Upper haze', 'haze'];
+    if (km >= 56.5) return ['Upper cloud deck', 'cloud'];
+    if (km > 54) return ['Middle cloud deck', 'cloud'];
+    if (km >= 50) return ['THE BAND — habitable', 'band'];
+    if (km >= 47.5) return ['Lower cloud deck', 'cloud'];
+    if (km >= 30) return ['Too hot to float', 'hot'];
+    if (km >= 5) return ['Furnace', 'hot'];
+    return ['Surface — 92 atm, 464 °C', 'surface'];
+  }
+
+  /* ---------- descent stage (canvas) ---------------------- */
+
+  var SKY = [
+    [100, [5, 5, 12], [10, 9, 18]],
+    [72, [10, 9, 18], [30, 22, 54]],
+    [62, [26, 21, 52], [78, 60, 92]],
+    [56, [72, 60, 90], [176, 150, 104]],
+    [52, [116, 98, 84], [214, 176, 112]],
+    [48, [186, 143, 82], [222, 164, 86]],
+    [40, [200, 140, 68], [206, 116, 52]],
+    [25, [186, 102, 46], [168, 63, 24]],
+    [10, [147, 64, 26], [122, 42, 16]],
+    [0, [122, 42, 16], [74, 20, 8]]
+  ];
+
+  function skyAt(km) {
+    var a = SKY[0], b = SKY[SKY.length - 1];
+    for (var i = 1; i < SKY.length; i++) {
+      if (km >= SKY[i][0]) { a = SKY[i - 1]; b = SKY[i]; break; }
+      a = SKY[i - 1]; b = SKY[i];
+    }
+    var f = clamp((a[0] - km) / (a[0] - b[0] || 1), 0, 1);
+    function mix(i, j) {
+      return 'rgb(' + Math.round(lerp(a[i][j], b[i][j], f)) + ',' +
+        Math.round(lerp(a[i][j + 1], b[i][j + 1], f)) + ',' +
+        Math.round(lerp(a[i][j + 2], b[i][j + 2], f)) + ')';
+    }
+    return [mix(1, 0), mix(2, 0)];
+  }
+
+  var ALT_STOPS = [
+    [0.00, 100], [0.16, 72], [0.26, 63], [0.36, 58],
+    [0.46, 55], [0.58, 52], [0.68, 49.5], [0.76, 45],
+    [0.85, 32], [0.93, 14], [1.00, 0]
+  ];
+
+  function descentStage() {
+    var stage = $('#descent');
+    if (!stage) return;
+    var track = $('.stage__track', stage);
+    var canvas = $('#descentCanvas');
+    var ctx = canvas.getContext('2d');
+    var out = {
+      alt: $('#dAlt'), temp: $('#dTemp'), pres: $('#dPres'),
+      lift: $('#dLift'), shield: $('#dShield'), zone: $('#dZone')
+    };
+    var marker = $('#dMarker');
+    var scale = $('#dScale');
+
+    /* altitude ticks down the left edge */
+    var TICKS = [100, 90, 80, 70, 60, 55, 50, 45, 40, 30, 20, 10, 0];
+    var tickNodes = TICKS.map(function (t) {
+      var n = el('div', 'descent__tick', t + ' km');
+      if (t % 20 === 0 || t === 50 || t === 55) n.setAttribute('data-major', '1');
+      scale.appendChild(n);
+      return n;
+    });
+
+    /* procedural cloud streaks, fixed to altitudes */
+    var streaks = [];
+    (function () {
+      var seed = 20420727;
+      function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+      for (var i = 0; i < 260; i++) {
+        var km = 24 + rnd() * 64;                     /* 24 – 88 km */
+        var dense = km > 47 && km < 71 ? 1 : 0.28;    /* the real decks */
+        streaks.push({
+          km: km,
+          depth: 0.42 + rnd() * 0.62,
+          x: rnd() * 1.6 - 0.3,
+          w: (0.22 + rnd() * 0.78),
+          h: 6 + rnd() * 34,
+          a: (0.05 + rnd() * 0.3) * dense,
+          warm: rnd()
+        });
+      }
+      streaks.sort(function (a, b) { return a.depth - b.depth; });
+    })();
+
+    var w = 0, h = 0, dpr = 1;
+    function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.clientWidth; h = canvas.clientHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    var SPAN = 30; /* km visible top-to-bottom */
+
+    function render(alt) {
+      if (!w || !h) size();
+      var pxPerKm = h / SPAN;
+      function yOf(km) { return h / 2 + (alt - km) * pxPerKm; }
+
+      var sky = skyAt(alt);
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, sky[0]);
+      g.addColorStop(1, sky[1]);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+
+      /* streaks */
+      for (var i = 0; i < streaks.length; i++) {
+        var s = streaks[i];
+        var y = h / 2 + (alt - s.km) * pxPerKm * s.depth;
+        if (y < -80 || y > h + 80) continue;
+        var sw = w * s.w * (0.6 + s.depth * 0.8);
+        var sx = s.x * w - sw * 0.2;
+        var fade = clamp(1 - Math.abs(s.km - alt) / (SPAN * 0.9), 0, 1);
+        var grad = ctx.createLinearGradient(sx, 0, sx + sw, 0);
+        var col = s.warm > 0.5 ? '242,232,208' : '232,205,150';
+        grad.addColorStop(0, 'rgba(' + col + ',0)');
+        grad.addColorStop(0.5, 'rgba(' + col + ',' + (s.a * fade).toFixed(3) + ')');
+        grad.addColorStop(1, 'rgba(' + col + ',0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        if (ctx.ellipse) ctx.ellipse(sx + sw / 2, y, sw / 2, s.h * s.depth / 2, 0, 0, Math.PI * 2);
+        else ctx.rect(sx, y - s.h * s.depth / 2, sw, s.h * s.depth);
+        ctx.fill();
+      }
+
+      /* the band, 50–54 km */
+      var yb = yOf(D.FLOAT_BAND.hi), yl = yOf(D.FLOAT_BAND.lo);
+      if (yl > -60 && yb < h + 60) {
+        ctx.fillStyle = 'rgba(95,208,196,0.10)';
+        ctx.fillRect(0, yb, w, yl - yb);
+        ctx.strokeStyle = 'rgba(95,208,196,0.55)';
+        ctx.lineWidth = 1;
+        [yb, yl].forEach(function (y) {
+          ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); ctx.stroke();
+        });
+        ctx.fillStyle = 'rgba(95,208,196,0.95)';
+        ctx.font = '500 11px "IBM Plex Mono", monospace';
+        ctx.fillText('FLOAT BAND  50 – 54 km', 18, yb - 9);
+      }
+
+      /* the airship, parked at 52 km */
+      var ys = yOf(52);
+      if (ys > -120 && ys < h + 120) {
+        var scaleF = clamp(1 - Math.abs(52 - alt) / 26, 0.15, 1);
+        drawShip(ctx, w * 0.62, ys, Math.min(w * 0.34, 260), scaleF);
+      }
+
+      /* the surface */
+      var y0 = yOf(0);
+      if (y0 < h + 40) {
+        var sg = ctx.createLinearGradient(0, y0 - 60, 0, h);
+        sg.addColorStop(0, 'rgba(199,56,27,0)');
+        sg.addColorStop(0.5, 'rgba(199,56,27,0.75)');
+        sg.addColorStop(1, 'rgba(60,12,6,1)');
+        ctx.fillStyle = sg;
+        ctx.fillRect(0, y0 - 60, w, h - y0 + 60);
+        ctx.strokeStyle = 'rgba(255,122,69,0.8)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, y0);
+        for (var x = 0; x <= w; x += 14) {
+          ctx.lineTo(x, y0 + Math.sin(x * 0.021) * 5 + Math.sin(x * 0.007) * 9);
+        }
+        ctx.stroke();
+      }
+
+      /* left-edge tick positions */
+      for (var t = 0; t < TICKS.length; t++) {
+        var node = tickNodes[t];
+        var ty = yOf(TICKS[t]);
+        node.style.top = ty + 'px';
+        node.style.opacity = (ty < -10 || ty > h + 10) ? 0 : 1;
+      }
+      marker.style.top = (h / 2) + 'px';
+    }
+
+    function drawShip(c, cx, cy, len, k) {
+      var a = len / 2, b = len / 7.6;
+      c.save();
+      c.globalAlpha = clamp(k, 0, 1);
+      c.fillStyle = 'rgba(20,18,35,0.92)';
+      c.strokeStyle = 'rgba(242,232,208,0.9)';
+      c.lineWidth = 1.4;
+      c.beginPath();
+      if (c.ellipse) c.ellipse(cx, cy, a, b, 0, 0, Math.PI * 2);
+      c.fill(); c.stroke();
+      /* solar crown */
+      c.beginPath();
+      c.strokeStyle = 'rgba(232,179,58,0.9)';
+      c.lineWidth = 2;
+      c.moveTo(cx - a * 0.62, cy - b * 0.74);
+      c.quadraticCurveTo(cx, cy - b * 1.08, cx + a * 0.62, cy - b * 0.74);
+      c.stroke();
+      /* gondola */
+      c.fillStyle = 'rgba(95,208,196,0.95)';
+      c.fillRect(cx - a * 0.2, cy + b * 0.86, a * 0.4, b * 0.52);
+      c.strokeStyle = 'rgba(242,232,208,0.5)';
+      c.lineWidth = 1;
+      c.beginPath();
+      c.moveTo(cx - a * 0.16, cy + b * 0.86); c.lineTo(cx - a * 0.3, cy + b * 0.2);
+      c.moveTo(cx + a * 0.16, cy + b * 0.86); c.lineTo(cx + a * 0.3, cy + b * 0.2);
+      c.stroke();
+      c.restore();
+    }
+
+    var last = -1;
+    onTick(function () {
+      var p = trackProgress(track);
+      var alt = keyed(ALT_STOPS, p);
+      if (Math.abs(alt - last) < 0.012) return;
+      last = alt;
+      var s = sample(alt);
+      var z = zoneOf(alt);
+      render(alt);
+      out.alt.firstChild.nodeValue = alt.toFixed(1);
+      out.temp.firstChild.nodeValue = fmt(s.tC, 0);
+      out.pres.firstChild.nodeValue = s.atm >= 1 ? s.atm.toFixed(2) : s.atm.toFixed(3);
+      out.lift.firstChild.nodeValue = s.liftAir >= 1 ? s.liftAir.toFixed(2) : s.liftAir.toFixed(3);
+      out.shield.firstChild.nodeValue = fmt(s.shield, 0);
+      out.zone.textContent = z[0];
+      out.temp.setAttribute('data-hot', s.tC > 90 ? '1' : '0');
+      out.pres.setAttribute('data-hot', s.atm > 2 ? '1' : '0');
+      out.alt.setAttribute('data-band', z[1] === 'band' ? '1' : '0');
+      out.zone.style.color = z[1] === 'band' ? 'var(--aqua)' :
+        z[1] === 'hot' || z[1] === 'surface' ? 'var(--ember)' : 'var(--cream)';
+    });
+
+    window.addEventListener('resize', function () { size(); last = -1; request(); }, { passive: true });
+    size();
+    render(100);
+  }
+
+  /* ---------- programme phases ---------------------------- */
+
+  function buildPhases() {
+    var wrap = $('#phases');
+    if (!wrap) return;
+    D.PHASES.forEach(function (ph) {
+      var p = el('article', 'phase');
+      p.setAttribute('data-status', ph.status);
+
+      var id = el('div', 'phase__id');
+      id.appendChild(el('p', 'phase__tag', ph.tag));
+      id.appendChild(el('h3', 'phase__name', ph.name));
+      id.appendChild(el('p', 'phase__years num', ph.years));
+      if (ph.window) id.appendChild(el('p', 'phase__years num', '◷ ' + ph.window));
+      id.appendChild(el('span', 'phase__badge', ph.status === 'funded' ? 'Funded or committed' : ph.status === 'flagship' ? 'Flagship' : 'Proposed'));
+      p.appendChild(id);
+
+      var body = el('div', 'phase__body');
+      body.appendChild(el('p', 'phase__thesis', ph.thesis));
+      var items = el('div', 'phase__items');
+      ph.items.forEach(function (it) {
+        var row = el('div', 'phase__item');
+        var hd = el('div', 'phase__item-h');
+        hd.appendChild(el('p', 'phase__item-n', it.name));
+        hd.appendChild(el('p', 'phase__item-w', it.who + (it.when ? ' · ' + it.when : '')));
+        row.appendChild(hd);
+        row.appendChild(el('p', 'phase__item-d', it.what));
+        items.appendChild(row);
+      });
+      body.appendChild(items);
+      body.appendChild(el('p', 'phase__cost')).innerHTML =
+        'Phase cost, order of magnitude: <b>$' + ph.cost.toFixed(1) + ' bn</b>';
+      p.appendChild(body);
+      wrap.appendChild(p);
+    });
+
+    var nodes = Array.prototype.slice.call(wrap.querySelectorAll('.phase'));
+    onTick(function (vh) {
+      for (var i = 0; i < nodes.length; i++) {
+        var r = nodes[i].getBoundingClientRect();
+        var on = r.top < vh * 0.6 && r.bottom > vh * 0.25;
+        nodes[i].classList.toggle('is-active', on);
+      }
+    });
+  }
+
+  /* ---------- launch-window table ------------------------- */
+
+  function buildWindows() {
+    var body = $('#windowRows');
+    if (!body) return;
+    D.WINDOWS.forEach(function (w) {
+      var tr = el('tr');
+      if (w.use && w.use.indexOf('PHASE 4') === 0) tr.setAttribute('data-flag', 'crew');
+      [
+        [prettyDate(w.open) + ' → ' + prettyDate(w.close), 'left'],
+        [prettyDate(w.best), null],
+        [prettyDate(w.arrive), null],
+        [w.tof + ' d', null],
+        [w.c3.toFixed(2), null],
+        [w.vinf.toFixed(2), null]
+      ].forEach(function (c) {
+        var td = el('td', null, c[0]);
+        if (c[1] === 'left') td.style.textAlign = 'left';
+        tr.appendChild(td);
+      });
+      var use = el('td', 'use', w.use || '—');
+      tr.appendChild(use);
+      body.appendChild(tr);
+    });
+  }
+
+  /* ---------- trajectory stage ---------------------------- */
+
+  var DAY_STOPS = [
+    [0.00, 0], [0.34, 124], [0.40, 124], [0.52, 154], [0.58, 154], [1.00, 459]
+  ];
+
+  function trajectoryStage() {
+    var stage = $('#voyage');
+    if (!stage || !TRAJ) return;
+    var track = $('.stage__track', stage);
+    var host = $('#orbitSvg');
+
+    var S = 300;                      /* px per AU */
+    var VB = 1000;
+    var s = svg('svg', {
+      viewBox: '-500 -560 1000 1080',
+      width: '100%', height: '100%',
+      preserveAspectRatio: 'xMidYMid meet',
+      role: 'img',
+      'aria-label': 'Heliocentric view of the Phosphorus 1 transfer, Earth departure 2042-07-27 to Earth return 2043-10-29'
+    });
+
+    function pt(p) { return [p[0] * S, -p[1] * S]; }
+    function path(pts) {
+      var d = '';
+      for (var i = 0; i < pts.length; i++) {
+        var q = pt(pts[i]);
+        d += (i ? 'L' : 'M') + q[0].toFixed(1) + ' ' + q[1].toFixed(1);
+      }
+      return d;
+    }
+
+    /* orbits */
+    s.appendChild(svg('path', { d: path(TRAJ.orbitEarth) + 'Z', fill: 'none', stroke: '#2A2740', 'stroke-width': 1.4 }));
+    s.appendChild(svg('path', { d: path(TRAJ.orbitVenus) + 'Z', fill: 'none', stroke: '#3A3250', 'stroke-width': 1.4 }));
+
+    /* sun */
+    var sunG = svg('g');
+    sunG.appendChild(svg('circle', { cx: 0, cy: 0, r: 26, fill: 'rgba(232,179,58,0.12)' }));
+    sunG.appendChild(svg('circle', { cx: 0, cy: 0, r: 13, fill: 'rgba(232,179,58,0.28)' }));
+    sunG.appendChild(svg('circle', { cx: 0, cy: 0, r: 6.5, fill: '#F2E8D0' }));
+    s.appendChild(sunG);
+
+    /* transfer arcs */
+    var outPath = svg('path', { d: path(TRAJ.outbound), fill: 'none', stroke: '#5FD0C4', 'stroke-width': 3, 'stroke-linecap': 'round' });
+    var inPath = svg('path', { d: path(TRAJ.inbound), fill: 'none', stroke: '#E8B33A', 'stroke-width': 3, 'stroke-linecap': 'round' });
+    var outGhost = svg('path', { d: path(TRAJ.outbound), fill: 'none', stroke: 'rgba(95,208,196,0.16)', 'stroke-width': 1.5 });
+    var inGhost = svg('path', { d: path(TRAJ.inbound), fill: 'none', stroke: 'rgba(232,179,58,0.16)', 'stroke-width': 1.5 });
+    s.appendChild(outGhost); s.appendChild(inGhost);
+    s.appendChild(outPath); s.appendChild(inPath);
+
+    /* planet markers */
+    function body(r, fill, stroke) {
+      var g = svg('g');
+      g.appendChild(svg('circle', { r: r + 7, fill: 'none', stroke: stroke, 'stroke-width': 1, opacity: 0.35 }));
+      g.appendChild(svg('circle', { r: r, fill: fill }));
+      return g;
+    }
+    var earth = body(8, '#5FD0C4', '#5FD0C4');
+    var venus = body(9, '#E8B33A', '#E8B33A');
+    var craft = svg('g');
+    craft.appendChild(svg('circle', { r: 11, fill: 'none', stroke: '#F2E8D0', 'stroke-width': 1, opacity: 0.5 }));
+    craft.appendChild(svg('circle', { r: 4.5, fill: '#F2E8D0' }));
+    s.appendChild(earth); s.appendChild(venus); s.appendChild(craft);
+
+    /* labels */
+    function label(text, cls) {
+      var t = svg('text', {
+        'font-family': '"IBM Plex Mono", monospace', 'font-size': 19,
+        fill: cls, 'letter-spacing': 1.6
+      });
+      t.textContent = text;
+      s.appendChild(t);
+      return t;
+    }
+    var lE = label('EARTH', '#5FD0C4');
+    var lV = label('VENUS', '#E8B33A');
+
+    /* apoapsis callout on the return leg */
+    var far = TRAJ.inbound.reduce(function (a, p) {
+      return (p[0] * p[0] + p[1] * p[1]) > (a[0] * a[0] + a[1] * a[1]) ? p : a;
+    }, TRAJ.inbound[0]);
+    var fp = pt(far);
+    var apo = svg('g', { opacity: 0 });
+    apo.appendChild(svg('circle', { cx: fp[0], cy: fp[1], r: 5, fill: 'none', stroke: '#FF7A45', 'stroke-width': 1.5 }));
+    var apoL = svg('text', {
+      x: fp[0] + (fp[0] > 0 ? -14 : 14), y: fp[1] + 34,
+      'text-anchor': fp[0] > 0 ? 'end' : 'start',
+      'font-family': '"IBM Plex Mono", monospace', 'font-size': 17, fill: '#FF7A45'
+    });
+    apoL.textContent = '1.32 AU — the long way home';
+    apo.appendChild(svg('line', { x1: fp[0], y1: fp[1] + 6, x2: fp[0], y2: fp[1] + 22, stroke: '#FF7A45', 'stroke-width': 1 }));
+    apo.appendChild(apoL);
+    s.appendChild(apo);
+
+    host.appendChild(s);
+
+    var outLen = outPath.getTotalLength ? outPath.getTotalLength() : 1000;
+    var inLen = inPath.getTotalLength ? inPath.getTotalLength() : 1000;
+    outPath.setAttribute('stroke-dasharray', outLen);
+    inPath.setAttribute('stroke-dasharray', inLen);
+
+    var rDay = $('#vDay'), rDate = $('#vDate'), rPhase = $('#vPhase'), rDist = $('#vDist');
+
+    function at(list, idx) {
+      var i = clamp(idx, 0, list.length - 1);
+      var a = list[Math.floor(i)], b = list[Math.min(Math.ceil(i), list.length - 1)];
+      var f = i - Math.floor(i);
+      return [lerp(a[0], b[0], f), lerp(a[1], b[1], f)];
+    }
+
+    var lastDay = -1;
+    onTick(function () {
+      var p = trackProgress(track);
+      var day = keyed(DAY_STOPS, p);
+      if (Math.abs(day - lastDay) < 0.25) return;
+      lastDay = day;
+
+      var eP = at(TRAJ.earthTrack, day / 2);
+      var vP = at(TRAJ.venusTrack, day / 2);
+      var e = pt(eP), v = pt(vP);
+      earth.setAttribute('transform', 'translate(' + e[0].toFixed(1) + ',' + e[1].toFixed(1) + ')');
+      venus.setAttribute('transform', 'translate(' + v[0].toFixed(1) + ',' + v[1].toFixed(1) + ')');
+      lE.setAttribute('x', e[0] + 16); lE.setAttribute('y', e[1] - 14);
+      lV.setAttribute('x', v[0] + 16); lV.setAttribute('y', v[1] - 14);
+
+      var cP, phase;
+      if (day <= 124) {
+        cP = at(TRAJ.outbound, day / 2);
+        phase = 'Outbound cruise';
+        outPath.setAttribute('stroke-dashoffset', outLen * (1 - day / 124));
+        inPath.setAttribute('stroke-dashoffset', inLen);
+      } else if (day < 154) {
+        cP = vP;
+        phase = 'Aloft at 50–54 km';
+        outPath.setAttribute('stroke-dashoffset', 0);
+        inPath.setAttribute('stroke-dashoffset', inLen);
+      } else {
+        cP = at(TRAJ.inbound, (day - 154) / 2);
+        phase = 'Return cruise';
+        outPath.setAttribute('stroke-dashoffset', 0);
+        inPath.setAttribute('stroke-dashoffset', inLen * (1 - (day - 154) / 305));
+      }
+      var c = pt(cP);
+      craft.setAttribute('transform', 'translate(' + c[0].toFixed(1) + ',' + c[1].toFixed(1) + ')');
+      apo.setAttribute('opacity', day > 260 ? 1 : 0);
+
+      var dist = Math.hypot(cP[0] - eP[0], cP[1] - eP[1]) * 149.598;
+      rDay.firstChild.nodeValue = fmt(Math.round(day));
+      rDate.textContent = prettyDate(dayToDate(TRAJ.dates.depart, Math.round(day)));
+      rPhase.textContent = phase;
+      rDist.firstChild.nodeValue = fmt(Math.round(dist));
+    });
+  }
+
+  /* ---------- entry sequence ------------------------------ */
+
+  function ediStage() {
+    var host = $('#ediSvg');
+    var list = $('#ediList');
+    if (!host || !list) return;
+
+    var beats = D.EDI.slice(1, 7);   /* entry interface -> trim to float */
+    var W = 900, H = 560, PAD = { l: 104, r: 56, t: 58, b: 66 };
+    var s = svg('svg', {
+      viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
+      preserveAspectRatio: 'xMidYMid meet', role: 'img',
+      'aria-label': 'Altitude against sequence for the Venus entry, descent and inflation: 125 km entry interface down to a 52 km float'
+    });
+
+    var maxAlt = 132, minAlt = 44;
+    function y(km) { return PAD.t + (maxAlt - km) / (maxAlt - minAlt) * (H - PAD.t - PAD.b); }
+    function x(i) { return PAD.l + i / (beats.length - 1) * (W - PAD.l - PAD.r); }
+
+    [125, 110, 90, 70, 60, 52, 44].forEach(function (km) {
+      s.appendChild(svg('line', { x1: PAD.l, y1: y(km), x2: W - PAD.r, y2: y(km), stroke: '#1F1D33', 'stroke-width': 1.5 }));
+      var t = svg('text', { x: PAD.l - 16, y: y(km) + 8, 'text-anchor': 'end', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 21, fill: '#5A5648' });
+      t.textContent = km;
+      s.appendChild(t);
+    });
+    var ax = svg('text', { x: PAD.l - 16, y: PAD.t - 22, 'text-anchor': 'end', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 19, fill: '#8B8373' });
+    ax.textContent = 'km';
+    s.appendChild(ax);
+
+    /* float band */
+    s.appendChild(svg('rect', { x: PAD.l, y: y(54), width: W - PAD.l - PAD.r, height: y(50) - y(54), fill: 'rgba(95,208,196,0.12)' }));
+    var bl = svg('text', { x: PAD.l + 12, y: y(54) - 12, 'font-family': '"IBM Plex Mono", monospace', 'font-size': 21, fill: '#5FD0C4', 'letter-spacing': 1.4 });
+    bl.textContent = 'FLOAT BAND 50–54';
+    s.appendChild(bl);
+
+    var d = '';
+    beats.forEach(function (b, i) { d += (i ? 'L' : 'M') + x(i) + ' ' + y(b.alt); });
+    s.appendChild(svg('path', { d: d, fill: 'none', stroke: '#2A2740', 'stroke-width': 2.5 }));
+    var live = svg('path', { d: d, fill: 'none', stroke: '#FF7A45', 'stroke-width': 4, 'stroke-linecap': 'round' });
+    s.appendChild(live);
+
+    var dots = beats.map(function (b, i) {
+      var g = svg('g');
+      var above = i < 4 || i === beats.length - 1;
+      g.appendChild(svg('circle', { cx: x(i), cy: y(b.alt), r: 8, fill: '#0A0912', stroke: '#4A4460', 'stroke-width': 2.5 }));
+      var t = svg('text', {
+        x: x(i) + (i === 0 ? 16 : i === beats.length - 1 ? -8 : 0),
+        y: y(b.alt) + (above ? -22 : 36),
+        'text-anchor': i === 0 ? 'start' : i === beats.length - 1 ? 'end' : 'middle',
+        'font-family': '"IBM Plex Mono", monospace', 'font-size': 20, fill: '#8B8373'
+      });
+      t.textContent = b.t;
+      g.appendChild(t);
+      s.appendChild(g);
+      return g;
+    });
+    host.appendChild(s);
+
+    var liveLen = live.getTotalLength ? live.getTotalLength() : 1000;
+    live.setAttribute('stroke-dasharray', liveLen);
+    live.setAttribute('stroke-dashoffset', liveLen);
+
+    D.EDI.forEach(function (b, i) {
+      var row = el('div', 'edi');
+      row.setAttribute('data-i', i);
+      var h = el('div', 'edi__h');
+      h.appendChild(el('span', 'edi__t num', b.t));
+      h.appendChild(el('span', 'edi__alt num', b.alt != null ? b.alt + ' km' : '—'));
+      row.appendChild(h);
+      var bd = el('div', 'edi__b');
+      bd.appendChild(el('h4', 'edi__n', b.name));
+      bd.appendChild(el('p', 'edi__d', b.detail));
+      row.appendChild(bd);
+      list.appendChild(row);
+    });
+    var rows = Array.prototype.slice.call(list.children);
+
+    onTick(function (vh) {
+      var r = list.getBoundingClientRect();
+      var span = r.height - vh * 0.45;
+      var p = span > 0 ? clamp((vh * 0.72 - r.top) / span, 0, 1) : (r.top < vh * 0.5 ? 1 : 0);
+      var f = clamp(p * 1.08, 0, 1);
+      live.setAttribute('stroke-dashoffset', liveLen * (1 - f));
+      var active = Math.round(f * (beats.length - 1));
+      dots.forEach(function (g, i) {
+        var c = g.firstChild;
+        c.setAttribute('fill', i <= active ? '#FF7A45' : '#0A0912');
+        c.setAttribute('stroke', i <= active ? '#FF7A45' : '#4A4460');
+        g.lastChild.setAttribute('fill', i === active ? '#F2E8D0' : '#8B8373');
+      });
+      for (var i = 0; i < rows.length; i++) {
+        var r = rows[i].getBoundingClientRect();
+        rows[i].classList.toggle('is-on', r.top < vh * 0.62 && r.bottom > vh * 0.2);
+      }
+    });
+  }
+
+  /* ---------- airship cutaway ----------------------------- */
+
+  function cutaway() {
+    var host = $('#shipSvg');
+    if (!host) return;
+    var W = 1440, H = 560;
+    var s = svg('svg', {
+      viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
+      preserveAspectRatio: 'xMidYMid meet', role: 'img',
+      'aria-label': 'Cutaway of the Phosphorus airship: a 129 metre envelope carrying sealed helium lift cells above an ambient-pressure breathable-air volume, with a gondola holding the habitat module and the Vesper ascent vehicle'
+    });
+
+    var cx = 720, cy = 190, a = 340, b = 92;
+    var LX = 318, RX = 1126;        /* label columns */
+
+    var defs = svg('defs');
+    var lg = svg('linearGradient', { id: 'env', x1: 0, y1: 0, x2: 0, y2: 1 });
+    lg.appendChild(svg('stop', { offset: '0%', 'stop-color': '#232037' }));
+    lg.appendChild(svg('stop', { offset: '100%', 'stop-color': '#12101F' }));
+    defs.appendChild(lg);
+    s.appendChild(defs);
+
+    s.appendChild(svg('ellipse', { cx: cx, cy: cy, rx: a, ry: b, fill: 'url(#env)', stroke: '#F2E8D0', 'stroke-width': 2.2 }));
+
+    /* sealed helium lift cells */
+    [-0.58, -0.195, 0.195, 0.58].forEach(function (f) {
+      s.appendChild(svg('ellipse', {
+        cx: cx + a * f, cy: cy - b * 0.22, rx: a * 0.17, ry: b * 0.48,
+        fill: 'rgba(232,179,58,0.16)', stroke: 'rgba(232,179,58,0.72)', 'stroke-width': 1.6
+      }));
+    });
+
+    /* ambient-pressure breathable-air volume, lower hull */
+    s.appendChild(svg('path', {
+      d: 'M' + (cx - a * 0.78) + ' ' + (cy + b * 0.36) +
+         ' Q' + cx + ' ' + (cy + b * 1.62) + ' ' + (cx + a * 0.78) + ' ' + (cy + b * 0.36) +
+         ' Q' + cx + ' ' + (cy + b * 0.26) + ' ' + (cx - a * 0.78) + ' ' + (cy + b * 0.36) + 'Z',
+      fill: 'rgba(95,208,196,0.20)', stroke: 'rgba(95,208,196,0.8)', 'stroke-width': 1.6
+    }));
+
+    /* ballonets */
+    [-0.46, 0.46].forEach(function (f) {
+      s.appendChild(svg('ellipse', {
+        cx: cx + a * f, cy: cy + b * 0.38, rx: a * 0.095, ry: b * 0.19,
+        fill: 'rgba(242,232,208,0.07)', stroke: 'rgba(242,232,208,0.45)', 'stroke-width': 1.2, 'stroke-dasharray': '5 4'
+      }));
+    });
+
+    /* solar crown */
+    s.appendChild(svg('path', {
+      d: 'M' + (cx - a * 0.76) + ' ' + (cy - b * 0.62) + ' Q' + cx + ' ' + (cy - b * 1.32) + ' ' + (cx + a * 0.76) + ' ' + (cy - b * 0.62),
+      fill: 'none', stroke: '#E8B33A', 'stroke-width': 6, 'stroke-linecap': 'round'
+    }));
+
+    /* gondola and suspension */
+    var gw = 196, gh = 50, gx = cx - gw / 2, gy = cy + b + 34;
+    [-0.30, -0.10, 0.10, 0.30].forEach(function (f) {
+      s.appendChild(svg('line', {
+        x1: cx + gw * f, y1: gy, x2: cx + a * f * 1.1, y2: cy + b * 0.95,
+        stroke: 'rgba(242,232,208,0.3)', 'stroke-width': 1.2
+      }));
+    });
+    s.appendChild(svg('rect', { x: gx, y: gy, width: gw, height: gh, fill: '#141223', stroke: '#5FD0C4', 'stroke-width': 2 }));
+    s.appendChild(svg('rect', { x: gx + 9, y: gy + 9, width: 72, height: gh - 18, fill: 'rgba(95,208,196,0.28)' }));
+    s.appendChild(svg('rect', { x: gx + 88, y: gy + 9, width: 42, height: gh - 18, fill: 'rgba(232,179,58,0.24)' }));
+    s.appendChild(svg('rect', { x: gx + 137, y: gy + 9, width: 50, height: gh - 18, fill: 'rgba(255,122,69,0.30)' }));
+
+    [cx - a - 8, cx + a + 8].forEach(function (px) {
+      s.appendChild(svg('ellipse', { cx: px, cy: cy, rx: 7, ry: 24, fill: 'none', stroke: '#8B8373', 'stroke-width': 2 }));
+    });
+
+    /* scale bar */
+    var sy = H - 26;
+    s.appendChild(svg('line', { x1: cx - a, y1: sy, x2: cx + a, y2: sy, stroke: '#5A5648', 'stroke-width': 1.2 }));
+    [-a, a].forEach(function (o) {
+      s.appendChild(svg('line', { x1: cx + o, y1: sy - 7, x2: cx + o, y2: sy + 7, stroke: '#5A5648', 'stroke-width': 1.2 }));
+    });
+    var sl = svg('text', { x: cx, y: sy - 14, 'text-anchor': 'middle', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 18, fill: '#8B8373' });
+    sl.textContent = '129 m — longer than a Boeing 747 (70.6 m)';
+    s.appendChild(sl);
+
+    /* callouts in two clean columns, single straight leaders */
+    var CALLS = [
+      { x: cx - a * 0.58, y: cy - b * 0.70, ex: LX, ey: 74,  anchor: 'end',
+        t: 'Helium lift cells', v: '46 000 m³ · 66.8 t lift', c: '#E8B33A' },
+      { x: cx - a * 0.46, y: cy + b * 0.38, ex: LX, ey: 246, anchor: 'end',
+        t: 'Ballonets', v: 'buoyancy and thermal trim', c: '#C9BFA8' },
+      { x: gx + 45, y: gy + gh, ex: LX, ey: 420, anchor: 'end',
+        t: 'Habitat module', v: '2 crew · 30 days · 1 atm', c: '#5FD0C4' },
+      { x: cx + a * 0.14, y: cy - b * 1.16, ex: RX, ey: 74,  anchor: 'start',
+        t: 'Thin-film photovoltaics', v: '~1 000 m² · 2 601 W/m²', c: '#E8B33A' },
+      { x: cx + a * 0.40, y: cy + b * 1.00, ex: RX, ey: 246, anchor: 'start',
+        t: 'Breathable-air volume', v: '31 500 m³ · 16.8 t · ambient', c: '#5FD0C4' },
+      { x: gx + 162, y: gy + gh, ex: RX, ey: 420, anchor: 'start',
+        t: 'Vesper ascent vehicle', v: '~8.0 km/s to Venus orbit', c: '#FF7A45' }
+    ];
+    CALLS.forEach(function (c) {
+      var tip = c.ex + (c.anchor === 'start' ? -14 : 14);
+      s.appendChild(svg('line', {
+        x1: c.x, y1: c.y, x2: tip, y2: c.ey - 6,
+        stroke: c.c, 'stroke-width': 1.2, opacity: 0.5
+      }));
+      s.appendChild(svg('circle', { cx: c.x, cy: c.y, r: 3.5, fill: c.c }));
+      var t1 = svg('text', {
+        x: c.ex, y: c.ey, 'text-anchor': c.anchor,
+        'font-family': 'Archivo, sans-serif', 'font-size': 20, 'font-weight': 600, fill: '#F2E8D0'
+      });
+      t1.textContent = c.t;
+      var t2 = svg('text', {
+        x: c.ex, y: c.ey + 22, 'text-anchor': c.anchor,
+        'font-family': '"IBM Plex Mono", monospace', 'font-size': 16, fill: c.c
+      });
+      t2.textContent = c.v;
+      s.appendChild(t1); s.appendChild(t2);
+    });
+
+    host.appendChild(s);
+  }
+
+  /* ---------- lift calculator ----------------------------- */
+
+  function liftCalc() {
+    var input = $('#altRange');
+    if (!input) return;
+    var V_HE = 46000, V_AIR = 31500, STRUCT = 20.6;
+    var outs = {
+      alt: $('#cAlt'), t: $('#cTemp'), p: $('#cPres'),
+      he: $('#cHe'), air: $('#cAir'), net: $('#cNet'), verdict: $('#cVerdict')
+    };
+    function update() {
+      var km = +input.value / 10;
+      var s = sample(km);
+      var he = V_HE * s.liftHe / 1000;
+      var air = V_AIR * s.liftAir / 1000;
+      var gross = he + air;
+      var net = gross - STRUCT;
+      outs.alt.textContent = km.toFixed(1);
+      outs.t.textContent = fmt(s.tC, 0);
+      outs.p.textContent = s.atm.toFixed(2);
+      outs.he.textContent = he.toFixed(1);
+      outs.air.textContent = air.toFixed(1);
+      outs.net.textContent = net.toFixed(1);
+      var v, col;
+      if (km < 48) { v = 'Lift is plentiful — but it is ' + fmt(s.tC, 0) + ' °C outside.'; col = 'var(--ember)'; }
+      else if (km <= 54) { v = 'Nominal. Shirt-sleeve pressure, workable heat, ' + net.toFixed(0) + ' t of useful lift.'; col = 'var(--aqua)'; }
+      else if (km <= 58) { v = 'Comfortable, but the hull can only carry ' + net.toFixed(0) + ' t. Payload starts to bite.'; col = 'var(--sulfur)'; }
+      else { v = 'Too thin. This hull cannot lift its own structure up here.'; col = 'var(--critical)'; }
+      outs.verdict.textContent = v;
+      outs.verdict.style.color = col;
+      input.setAttribute('aria-valuetext', km.toFixed(1) + ' kilometres');
+    }
+    input.addEventListener('input', update);
+    update();
+  }
+
+  /* ---------- simple list renderers ----------------------- */
+
+  function buildFleet() {
+    var wrap = $('#fleet');
+    if (!wrap) return;
+    D.FLEET.forEach(function (v) {
+      var c = el('article', 'vessel');
+      c.appendChild(el('p', 'vessel__code num', v.code));
+      c.appendChild(el('h3', 'vessel__name', v.name));
+      c.appendChild(el('p', 'vessel__role', v.role + ' · ' + v.mass + ' · crew ' + v.crew));
+      c.appendChild(el('p', 'vessel__line', v.line));
+      var dl = el('dl', 'vessel__specs');
+      v.specs.forEach(function (sp) {
+        var row = el('div', 'vessel__spec');
+        row.appendChild(el('dt', null, sp[0]));
+        row.appendChild(el('dd', null, sp[1]));
+        dl.appendChild(row);
+      });
+      c.appendChild(dl);
+      wrap.appendChild(c);
+    });
+  }
+
+  function buildLaminate() {
+    var wrap = $('#laminate');
+    if (!wrap) return;
+    var cols = ['#F2E8D0', '#C9BFA8', '#E8B33A', '#5FD0C4'];
+    D.LAMINATE.forEach(function (l, i) {
+      var row = el('div', 'lam');
+      row.style.setProperty('--layercol', cols[i % cols.length]);
+      var h = el('div');
+      h.appendChild(el('p', 'lam__n', l.layer));
+      h.appendChild(el('p', 'lam__t num', l.thick));
+      row.appendChild(h);
+      row.appendChild(el('p', 'lam__w', l.why));
+      wrap.appendChild(row);
+    });
+  }
+
+  function buildAloft() {
+    var wrap = $('#loops');
+    if (!wrap) return;
+    D.ALOFT.loops.forEach(function (l) {
+      var c = el('article', 'loop');
+      c.appendChild(el('h4', 'loop__n', l.name));
+      var flow = el('p', 'loop__flow');
+      flow.appendChild(el('span', 'loop__in', l.in));
+      flow.appendChild(el('span', 'loop__arrow', '→'));
+      flow.appendChild(el('span', 'loop__out', l.out));
+      c.appendChild(flow);
+      c.appendChild(el('p', 'loop__how', l.how));
+      wrap.appendChild(c);
+    });
+  }
+
+  function buildCrew() {
+    var wrap = $('#crew');
+    if (!wrap) return;
+    D.CREW.forEach(function (c) {
+      var row = el('div', 'crewrow');
+      row.appendChild(el('p', 'crewrow__r', c.role));
+      row.appendChild(el('p', 'crewrow__s num', c.station));
+      var bar = el('div', 'crewrow__bar');
+      var fill = el('div', 'crewrow__fill');
+      fill.style.width = (c.days / 459 * 100).toFixed(1) + '%';
+      if (c.days === 30) { fill.style.background = 'var(--aqua)'; fill.style.marginLeft = (124 / 459 * 100).toFixed(1) + '%'; }
+      bar.appendChild(fill);
+      row.appendChild(bar);
+      row.appendChild(el('p', 'crewrow__d num', c.days + ' d'));
+      row.appendChild(el('p', 'crewrow__w', c.why));
+      wrap.appendChild(row);
+    });
+  }
+
+  function buildCost() {
+    var wrap = $('#costBars');
+    if (!wrap) return;
+    var max = Math.max.apply(null, D.COSTS.phases.map(function (p) { return p.usd; }));
+    D.COSTS.phases.forEach(function (p, i) {
+      var b = el('div', 'costbar');
+      if (i === 4) b.setAttribute('data-flag', 'crew');
+      if (i === 0) b.setAttribute('data-flag', 'funded');
+      var top = el('div', 'costbar__top');
+      top.appendChild(el('span', null, p.name));
+      top.appendChild(el('b', null, '$' + p.usd.toFixed(1) + ' bn'));
+      b.appendChild(top);
+      var tr = el('div', 'costbar__track');
+      var fi = el('div', 'costbar__fill');
+      fi.style.width = '0%';
+      fi.setAttribute('data-w', (p.usd / max * 100).toFixed(1) + '%');
+      tr.appendChild(fi); b.appendChild(tr);
+      b.appendChild(el('p', 'note', p.note));
+      wrap.appendChild(b);
+    });
+
+    var cmp = $('#costCompare');
+    if (cmp) {
+      var rows = [{ label: 'Project Phosphorus, all five phases', usd: D.COSTS.total, venus: true }]
+        .concat(D.COSTS.marsEstimates.map(function (m) { return { label: m.label, usd: m.usd }; }));
+      var mx = 1000;
+      rows.forEach(function (r) {
+        var row = el('div', 'compare__row' + (r.venus ? ' compare__row--venus' : ''));
+        row.appendChild(el('p', 'compare__label', r.label));
+        var tr = el('div', 'compare__track');
+        var f = el('div', 'compare__fill');
+        f.style.width = '0%';
+        f.setAttribute('data-w', (r.usd / mx * 100).toFixed(2) + '%');
+        tr.appendChild(f);
+        row.appendChild(tr);
+        row.appendChild(el('p', 'compare__val', '$' + fmt(r.usd, r.usd < 100 ? 1 : 0) + ' bn'));
+        cmp.appendChild(row);
+      });
+    }
+
+    var fired = false;
+    onTick(function (vh) {
+      if (fired) return;
+      var r = wrap.getBoundingClientRect();
+      if (r.top < vh * 0.9) {
+        fired = true;
+        Array.prototype.forEach.call(document.querySelectorAll('.costbar__fill, .compare__fill'), function (n, i) {
+          setTimeout(function () { n.style.width = n.getAttribute('data-w'); }, REDUCED ? 0 : i * 70);
+        });
+      }
+    });
+  }
+
+  function buildRisks() {
+    var wrap = $('#risks');
+    if (!wrap) return;
+    D.RISKS.forEach(function (r) {
+      var a = el('article', 'risk');
+      a.setAttribute('data-sev', r.severity);
+      var h = el('div', 'risk__h');
+      h.appendChild(el('p', 'risk__rank num', 'RISK ' + String(r.rank).padStart(2, '0')));
+      h.appendChild(el('h3', 'risk__n', r.name));
+      h.appendChild(el('span', 'risk__sev', r.severity));
+      a.appendChild(h);
+      var b = el('div', 'risk__body');
+      b.appendChild(el('p', 'risk__what', r.what));
+      var fix = el('p', 'risk__fix');
+      fix.appendChild(el('b', null, 'What we do about it'));
+      fix.appendChild(document.createTextNode(r.fix));
+      b.appendChild(fix);
+      a.appendChild(b);
+      wrap.appendChild(a);
+    });
+  }
+
+  function buildSources() {
+    var wrap = $('#sources');
+    if (!wrap) return;
+    D.SOURCES.forEach(function (s) {
+      var row = el('div', 'source');
+      row.appendChild(el('p', 'source__tag', s.tag));
+      var p = el('p');
+      var a = el('a', null, s.cite);
+      a.href = s.url; a.rel = 'noopener'; a.target = '_blank';
+      p.appendChild(a);
+      row.appendChild(p);
+      wrap.appendChild(row);
+    });
+  }
+
+  /* ---------- reveal on scroll ---------------------------- */
+
+  function reveals() {
+    if (REDUCED || !('IntersectionObserver' in window)) return;
+    var nodes = document.querySelectorAll('.reveal');
+    if (!nodes.length) return;
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+    Array.prototype.forEach.call(nodes, function (n) {
+      var r = n.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.95) { n.classList.add('is-in'); return; }
+      n.classList.add('is-armed');
+      io.observe(n);
+    });
+  }
+
+  /* ---------- rail readout -------------------------------- */
+
+  function rail() {
+    var readout = $('#railReadout');
+    if (!readout) return;
+    var marks = Array.prototype.slice.call(document.querySelectorAll('[data-rail]'));
+    var last = '';
+    onTick(function (vh) {
+      var cur = marks[0] ? marks[0].getAttribute('data-rail') : '';
+      for (var i = 0; i < marks.length; i++) {
+        if (marks[i].getBoundingClientRect().top < vh * 0.45) cur = marks[i].getAttribute('data-rail');
+      }
+      if (cur !== last) { last = cur; readout.textContent = cur; }
+    });
+  }
+
+  /* ---------- boot ---------------------------------------- */
+
+  function boot() {
+    var sky = $('#heroSky');
+    if (sky) starfield(sky);
+    buildHero();
+    buildLedger();
+    buildBars();
+    buildPhases();
+    buildWindows();
+    buildFleet();
+    buildLaminate();
+    buildAloft();
+    buildCrew();
+    buildCost();
+    buildRisks();
+    buildSources();
+    cutaway();
+    liftCalc();
+    descentStage();
+    trajectoryStage();
+    ediStage();
+    rail();
+    reveals();
+
+    window.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', request, { passive: true });
+    frame();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
