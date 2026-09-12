@@ -1062,7 +1062,9 @@
     scene.add(person);
 
     var lookAt = new THREE.Vector3(0, -4, 0), last = -1;
+    function narrowK() { var w = v.w(), h = v.h(); return (w && h && w / h < 1) ? Math.min(2.2, 1.05 * h / w) : 1; }
     function cam(radius, theta, phi, ty) {
+      radius *= (radius < 100 ? 1 : 1);
       lookAt.y = ty;
       v.camera.position.set(lookAt.x + radius * Math.sin(phi) * Math.cos(theta), lookAt.y + radius * Math.cos(phi), lookAt.z + radius * Math.sin(phi) * Math.sin(theta));
       v.camera.lookAt(lookAt);
@@ -1072,8 +1074,24 @@
       hud.step.textContent = step; hud.key.textContent = key; hud.val.textContent = val; hud.unit.textContent = unit;
     }
 
-    function frame(p) {
+    function frame(p0) {
+      /* six cards: the skin, then cut / fold / inflate / fill, then the float */
+      var skin = 1 - seg(p0, 0, 1 / 6), floatT = seg(p0, 5 / 6, 1);
+      var p = seg(p0, 1 / 6, 5 / 6);
       var cut = seg(p, 0, 0.25), fold = seg(p, 0.25, 0.5), inflate = seg(p, 0.5, 0.75), fillT = seg(p, 0.75, 1);
+      if (skin > 0) {
+        /* the finished hull up close, turning, with its skin lit */
+        goreGroup.visible = false; floor.material.opacity = 0;
+        shipG.visible = true; shipG.scale.set(1, 1, 1);
+        if (envelope) { envelope.material.opacity = 1; envelope.material.depthWrite = true; }
+        if (air) air.visible = false;
+        helium.forEach(function (h) { h.visible = false; });
+        packed.visible = false; shellG.visible = false; person.visible = true;
+        cam(lerp(110, 300, 1 - skin) * narrowK(), 0.2 + (1 - skin) * 0.35, 1.2, -4);
+        setHud('Skin', 'Layers', '4', ' · 0.1 mm · 9.4 km of seam');
+        v.render(scene);
+        return;
+      }
       /* CUT: panels lie flat, then wrap one by one; the model takes over at the end */
       goreGroup.visible = cut < 1 || fold < 0.02;
       if (goreGroup.visible) setGores(cut, 0.6);
@@ -1108,10 +1126,17 @@
       person.visible = modelIn && r < 0.6;
 
       /* camera: floor-level for the cut, pulling in for the bundle, out again for the ship */
-      var theta = 0.55 + p * 1.1, phi = lerp(1.05, 1.25, cut);
+      var theta = 0.55 + p * 1.1 + floatT * 0.5, phi = lerp(1.05, 1.25, cut);
       var radius = cut < 1 ? lerp(300, 235, cut) : lerp(235, 34, r);
-      if (fillT > 0) radius = 235 + 25 * fillT;
+      if (fillT > 0) radius = 235 + 25 * fillT + 30 * floatT;
+      radius *= narrowK();
       cam(radius, theta, fold > 0 && inflate <= 0 ? lerp(1.25, 0.9, f) : phi, cut < 1 ? -8 : -4);
+      if (floatT > 0) {
+        helium.forEach(function (h) { h.material.opacity = 0.55; h.visible = true; });
+        setHud('Float', 'Day / night', '51', ' / 55 km · 54.8 t useful by day');
+        v.render(scene);
+        return;
+      }
 
       if (cut < 1) {
         var welded = Math.round(N * clamp((cut - 0.02) / 0.9, 0, 1));
@@ -1693,7 +1718,7 @@
     }
     function place(p) {
       var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
-      var narrow = v.w() < 760;
+      var narrow = v.w() < 760, nk = narrow ? Math.min(2, 1.05 * v.h() / Math.max(1, v.w())) : 1;
       /* the ship drifts between its band altitudes over the first part of a card */
       var shipKm = lerp(i ? SHIP_KM[i - 1] : SHIP_KM[0], SHIP_KM[i], ease(seg(local, 0, 0.45)));
       shipG.position.set(0, shipKm * U, 0);
@@ -1706,10 +1731,10 @@
         tether.geometry.setFromPoints([new THREE.Vector3(0, topY, 0), up.position]);
         follow(up, [4.5, 1.2, 7], lookUp * 0.6); focusKm = km;
       } else if (i === 1 || i === 3) {
-        follow(shipG, [18, 3, 26], lookUp * 3); focusKm = shipKm;
+        follow(shipG, [18 * nk, 3 * nk, 26 * nk], lookUp * 3); focusKm = shipKm;
       } else if (i === 2) {
         tmp.set(0, shipKm * U - 2.2, 0);
-        wantPos.set(6, shipKm * U - 1.4, 9); wantLook.copy(tmp); wantLook.y += lookUp; focusKm = shipKm;
+        wantPos.set(6 * nk, shipKm * U - 1.4, 9 * nk); wantLook.copy(tmp); wantLook.y += lookUp; focusKm = shipKm;
       } else if (i === 4) {
         var km4 = lerp(50, 45, ease(local));
         down.visible = tether.visible = true; down.position.set(1.2, km4 * U, 0);
@@ -1748,127 +1773,6 @@
       v.render(scene);
     });
     return { update: function (p) { progress = p; } };
-  }
-
-  /* ============================================================
-     THE FLEET — each vehicle, exploded part by part as you scroll
-     ============================================================ */
-
-  function fleet3d(canvas, host) {
-    var v = makeView(canvas, { fov: 38, near: 0.5, far: 6000, watch: canvas.closest('.stage') });
-    if (!v) return null;
-    var THREE = v.THREE, scene = new THREE.Scene();
-    scene.add(starfield(THREE, 600, 2500, 8123));
-    scene.add(new THREE.HemisphereLight(0xF2E8D0, 0x12101F, 0.85));
-    var key = new THREE.DirectionalLight(0xFFF3D6, 0.9); key.position.set(1, 1.2, 0.8); scene.add(key);
-    var fill = new THREE.DirectionalLight(0x5FD0C4, 0.25); fill.position.set(-1, -0.4, -0.6); scene.add(fill);
-    var overlay = document.createElement('div'); overlay.className = 'fx__labels'; host.appendChild(overlay);
-    var SPECS = PHOS.FLEET3D || [];
-    var tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
-
-    var vehicles = SPECS.map(function (spec) {
-      var obj = model(THREE, spec.key);
-      var box = new THREE.Box3().setFromObject(obj);
-      var size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
-      var span = Math.max(size.x, size.y, size.z);
-      obj.position.set(-center.x, -center.y, -center.z);
-      obj.traverse(function (o) {
-        if (!o.isMesh) return;
-        if (o.userData.material === 'hull' && spec.seeThrough) { o.material.transparent = true; o.material.opacity = 0.3; o.material.depthWrite = false; }
-      });
-      var parts = spec.parts.map(function (P, i) {
-        var meshes = obj.children.filter(function (m) { return P.groups.indexOf(m.name) >= 0; });
-        var pb = new THREE.Box3(); meshes.forEach(function (m) { pb.expandByObject(m); });
-        var pc = pb.getCenter(new THREE.Vector3());
-        var dir = P.dir ? new THREE.Vector3(P.dir[0], P.dir[1], P.dir[2]) : pc.clone().sub(center);
-        if (dir.length() < span * 0.03) dir.set(0.3, 0.8, 0.5);
-        dir.normalize();
-        var dist = span * (P.dist || 0.32);
-        var el = document.createElement('div'); el.className = 'fx__label';
-        el.innerHTML = '<b></b><span></span>'; el.firstChild.textContent = P.label; el.lastChild.textContent = P.note || '';
-        el.style.opacity = 0; overlay.appendChild(el);
-        return { meshes: meshes, at: pc, dir: dir, dist: dist, el: el, k: 0 };
-      });
-      obj.visible = false;
-      scene.add(obj);
-      return { spec: spec, obj: obj, parts: parts, span: span, size: size };
-    });
-    var N = vehicles.length, cards = null;
-    var theta = 0.85, phi = 1.12, drag = 0, dragging = false, lx = 0, ly = 0, t = 0;
-    var progress = 0, active = -1, camRadius = 100, wantRadius = 100;
-
-    canvas.addEventListener('pointerdown', function (e) { dragging = true; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', function (e) { if (!dragging) return; drag -= (e.clientX - lx) * 0.008; phi = clamp(phi - (e.clientY - ly) * 0.006, 0.3, 1.5); lx = e.clientX; ly = e.clientY; });
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { canvas.addEventListener(n, function () { dragging = false; }); });
-
-    function layout(p) {
-      var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
-      var V = vehicles[i];
-      if (i !== active) {
-        vehicles.forEach(function (o, j) { o.obj.visible = j === i; o.parts.forEach(function (P) { P.el.style.opacity = 0; }); });
-        active = i;
-        if (!cards) cards = Array.prototype.slice.call(host.closest('.stage').querySelectorAll('.stage__card'));
-      }
-      var kAll = ease(seg(local, 0.1, 0.72));
-      fade(V.obj, seg(local, 0, 0.1));
-      var n = V.parts.length;
-      var list = cards && cards[i] ? cards[i].querySelectorAll('.part') : null;
-      V.parts.forEach(function (P, j) {
-        var k = ease(seg(local, 0.1 + 0.5 * j / n, 0.32 + 0.5 * j / n));
-        P.k = k;
-        P.meshes.forEach(function (m) { m.position.copy(P.dir).multiplyScalar(P.dist * k); });
-        if (list && list[j]) list[j].classList.toggle('is-on', k > 0.35);
-      });
-      var wideModel = V.size.x > V.span * 0.8 || V.size.z > V.span * 0.8;
-      wantRadius = V.span * (V.size.y > V.span * 0.8 ? 1.85 : wideModel ? 1.75 : 1.5) * (1 + 0.45 * kAll);
-    }
-
-    function frame(dt, rdt) {
-      t += dt;
-      if (!dragging) theta += dt * 0.07;
-      camRadius += (wantRadius - camRadius) * (1 - Math.exp(-(rdt || dt) * 4));
-      var w = v.w(), h = v.h(), wide = w >= 760;
-      var V = vehicles[active < 0 ? 0 : active];
-      var th = theta + drag;
-      var target = new THREE.Vector3(0, 0, 0);
-      var pos = new THREE.Vector3(camRadius * Math.sin(phi) * Math.cos(th), camRadius * Math.cos(phi), camRadius * Math.sin(phi) * Math.sin(th));
-      /* slide the whole view so the model sits right of the cards on wide screens */
-      var dir = target.clone().sub(pos).normalize();
-      var right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
-      var sh = wide ? camRadius * 0.27 : 0;
-      pos.addScaledVector(right, -sh); target.addScaledVector(right, -sh);
-      v.camera.position.copy(pos); v.camera.lookAt(target);
-      v.render(scene);
-      /* project the part labels */
-      if (V && V.obj.visible) {
-        var items = [];
-        V.parts.forEach(function (P) {
-          var on = P.k > 0.35;
-          P.el.style.opacity = on ? 1 : 0;
-          if (!on) return;
-          tmp.copy(P.at).addScaledVector(P.dir, P.dist * P.k);
-          V.obj.localToWorld(tmp);
-          tmp2.copy(tmp).project(v.camera);
-          var lw = P.el.offsetWidth || 120, lh = P.el.offsetHeight || 30;
-          items.push({ P: P, x: clamp((tmp2.x + 1) / 2 * w + 12, 8, w - lw - 8), y: (1 - tmp2.y) / 2 * h - 8, w: lw, h: lh });
-        });
-        /* stack labels that would land on top of each other */
-        items.sort(function (a, b) { return a.y - b.y; });
-        var placed = [];
-        var low = 0;
-        items.forEach(function (it) {
-          placed.forEach(function (q) { if (it.x < q.x + q.w + 6 && q.x < it.x + it.w + 6 && it.y < q.y + q.h + 5) it.y = q.y + q.h + 5; });
-          it.y = Math.max(8, it.y);
-          placed.push(it);
-          low = Math.max(low, it.y + it.h);
-        });
-        var over = Math.max(0, low - (h - 8));
-        placed.forEach(function (it) { it.P.el.style.transform = 'translate(' + it.x.toFixed(1) + 'px,' + (it.y - over).toFixed(1) + 'px)'; });
-      }
-    }
-    layout(0);
-    ticker(v, frame);
-    return { update: function (p) { progress = p; layout(p); } };
   }
 
   /* ============================================================
@@ -1931,7 +1835,7 @@
     function place(p) {
       var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
       var rng = DAYS[i] || [0, 0];
-      var day = lerp(rng[0], rng[1], ease(local));
+      var day = lerp(rng[0], rng[1], local);
       var st = lapState(day * 24);
       var altU = st.day ? 0.9 : 2.4;
       onGlobe(LAT, st.lon, altU, pos);
@@ -1959,20 +1863,18 @@
         trailGeo.attributes.position.needsUpdate = true; trailGeo.attributes.color.needsUpdate = true;
       }
       trailGeo.setDrawRange(0, trailN);
-      /* camera: card one pulls back from the ship to the whole planet, then rides along */
+      /* camera: pinned in the sun's frame over the morning side, so the ship comes
+         over the dawn limb, crosses the day side, and goes round the back at night */
       var wide = v.w() >= 760;
-      var pull = i === 0 ? ease(seg(local, 0.05, 0.95)) : 1;
-      var radius = lerp(5, 175, pull);
-      var east = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), radial).normalize();
-      wantPos.copy(pos).addScaledVector(radial, radius * 0.72).addScaledVector(east, radius * 0.5).addScaledVector(new THREE.Vector3(0, 1, 0), radius * 0.32);
-      wantLook.copy(pos).multiplyScalar(1 - pull * 0.85);   /* from the ship toward the planet's center */
-      if (wide) {
-        var d = new THREE.Vector3().subVectors(wantLook, wantPos).normalize();
-        var right = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize();
-        wantPos.addScaledVector(right, -radius * 0.24 * pull); wantLook.addScaledVector(right, -radius * 0.24 * pull);
-      }
-      ship.visible = true;
-      dot.scale.setScalar(lerp(0.01, 5, pull));
+      var lo = -30 * Math.PI / 180, la = 18 * Math.PI / 180, R0 = wide ? 230 : 230 * Math.min(2.2, 1.05 * v.h() / Math.max(1, v.w()));
+      wantPos.set(R0 * Math.cos(la) * Math.cos(lo), R0 * Math.sin(la), -R0 * Math.cos(la) * Math.sin(lo));
+      wantLook.set(0, 0, 0);
+      var d = new THREE.Vector3().subVectors(wantLook, wantPos).normalize();
+      var right = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize();
+      var upv = new THREE.Vector3().crossVectors(right, d).normalize();
+      if (wide) { wantPos.addScaledVector(right, -R0 * 0.24); wantLook.addScaledVector(right, -R0 * 0.24); }
+      else { wantPos.addScaledVector(upv, R0 * 0.16); wantLook.addScaledVector(upv, R0 * 0.16); }
+      dot.scale.setScalar(5);
       setHud(day, st);
     }
     ticker(v, function (dt, rdt) {
@@ -2009,7 +1911,7 @@
       try { gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl'); } catch (e) { gl = null; }
       if (!gl) return null;
 
-      var out = { acts: false, descent: null, cutaway: false, compare: null, build: null, walk: null, learn: null, samples: null, fleet: null, stay: null };
+      var out = { acts: false, descent: null, cutaway: false, compare: null, build: null, walk: null, learn: null, samples: null, stay: null };
       var a = document.getElementById('assemblyCanvas');
       var b = document.getElementById('journeyCanvas');
       var d = document.getElementById('descentCanvas');
@@ -2059,12 +1961,6 @@
         var cs2 = swapCanvas(sc);
         out.samples = samples3d(cs2, { alt: document.getElementById('sAlt'), temp: document.getElementById('sTemp'), pres: document.getElementById('sPres') });
         if (out.samples) sc.hidden = true; else cs2.parentNode.removeChild(cs2);
-      }
-      var fc = document.getElementById('fleetCanvas');
-      if (fc) {
-        var cf2 = swapCanvas(fc);
-        out.fleet = fleet3d(cf2, fc.parentNode);
-        if (out.fleet) fc.hidden = true; else cf2.parentNode.removeChild(cf2);
       }
       var yc = document.getElementById('stayCanvas');
       if (yc) {

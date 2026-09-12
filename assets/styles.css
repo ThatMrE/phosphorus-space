@@ -616,17 +616,16 @@ section { position: relative; }
 /* ---------- what it costs, Venus against Mars ------------- */
 
 .costvs { display: grid; gap: 1px; background: var(--line-soft); grid-template-columns: 1fr; }
-@media (min-width: 760px) { .costvs { grid-template-columns: 1fr 1fr; } }
-.costvs__col { background: var(--void); padding: clamp(1.2rem, 3vw, 1.8rem); display: flex; flex-direction: column; gap: 1.1rem; }
+@media (min-width: 640px) { .costvs { grid-template-columns: 1fr 1fr; } }
+.costvs__col { background: var(--void); padding: clamp(1.4rem, 4vw, 2.4rem); display: flex; flex-direction: column; gap: 0.5rem; }
 .costvs__col--venus { background: rgba(232, 179, 58, 0.05); }
-.costvs__who { font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.16em; text-transform: uppercase; color: var(--cream-dim); padding-bottom: 0.7rem; border-bottom: 1px solid var(--line); }
-.costvs__who b { color: var(--cream); font-weight: 500; }
-.costvs__col--venus .costvs__who b { color: var(--sulfur); }
-.costvs__row { display: flex; flex-direction: column; gap: 0.15rem; }
-.costvs__k { font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream-faint); }
-.costvs__v { font-family: var(--f-display); font-size: var(--step-3); font-weight: 700; letter-spacing: -0.04em; line-height: 1.05; color: var(--cream); font-variant-numeric: tabular-nums; }
+.costvs__who { margin: 0; font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.18em; text-transform: uppercase; color: var(--cream-dim); }
+.costvs__col--venus .costvs__who { color: var(--sulfur); }
+.costvs__v { margin: 0; font-family: var(--f-display); font-size: clamp(2.6rem, 1.4rem + 5vw, 5.4rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
 .costvs__col--venus .costvs__v { color: var(--sulfur); }
-.costvs__d { font-size: var(--step--1); color: var(--cream-dim); }
+.costvs__k { margin: 0.2rem 0 0; font-family: var(--f-sans); font-weight: 600; font-size: var(--step-0); color: var(--cream); }
+.costvs__d { margin: 0; font-size: var(--step--1); color: var(--cream-dim); line-height: 1.5; }
+
 
 .compare { display: flex; flex-direction: column; gap: 1.4rem; }
 .compare__row { display: flex; flex-direction: column; gap: 0.45rem; }
@@ -738,7 +737,6 @@ input[type="range"]::-moz-range-thumb {
 
 /* ---------- misc ------------------------------------------ */
 
-.two { display: grid; gap: clamp(1.6rem, 4vw, 3rem); grid-template-columns: 1fr; }
 @media (min-width: 860px) { .two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 
 .factgrid { display: grid; gap: 1px; background: var(--line-soft); grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
@@ -779,8 +777,10 @@ input[type="range"]::-moz-range-thumb {
   justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem;
 }
 
-#lapSvg { width: 100%; overflow-x: auto; }
-#lapSvg svg { min-width: 560px; }
+#lapSvg { width: 100%; overflow-x: auto; position: relative; }
+#lapSvg svg { min-width: 760px; }
+@media (max-width: 800px) { .lap__swipe { display: block; } }
+.lap__swipe { display: none; margin: 0.4rem 0 0; font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-faint); }
 
 .lap__out {
   display: grid; gap: 1px; background: var(--line-soft);
@@ -867,6 +867,7 @@ input[type="range"]::-moz-range-thumb {
 .build .stage__viz { background: var(--void); }
 #buildCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .build .stage__step { min-height: 92svh; }
+.build .stage__card { max-width: 31rem; }
 .bcard__step {
   display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; align-items: baseline; margin: 0;
   font-family: var(--f-display); font-size: var(--step-2); font-weight: 700; color: var(--sulfur); letter-spacing: -0.01em;
@@ -907,24 +908,20 @@ input[type="range"]::-moz-range-thumb {
 .samples__hud { min-width: 12rem; }
 
 /* the fleet, exploded */
-.fleet .stage__viz { background: var(--void); }
-#fleetCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
-.fleet .stage__step { min-height: 96svh; }
-.fleet .stage__card { max-width: 30rem; }
-.fx__labels { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
-.fx__label {
-  position: absolute; left: 0; top: 0; max-width: 13rem; padding: 0.3rem 0.55rem;
-  background: rgba(10, 9, 18, 0.8); border-left: 2px solid var(--sulfur);
-  transition: opacity .35s ease; will-change: transform;
-}
-.fx__label b { display: block; font-family: var(--f-sans); font-weight: 600; font-size: var(--step--1); color: var(--cream); line-height: 1.25; }
-.fx__label span { font-family: var(--f-mono); font-size: 0.68rem; color: var(--sulfur); }
-.fx__label span:empty { display: none; }
-.parts { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); margin-top: 0.2rem; }
-.part { margin: 0; padding: 0.3rem 0; display: flex; gap: 0.7rem; align-items: baseline; font-family: var(--f-mono); font-size: var(--step--2); color: var(--cream-faint); border-bottom: 1px solid var(--line-soft); transition: color .3s ease; }
-.part b { font-weight: 500; color: var(--cream-dim); min-width: 8rem; transition: color .3s ease; }
-.part.is-on { color: var(--cream-dim); } .part.is-on b { color: var(--sulfur); }
-.fspecs { margin-top: 0.6rem; display: flex; flex-direction: column; }
+.fspecs { margin-top: 0.2rem; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.fspec--head span { color: var(--cream); }
+.fspec--head b { color: var(--sulfur); }
+.stage__card--aqua .fspec--head b { color: var(--aqua); }
+.stage__card--ember .fspec--head b { color: var(--ember); }
+.fspec__line { margin: 0; padding: 0.4rem 0; font-size: var(--step--1); color: var(--cream-dim); }
+.stage__card .laminate, .stage__card .floats { margin-top: 0.2rem; }
+.stage__card .lam { padding: 0.55rem 0 0.6rem 0.8rem; grid-template-columns: 1fr; gap: 0.15rem; }
+.stage__card .lam > div { display: flex; flex-wrap: wrap; gap: 0.2rem 0.7rem; align-items: baseline; }
+.stage__card .floats__col { grid-template-columns: 1fr 1fr; }
+.stage__card .floats__cell { padding: 0.55rem 0.7rem; }
+.stage__card .floats__cell dd { font-size: var(--step-0); }
+.stage__card .floats__cell--hero dd { font-size: var(--step-1); }
+.stage__card .floats__h { padding: 0.6rem 0.7rem; }
 .fspec { margin: 0; display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--line-soft); font-family: var(--f-mono); font-size: var(--step--2); color: var(--cream-dim); }
 .fspec b { font-weight: 500; color: var(--cream); text-align: right; font-variant-numeric: tabular-nums; }
 .fdl { display: inline-block; margin-top: 0.7rem; font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.08em; text-transform: uppercase; color: var(--aqua); text-decoration: none; border-bottom: 1px solid currentColor; }
@@ -948,12 +945,6 @@ input[type="range"]::-moz-range-thumb {
 .pitem__n b { font-family: var(--f-sans); font-weight: 600; color: var(--cream); }
 .pitem__n span { font-family: var(--f-mono); font-size: var(--step--2); color: var(--cream-dim); }
 .stage__card .pitem__d { font-size: var(--step--1); color: var(--cream-dim); line-height: 1.5; }
-.pwins { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 0.2rem; }
-.pwin { margin: 0; padding: 0.3rem 0; border-bottom: 1px solid var(--line-soft); display: grid; grid-template-columns: 6.2rem 1fr; gap: 0.1rem 0.6rem; font-family: var(--f-mono); font-size: 0.68rem; color: var(--cream-faint); }
-.pwin b { font-weight: 500; color: var(--cream-dim); }
-.pwin i { font-style: normal; grid-column: 2; color: var(--cream-faint); }
-.pwin--used b, .pwin--used i { color: var(--sulfur); }
-.pwin--crew b, .pwin--crew i { color: var(--ember); }
 .pbars { display: flex; flex-direction: column; gap: 0.45rem; border-top: 1px solid var(--line); padding-top: 0.6rem; margin-top: 0.2rem; }
 .pbar__top { margin: 0; display: flex; justify-content: space-between; gap: 1rem; font-family: var(--f-mono); font-size: var(--step--2) !important; color: var(--cream-dim); }
 .pbar__top b { color: var(--cream); font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -961,14 +952,15 @@ input[type="range"]::-moz-range-thumb {
 .pbar__fill { height: 100%; background: var(--sulfur); }
 .pbar--crew .pbar__fill { background: var(--ember); }
 .pbar--funded .pbar__fill { background: var(--aqua-deep); }
+.bill { display: grid; gap: clamp(2rem, 5vw, 3.5rem); grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .bill { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+.pbars--wide { border-top: 0; padding-top: 0; margin-top: 0; gap: 1rem; }
+.pbars--wide .pbar__top { font-size: var(--step--1) !important; }
+.pbars--wide .pbar__track { height: 10px; }
+.pbars--wide .pbar__fill { transition: width .8s cubic-bezier(.2,.7,.3,1); }
+.pbar__note { margin: 0; font-size: var(--step--1); color: var(--cream-dim); }
 @media (max-width: 760px) {
   #build .stage__step, #walk .stage__step, #samples .stage__step, #stay .stage__step { align-items: flex-start; padding-top: 5vh; }
-  .fleet .stage__viz { height: 44svh; min-height: 0; z-index: 4; }
-  .fleet .stage__steps { margin-top: 0; }
-  .fleet .stage__step { min-height: 56svh; }
-  .fleet .act__badge { display: none; }
-  .fx__label { max-width: 9rem; padding: 0.2rem 0.4rem; }
-  .fx__label b { font-size: 0.7rem; }
   .program .stage__step { align-items: flex-start; padding-top: 4vh; }
   .program .journey__hud { display: none; }
   .learn .stage__viz { height: 42svh; min-height: 0; z-index: 4; }
@@ -1017,7 +1009,7 @@ input[type="range"]::-moz-range-thumb {
   .compare .stage__steps { margin-top: 0; }
   .compare .stage__step { min-height: 58svh; justify-content: center; }
   .compare .act__badge { display: none; }
-  .cmp__call { max-width: 9.2rem; font-size: 0.62rem; padding: 0.3rem 0.4rem; }
+  .cmp__call { max-width: 9.6rem; font-size: 0.7rem; padding: 0.3rem 0.4rem; }
   .cmp__n { font-size: var(--step-1); }
 }
 
@@ -1127,4 +1119,14 @@ input[type="range"]::-moz-range-thumb {
   .f3d__label { position: static; max-width: none; padding: 0.9rem 0.9rem 0; }
   .f3d__stage { display: flex; flex-direction: column; aspect-ratio: auto; max-height: none; }
   .f3d__stage canvas { position: relative; aspect-ratio: 4 / 3; height: auto; }
+}
+
+/* phones: nothing under eleven pixels, spec rows stacked */
+@media (max-width: 480px) {
+  :root { --step--2: 0.72rem; }
+  .readout__v small { font-size: 0.62em; }
+  .floats__cell dd span + span { font-size: 0.66em; }
+  .fspec { flex-direction: column; gap: 0.05rem; }
+  .fspec b { text-align: left; }
+  .costvs__v { font-size: clamp(2.4rem, 12vw, 3.4rem); }
 }
