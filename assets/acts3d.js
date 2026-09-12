@@ -1931,7 +1931,7 @@
     function place(p) {
       var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
       var rng = DAYS[i] || [0, 0];
-      var day = lerp(rng[0], rng[1], ease(local));
+      var day = lerp(rng[0], rng[1], local);
       var st = lapState(day * 24);
       var altU = st.day ? 0.9 : 2.4;
       onGlobe(LAT, st.lon, altU, pos);
@@ -1959,20 +1959,18 @@
         trailGeo.attributes.position.needsUpdate = true; trailGeo.attributes.color.needsUpdate = true;
       }
       trailGeo.setDrawRange(0, trailN);
-      /* camera: card one pulls back from the ship to the whole planet, then rides along */
+      /* camera: pinned in the sun's frame over the morning side, so the ship comes
+         over the dawn limb, crosses the day side, and goes round the back at night */
       var wide = v.w() >= 760;
-      var pull = i === 0 ? ease(seg(local, 0.05, 0.95)) : 1;
-      var radius = lerp(5, 175, pull);
-      var east = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), radial).normalize();
-      wantPos.copy(pos).addScaledVector(radial, radius * 0.72).addScaledVector(east, radius * 0.5).addScaledVector(new THREE.Vector3(0, 1, 0), radius * 0.32);
-      wantLook.copy(pos).multiplyScalar(1 - pull * 0.85);   /* from the ship toward the planet's center */
-      if (wide) {
-        var d = new THREE.Vector3().subVectors(wantLook, wantPos).normalize();
-        var right = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize();
-        wantPos.addScaledVector(right, -radius * 0.24 * pull); wantLook.addScaledVector(right, -radius * 0.24 * pull);
-      }
-      ship.visible = true;
-      dot.scale.setScalar(lerp(0.01, 5, pull));
+      var lo = -30 * Math.PI / 180, la = 18 * Math.PI / 180, R0 = 230;
+      wantPos.set(R0 * Math.cos(la) * Math.cos(lo), R0 * Math.sin(la), -R0 * Math.cos(la) * Math.sin(lo));
+      wantLook.set(0, 0, 0);
+      var d = new THREE.Vector3().subVectors(wantLook, wantPos).normalize();
+      var right = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize();
+      var upv = new THREE.Vector3().crossVectors(right, d).normalize();
+      if (wide) { wantPos.addScaledVector(right, -R0 * 0.24); wantLook.addScaledVector(right, -R0 * 0.24); }
+      else { wantPos.addScaledVector(upv, R0 * 0.16); wantLook.addScaledVector(upv, R0 * 0.16); }
+      dot.scale.setScalar(5);
       setHud(day, st);
     }
     ticker(v, function (dt, rdt) {

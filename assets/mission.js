@@ -799,28 +799,6 @@
       return { step: P.ph.tag, where: P.ph.years + (P.ph.window ? ' · ' + P.ph.window : ''), head: P.ph.name, body: P.ph.thesis, extra: items,
                num: '$' + P.cost.toFixed(1) + ' bn', numlab: P.note, cls: P.ph.status === 'flagship' ? 'stage__card--ember' : P.ph.status === 'funded' ? 'stage__card--aqua' : '' };
     });
-    var winList = el('div', 'pwins');
-    windows.forEach(function (W) {
-      var row = el('p', 'pwin' + (W.crew ? ' pwin--crew' : W.step >= 0 ? ' pwin--used' : ''));
-      row.appendChild(el('b', null, prettyDate(W.w.best)));
-      row.appendChild(el('span', null, '→ ' + prettyDate(W.w.arrive) + ' · ' + W.w.tof + ' d · C₃ ' + W.w.c3.toFixed(1) + ' · V∞ ' + W.w.vinf.toFixed(1)));
-      row.appendChild(el('i', null, W.w.use || 'spare'));
-      winList.appendChild(row);
-    });
-    rows.push({ step: 'Every chance to go', where: 'between now and 2050', head: 'A window opens every 584 days.',
-      body: 'Mars opens every 780. Over twenty years that is four extra chances to go — and four extra chances to bring somebody home early. Cheapest departure in each window, from the trajectory search.',
-      extra: winList, num: '13', numlab: 'windows · 9 used' });
-    var bars = el('div', 'pbars');
-    phases.forEach(function (P) {
-      var b = el('div', 'pbar' + (P.ph.status === 'flagship' ? ' pbar--crew' : P.ph.status === 'funded' ? ' pbar--funded' : ''));
-      var top = el('p', 'pbar__top'); top.appendChild(el('span', null, P.ph.tag + ' — ' + P.ph.name)); top.appendChild(el('b', null, '$' + P.cost.toFixed(1) + ' bn'));
-      b.appendChild(top);
-      var tr = el('div', 'pbar__track'); var f = el('div', 'pbar__fill'); f.style.width = (P.cost / 17.8 * 100).toFixed(1) + '%'; tr.appendChild(f); b.appendChild(tr);
-      bars.appendChild(b);
-    });
-    rows.push({ step: 'The bill', where: '2026 dollars · order of magnitude', head: 'Forty-four billion over twenty years, and launch is barely one percent of it.',
-      body: 'Getting people to Venus takes about 450 tons in low Earth orbit. At the prices a Starship-class vehicle is aiming for, that is $90–225 million of launch — half a percent of the whole thing. The ascent vehicle and twenty years of payroll are what cost money.',
-      extra: bars, num: '$2.2 bn', numlab: 'a year, averaged across the program' });
     var NC = rows.length;
 
     /* the drawing */
@@ -838,10 +816,7 @@
       ctx.clearRect(0, 0, W, H);
       var wide = W >= 760;
       var i = Math.min(NC - 1, Math.floor(p * NC)), local = p * NC - i;
-      var year, allWin = i === NC - 2, bill = i === NC - 1;
-      if (i < phases.length) year = lerp(phases[i].y0, phases[i].y1, local);
-      else if (allWin) year = lerp(Y0, 2051, ease(local));
-      else year = 2055.99;
+      var year = lerp(phases[i].y0, phases[i].y1, local);
       var x0 = wide ? W * 0.56 : 20, x1 = W - (wide ? 36 : 20);
       var top = wide ? H * 0.16 : H * 0.6, bot = wide ? H * 0.72 : H * 0.96;
       var yA = top + (bot - top) * 0.55;
@@ -862,10 +837,10 @@
         var on = j === i, past = year >= P.y0;
         var yy = yA - 26 - (phases.length - 1 - j) * (laneH + 5);
         var c = P.ph.status === 'flagship' ? COL.ember : P.ph.status === 'funded' ? COL.aqua : COL.sulfur;
-        ctx.globalAlpha = on ? 1 : (past || allWin || bill ? 0.45 : 0.18);
+        ctx.globalAlpha = on ? 1 : (past ? 0.45 : 0.18);
         ctx.fillStyle = c;
         var xa = X(P.y0), xb = X(Math.min(P.y1, on ? Math.max(year, P.y0 + 0.2) : P.y1));
-        if (!on && !past && !allWin && !bill) xb = X(P.y1);
+        if (!on && !past) xb = X(P.y1);
         ctx.fillRect(xa, yy - laneH / 2, Math.max(2, xb - xa), laneH);
         ctx.globalAlpha = on ? 1 : 0.5;
         ctx.fillStyle = on ? COL.cream : COL.dim; ctx.textAlign = 'right';
@@ -878,12 +853,12 @@
         var passed = year >= Wn.best - 0.05;
         var xa = X(Wn.best), xb = X(Wn.arrive), hh = 10 + Wn.w.tof / 9;
         var c = Wn.crew ? COL.ember : used ? COL.sulfur : COL.cream;
-        ctx.globalAlpha = mine ? 1 : passed || allWin ? (used ? 0.8 : 0.35) : 0.14;
+        ctx.globalAlpha = mine ? 1 : passed ? (used ? 0.8 : 0.35) : 0.14;
         ctx.strokeStyle = c; ctx.lineWidth = mine ? 2 : 1.2;
         ctx.beginPath(); ctx.moveTo(xa, yA); ctx.quadraticCurveTo((xa + xb) / 2, yA - hh * 2, xb, yA); ctx.stroke();
         ctx.fillStyle = c;
         ctx.beginPath(); ctx.arc(xa, yA, mine ? 3.5 : 2.5, 0, Math.PI * 2); ctx.fill();
-        if (mine || (allWin && wide)) {
+        if (mine) {
           ctx.textAlign = 'center'; ctx.fillStyle = mine ? COL.cream : COL.dim;
           ctx.fillText(prettyDate(Wn.w.best).replace(/ \d{4}$/, ''), xa, yA - hh * 1.2 - 12 - (windows.indexOf(Wn) % 2) * 14);
         }
@@ -896,7 +871,7 @@
         phases.forEach(function (P) { s += P.cost * clamp((yr - P.y0) / (P.y1 - P.y0), 0, 1); });
         return s;
       }
-      var reveal = bill ? lerp(Y0, Y1, ease(seg(local, 0, 0.6))) : year;
+      var reveal = year;
       ctx.beginPath(); ctx.moveTo(X(Y0), base);
       for (var yr = Y0; yr <= Math.min(reveal, Y1); yr += 0.1) ctx.lineTo(X(yr), base - cH * spentBy(yr) / costTotal);
       var endY = Math.min(reveal, Y1);
@@ -906,13 +881,13 @@
       ctx.beginPath();
       for (var yr2 = Y0; yr2 <= endY; yr2 += 0.1) { var px = X(yr2), py = base - cH * spentBy(yr2) / costTotal; yr2 === Y0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py); }
       ctx.stroke();
-      var spent = spentBy(bill ? reveal : year);
+      var spent = spentBy(year);
       ctx.fillStyle = COL.sulfur; ctx.textAlign = 'left';
       ctx.fillText('$' + spent.toFixed(1) + ' bn', Math.min(X(endY) + 6, x1 - 60), base - cH * spent / costTotal - 8);
       ctx.fillStyle = COL.dim; ctx.textAlign = 'left';
       ctx.fillText('spent, cumulative', x0, base + 12);
       /* cursor */
-      if (!bill) {
+      {
         ctx.strokeStyle = 'rgba(242,232,208,0.5)'; ctx.setLineDash([3, 4]);
         ctx.beginPath(); ctx.moveTo(X(year), top); ctx.lineTo(X(year), bot); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = COL.cream; ctx.textAlign = 'center'; ctx.font = '600 13px Archivo, system-ui, sans-serif';
@@ -921,17 +896,46 @@
       }
       /* HUD */
       if (hud.year) {
-        hud.year.textContent = bill ? '2026 → 2055' : String(Math.floor(year));
+        hud.year.textContent = String(Math.floor(year));
         hud.spent.innerHTML = '$' + spent.toFixed(1) + '<small> bn</small>';
         var nx = null;
         for (var k = 0; k < windows.length; k++) if (windows[k].best >= year) { nx = windows[k]; break; }
-        hud.next.textContent = bill ? '13 by 2050' : nx ? prettyDate(nx.w.best) + (nx.w.use ? ' · ' + nx.w.use.replace(/^STEP 4 — PEOPLE$/, 'Step 4 — People') : ' · spare') : '—';
+        hud.next.textContent = nx ? prettyDate(nx.w.best) + (nx.w.use ? ' · ' + nx.w.use.replace(/^STEP 4 — PEOPLE$/, 'Step 4 — People') : ' · spare') : '—';
       }
     }
     var last = -1;
     stageSteps('program', rows, function (r) { return stepCard(r); }, { update: function (p) { if (Math.abs(p - last) < 0.0005) return; last = p; draw(p); } });
     window.addEventListener('resize', function () { size(); draw(last < 0 ? 0 : last); }, { passive: true });
     size(); draw(0);
+  }
+
+  /* ---------- the bill, step by step ---------------------- */
+
+  function buildBill() {
+    var wrap = $('#billBars');
+    if (!wrap || !D.COSTS) return;
+    var max = Math.max.apply(null, D.COSTS.phases.map(function (c) { return c.usd; }));
+    D.COSTS.phases.forEach(function (c, i) {
+      var st = D.PHASES[i] ? D.PHASES[i].status : '';
+      var b = el('div', 'pbar' + (st === 'flagship' ? ' pbar--crew' : st === 'funded' ? ' pbar--funded' : ''));
+      var top = el('p', 'pbar__top'); top.appendChild(el('span', null, c.name)); top.appendChild(el('b', null, '$' + c.usd.toFixed(1) + ' bn'));
+      b.appendChild(top);
+      var tr = el('div', 'pbar__track'); var f = el('div', 'pbar__fill');
+      f.style.width = '0%'; f.setAttribute('data-w', (c.usd / max * 100).toFixed(1) + '%');
+      tr.appendChild(f); b.appendChild(tr);
+      b.appendChild(el('p', 'pbar__note', c.note));
+      wrap.appendChild(b);
+    });
+    var fired = false;
+    onTick(function (vh) {
+      if (fired) return;
+      if (wrap.getBoundingClientRect().top < vh * 0.9) {
+        fired = true;
+        Array.prototype.forEach.call(wrap.querySelectorAll('.pbar__fill'), function (n, i) {
+          setTimeout(function () { n.style.width = n.getAttribute('data-w'); }, REDUCED ? 0 : i * 70);
+        });
+      }
+    });
   }
 
   /* ---------- the fleet, exploded ------------------------- */
@@ -1150,6 +1154,7 @@
     buildFleet(three && three.fleet);
     buildStay(three && three.stay);
     programStage();
+    buildBill();
     buildScience(three && three.learn);
     buildSampling(three && three.samples);
     if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);

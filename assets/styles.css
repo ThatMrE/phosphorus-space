@@ -948,12 +948,6 @@ input[type="range"]::-moz-range-thumb {
 .pitem__n b { font-family: var(--f-sans); font-weight: 600; color: var(--cream); }
 .pitem__n span { font-family: var(--f-mono); font-size: var(--step--2); color: var(--cream-dim); }
 .stage__card .pitem__d { font-size: var(--step--1); color: var(--cream-dim); line-height: 1.5; }
-.pwins { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 0.2rem; }
-.pwin { margin: 0; padding: 0.3rem 0; border-bottom: 1px solid var(--line-soft); display: grid; grid-template-columns: 6.2rem 1fr; gap: 0.1rem 0.6rem; font-family: var(--f-mono); font-size: 0.68rem; color: var(--cream-faint); }
-.pwin b { font-weight: 500; color: var(--cream-dim); }
-.pwin i { font-style: normal; grid-column: 2; color: var(--cream-faint); }
-.pwin--used b, .pwin--used i { color: var(--sulfur); }
-.pwin--crew b, .pwin--crew i { color: var(--ember); }
 .pbars { display: flex; flex-direction: column; gap: 0.45rem; border-top: 1px solid var(--line); padding-top: 0.6rem; margin-top: 0.2rem; }
 .pbar__top { margin: 0; display: flex; justify-content: space-between; gap: 1rem; font-family: var(--f-mono); font-size: var(--step--2) !important; color: var(--cream-dim); }
 .pbar__top b { color: var(--cream); font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -961,6 +955,13 @@ input[type="range"]::-moz-range-thumb {
 .pbar__fill { height: 100%; background: var(--sulfur); }
 .pbar--crew .pbar__fill { background: var(--ember); }
 .pbar--funded .pbar__fill { background: var(--aqua-deep); }
+.bill { display: grid; gap: clamp(2rem, 5vw, 3.5rem); grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .bill { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); } }
+.pbars--wide { border-top: 0; padding-top: 0; margin-top: 0; gap: 1rem; }
+.pbars--wide .pbar__top { font-size: var(--step--1) !important; }
+.pbars--wide .pbar__track { height: 10px; }
+.pbars--wide .pbar__fill { transition: width .8s cubic-bezier(.2,.7,.3,1); }
+.pbar__note { margin: 0; font-size: var(--step--1); color: var(--cream-dim); }
 @media (max-width: 760px) {
   #build .stage__step, #walk .stage__step, #samples .stage__step, #stay .stage__step { align-items: flex-start; padding-top: 5vh; }
   .fleet .stage__viz { height: 44svh; min-height: 0; z-index: 4; }
