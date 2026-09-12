@@ -53,7 +53,8 @@ python3 porkchop.py          # Earth→Venus departure opportunities, 2030–205
 python3 roundtrip.py         # round-trip itineraries with a fixed atmospheric stay
 python3 compare.py           # Venus vs Mars, buoyancy table, envelope sizing
 python3 export_trajectory.py # regenerates assets/trajectory.js for the orbit plot
-python3 lapcycle.py          # lap period, night length and storage across the float band
+python3 lapcycle.py          # what the lap and night would be if the ship only drifted
+python3 sunchase.py          # the sun-chasing cycle, and why parking under the sun does not close
 ```
 
 **Method.** Planet states come from JPL's *Approximate Positions of the Planets*
@@ -80,14 +81,20 @@ columns:
   surface is 21. Note that Venus has no magnetic field, so this is column density
   only — Earth's geomagnetic cutoff is additional protection Venus does not have.
 
-**The lap cycle.** The airship is carried by the super-rotating atmosphere, so
-how long a "day" lasts aboard is set by float altitude — wind speed varies with
-height. Venus' own retrograde rotation runs the same way as the wind, so the two
-rates add and the solar cycle is slightly shorter than the lap measured against
-the surface. Across the 50–55 km band that gives a **4.5–7.0 day lap and a 54–83
-hour night**, and at an 8 kW habitat load, **431–668 kWh** of storage to cross the
-dark. The commonly quoted "~50 hours" applies to balloons floating higher and
-faster than this mission's band.
+**Chasing the sun.** The airship is carried by the super-rotating atmosphere;
+left to drift it would lap Venus every 4.5–7.0 days and spend 54–83 hours of
+every lap in the dark (`lapcycle.py`). It cannot hold still under the sun: the
+wind at 52 km is 75 m/s, the sub-solar point moves at only 3.8 m/s, and drag on
+a 34 m hull goes as the cube of airspeed, so station-keeping at the equator
+would take ~24 MW. What it can do is bend the cycle (`sunchase.py`): by day it
+floats at 51 km and flies 10 m/s upwind on solar surplus (~73 kW), and at
+sunset it climbs to 55 km and coasts across the night on the fastest air. That
+gives an **88-hour day and a 54-hour night — 62% of the stay in daylight** —
+and at an 8 kW habitat load, **431 kWh** of storage for every night instead of
+up to 668. The same script shows station-keeping by latitude: the propulsive
+power and the array's output only meet at ~85°, inside the polar vortex, where
+the sun never rises more than a few degrees. Wind by latitude is taken as flat
+to 50° and solid-body poleward of that, after Venus Express cloud tracking.
 
 **The air fill.** The lower hull holds 31 500 m³ of breathable air — 33.6 t of
 gas, more than the airship's entire useful payload, so it can never be shipped.
@@ -129,7 +136,10 @@ assets/styles.css       design tokens and components
 assets/data.js          every displayed number, in one place
 assets/trajectory.js    generated — heliocentric geometry for the orbit plot
 assets/mission.js       scroll engine, canvas and SVG renderers
-assets/acts.js          the three acts: orbital assembly, departure/cruise/arrival
+assets/acts3d.js        the three acts in WebGL: Starship launches and orbital assembly,
+                        departure, cruise and the aerobraking pass, entry and inflation,
+                        plus the labeled 3D cutaway of the ship
+assets/acts.js          the same three acts drawn in 2D canvas — the fallback when WebGL is off
 assets/models.js        generated — OBJ text for the 3D viewer
 assets/viewer.js        the 3D fleet viewer (drag to turn, cutaway, model switcher)
 assets/vendor/          three.js r128 (MIT — license alongside)
@@ -139,19 +149,32 @@ scripts/*.py            the orbital mechanics and the model generator
 
 ### Sections
 
-Why Venus (with the Venus/Mars ledger) · **Act 01 — getting ready**, the stack
+Why Venus (with the Venus/Mars ledger) · **Act 01 — getting ready**, Starship flights and the stack
 assembling in orbit · **Act 02 — the trip**, one camera from leaving Earth through
-the computed transfer to braking at Venus · **Act 03 — going down**, the descent
-through the atmosphere to the floor · entry and inflation · the ship · **the fleet in
-3D** · how it floats · life up there · the crew · what we'd learn · the program and
-launch windows · the fleet · the bill · what could go wrong · so.
+the computed transfer to the aerobraking pass at Venus · **Act 03 — going down**, the descent
+through the atmosphere to the floor · the ship (cutaway, skin, how it floats, how it
+gets made) · **the fleet in 3D** with each vehicle's spec sheet · life up there · the
+crew · what we'd learn · the program and launch windows · the bill · what could go
+wrong · so.
 
 ### The 3D models
 
 `scripts/build_models.py` generates every model from the plan's own dimensions —
 the 129 × 34 m hull with its helium cells and breathable-air volume, the 180 m³
 transit habitat with wings and tanks, a two-stage ascent vehicle sized for ~40 t of
-LOX/methane, and the assembled orbital stack. A 1.8 m person stands beside each one.
+LOX/methane, the assembled orbital stack, the launch vehicle (a 9 m stainless
+ship on a 71 m booster, public dimensions only) and the direct-entry vehicle (a
+12.8 m 70° sphere-cone heat shield with the packed hull and crew module inside).
+A 1.8 m person stands beside each one.
+
+The acts use the same models. Act 01 splits the stack OBJ into its six deliveries
+and flies each one up on Starship; Act 02 flies the stack out of Earth orbit,
+along the real Lambert arc, and through an aerobraking pass at Venus with Hesperus
+and the entry vehicle on their separate paths; Act 03 lays a transparent WebGL
+layer over the 2D atmosphere so the entry vehicle, chute and inflating hull line
+up with the altitude scale. Earth and Venus are procedural (value-noise textures
+built at load time). Every act keeps its 2D renderer as the fallback when WebGL
+is unavailable.
 No external assets: online model libraries were not reachable from the build
 environment, and nothing that exists elsewhere is this specific vehicle anyway.
 

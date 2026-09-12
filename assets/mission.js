@@ -187,58 +187,6 @@
     });
   }
 
-  function buildBars() {
-    var wrap = $('#durationBars');
-    if (!wrap) return;
-    var M = D.MISSION;
-    var trips = [
-      { name: 'Venus — Phosphorus 1', out: M.outboundDays, stay: M.aloftDays, back: M.returnDays, total: M.totalDays, note: 'depart 2042-07-27' },
-      { name: 'Venus — 2045 backup', out: D.BACKUP_WINDOW.outboundDays, stay: D.BACKUP_WINDOW.aloftDays, back: D.BACKUP_WINDOW.returnDays, total: D.BACKUP_WINDOW.totalDays, note: 'depart 2045-10-24' },
-      { name: 'Mars — short stay', out: D.MARS_TRIPS[0].out, stay: D.MARS_TRIPS[0].stay, back: D.MARS_TRIPS[0].back, total: D.MARS_TRIPS[0].total, note: 'depart 2041-10-19' },
-      { name: 'Mars — long stay', out: D.MARS_TRIPS[1].out, stay: D.MARS_TRIPS[1].stay, back: D.MARS_TRIPS[1].back, total: D.MARS_TRIPS[1].total, note: 'depart 2041-10-20' }
-    ];
-    var max = 1020;
-    trips.forEach(function (t) {
-      var b = el('div', 'bar');
-      var lab = el('div', 'bar__label');
-      var left = el('span'); left.appendChild(el('b', null, t.name));
-      var right = el('span', 'num', fmt(t.total) + ' d  ·  ' + t.note);
-      lab.appendChild(left); lab.appendChild(right);
-      b.appendChild(lab);
-      var track = el('div', 'bar__track');
-      ['out', 'stay', 'back'].forEach(function (k) {
-        var seg = el('div', 'bar__seg bar__seg--' + k);
-        seg.style.width = '0%';
-        seg.setAttribute('data-w', (t[k] / max * 100).toFixed(2) + '%');
-        track.appendChild(seg);
-      });
-      b.appendChild(track);
-      wrap.appendChild(b);
-    });
-
-    var key = el('div', 'bar__key');
-    [['out', 'Outbound'], ['stay', 'On station'], ['back', 'Return']].forEach(function (p) {
-      var s = el('span');
-      var i = el('i');
-      i.style.background = p[0] === 'out' ? 'var(--aqua)' : p[0] === 'stay' ? 'var(--sulfur)' : 'var(--sulfur-deep)';
-      s.appendChild(i); s.appendChild(document.createTextNode(p[1]));
-      key.appendChild(s);
-    });
-    wrap.appendChild(key);
-
-    var fired = false;
-    onTick(function (vh) {
-      if (fired) return;
-      var r = wrap.getBoundingClientRect();
-      if (r.top < vh * 0.85) {
-        fired = true;
-        Array.prototype.forEach.call(wrap.querySelectorAll('.bar__seg'), function (s, i) {
-          setTimeout(function () { s.style.width = s.getAttribute('data-w'); }, REDUCED ? 0 : i * 45);
-        });
-      }
-    });
-  }
-
   /* ---------- atmospheric interpolation ------------------- */
 
   var P = D.PROFILE || [];
@@ -310,7 +258,7 @@
     [0.85, 32], [0.93, 14], [1.00, 0]
   ];
 
-  function descentStage() {
+  function descentStage(ship3d) {
     var stage = $('#descent');
     if (!stage) return;
     var track = $('.stage__track', stage);
@@ -411,11 +359,14 @@
         ctx.fillText('FLOAT BAND  50 – 54 km', 18, yb - 9);
       }
 
-      /* the airship, parked at 52 km */
+      /* the airship, parked at 52 km — in three dimensions when WebGL is up */
       var ys = yOf(52);
-      if (ys > -120 && ys < h + 120) {
+      var shipLen = Math.min(w * 0.34, 260);
+      if (ship3d) {
+        ship3d(alt, w, h, { span: SPAN, x: 0.62, len: shipLen });
+      } else if (ys > -120 && ys < h + 120) {
         var scaleF = clamp(1 - Math.abs(52 - alt) / 26, 0.15, 1);
-        drawShip(ctx, w * 0.62, ys, Math.min(w * 0.34, 260), scaleF);
+        drawShip(ctx, w * 0.62, ys, shipLen, scaleF);
       }
 
       /* the surface */
@@ -533,8 +484,6 @@
         items.appendChild(row);
       });
       body.appendChild(items);
-      body.appendChild(el('p', 'phase__cost')).innerHTML =
-        'Phase cost, order of magnitude: <b>$' + ph.cost.toFixed(1) + ' bn</b>';
       p.appendChild(body);
       wrap.appendChild(p);
     });
@@ -572,103 +521,6 @@
       var use = el('td', 'use', w.use || '—');
       tr.appendChild(use);
       body.appendChild(tr);
-    });
-  }
-
-  /* ---------- entry sequence ------------------------------ */
-
-  function ediStage() {
-    var host = $('#ediSvg');
-    var list = $('#ediList');
-    if (!host || !list) return;
-
-    var beats = D.EDI.slice(1, 7);   /* entry interface -> trim to float */
-    var W = 900, H = 560, PAD = { l: 104, r: 56, t: 58, b: 66 };
-    var s = svg('svg', {
-      viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
-      preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'Altitude against sequence for the Venus entry, descent and inflation: 125 km entry interface down to a 52 km float'
-    });
-
-    var maxAlt = 132, minAlt = 44;
-    function y(km) { return PAD.t + (maxAlt - km) / (maxAlt - minAlt) * (H - PAD.t - PAD.b); }
-    function x(i) { return PAD.l + i / (beats.length - 1) * (W - PAD.l - PAD.r); }
-
-    [125, 110, 90, 70, 60, 52, 44].forEach(function (km) {
-      s.appendChild(svg('line', { x1: PAD.l, y1: y(km), x2: W - PAD.r, y2: y(km), stroke: '#1F1D33', 'stroke-width': 1.5 }));
-      var t = svg('text', { x: PAD.l - 16, y: y(km) + 8, 'text-anchor': 'end', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 21, fill: '#5A5648' });
-      t.textContent = km;
-      s.appendChild(t);
-    });
-    var ax = svg('text', { x: PAD.l - 16, y: PAD.t - 22, 'text-anchor': 'end', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 19, fill: '#8B8373' });
-    ax.textContent = 'km';
-    s.appendChild(ax);
-
-    /* float band */
-    s.appendChild(svg('rect', { x: PAD.l, y: y(54), width: W - PAD.l - PAD.r, height: y(50) - y(54), fill: 'rgba(95,208,196,0.12)' }));
-    var bl = svg('text', { x: PAD.l + 12, y: y(54) - 12, 'font-family': '"IBM Plex Mono", monospace', 'font-size': 21, fill: '#5FD0C4', 'letter-spacing': 1.4 });
-    bl.textContent = 'FLOAT BAND 50–54';
-    s.appendChild(bl);
-
-    var d = '';
-    beats.forEach(function (b, i) { d += (i ? 'L' : 'M') + x(i) + ' ' + y(b.alt); });
-    s.appendChild(svg('path', { d: d, fill: 'none', stroke: '#2A2740', 'stroke-width': 2.5 }));
-    var live = svg('path', { d: d, fill: 'none', stroke: '#FF7A45', 'stroke-width': 4, 'stroke-linecap': 'round' });
-    s.appendChild(live);
-
-    var dots = beats.map(function (b, i) {
-      var g = svg('g');
-      var above = i < 4 || i === beats.length - 1;
-      g.appendChild(svg('circle', { cx: x(i), cy: y(b.alt), r: 8, fill: '#0A0912', stroke: '#4A4460', 'stroke-width': 2.5 }));
-      var t = svg('text', {
-        x: x(i) + (i === 0 ? 16 : i === beats.length - 1 ? -8 : 0),
-        y: y(b.alt) + (above ? -22 : 36),
-        'text-anchor': i === 0 ? 'start' : i === beats.length - 1 ? 'end' : 'middle',
-        'font-family': '"IBM Plex Mono", monospace', 'font-size': 20, fill: '#8B8373'
-      });
-      t.textContent = b.t;
-      g.appendChild(t);
-      s.appendChild(g);
-      return g;
-    });
-    host.appendChild(s);
-
-    var liveLen = live.getTotalLength ? live.getTotalLength() : 1000;
-    live.setAttribute('stroke-dasharray', liveLen);
-    live.setAttribute('stroke-dashoffset', liveLen);
-
-    D.EDI.forEach(function (b, i) {
-      var row = el('div', 'edi');
-      row.setAttribute('data-i', i);
-      var h = el('div', 'edi__h');
-      h.appendChild(el('span', 'edi__t num', b.t));
-      h.appendChild(el('span', 'edi__alt num', b.alt != null ? b.alt + ' km' : '—'));
-      row.appendChild(h);
-      var bd = el('div', 'edi__b');
-      bd.appendChild(el('h4', 'edi__n', b.name));
-      bd.appendChild(el('p', 'edi__d', b.detail));
-      row.appendChild(bd);
-      list.appendChild(row);
-    });
-    var rows = Array.prototype.slice.call(list.children);
-
-    onTick(function (vh) {
-      var r = list.getBoundingClientRect();
-      var span = r.height - vh * 0.45;
-      var p = span > 0 ? clamp((vh * 0.72 - r.top) / span, 0, 1) : (r.top < vh * 0.5 ? 1 : 0);
-      var f = clamp(p * 1.08, 0, 1);
-      live.setAttribute('stroke-dashoffset', liveLen * (1 - f));
-      var active = Math.round(f * (beats.length - 1));
-      dots.forEach(function (g, i) {
-        var c = g.firstChild;
-        c.setAttribute('fill', i <= active ? '#FF7A45' : '#0A0912');
-        c.setAttribute('stroke', i <= active ? '#FF7A45' : '#4A4460');
-        g.lastChild.setAttribute('fill', i === active ? '#F2E8D0' : '#8B8373');
-      });
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i].getBoundingClientRect();
-        rows[i].classList.toggle('is-on', r.top < vh * 0.62 && r.bottom > vh * 0.2);
-      }
     });
   }
 
@@ -828,27 +680,6 @@
   }
 
   /* ---------- simple list renderers ----------------------- */
-
-  function buildFleet() {
-    var wrap = $('#fleet');
-    if (!wrap) return;
-    D.FLEET.forEach(function (v) {
-      var c = el('article', 'vessel');
-      c.appendChild(el('p', 'vessel__code num', v.code));
-      c.appendChild(el('h3', 'vessel__name', v.name));
-      c.appendChild(el('p', 'vessel__role', v.role + ' · ' + v.mass + ' · crew ' + v.crew));
-      c.appendChild(el('p', 'vessel__line', v.line));
-      var dl = el('dl', 'vessel__specs');
-      v.specs.forEach(function (sp) {
-        var row = el('div', 'vessel__spec');
-        row.appendChild(el('dt', null, sp[0]));
-        row.appendChild(el('dd', null, sp[1]));
-        dl.appendChild(row);
-      });
-      c.appendChild(dl);
-      wrap.appendChild(c);
-    });
-  }
 
   function buildLaminate() {
     var wrap = $('#laminate');
@@ -1021,17 +852,6 @@
     });
   }
 
-  function buildAdvantage() {
-    var wrap = $('#advantage');
-    if (!wrap) return;
-    D.CREW_ADVANTAGE.forEach(function (a) {
-      var c = el('article', 'adv');
-      c.appendChild(el('h4', 'adv__t', a.t));
-      c.appendChild(el('p', 'adv__d', a.d));
-      wrap.appendChild(c);
-    });
-  }
-
   /* ---------- construction -------------------------------- */
 
   function buildConstruction() {
@@ -1055,120 +875,173 @@
     });
   }
 
-  /* ---------- the lap: one circumnavigation --------------- */
+  /* ---------- chasing the sun: one day and one night ------ */
 
-  function lapChart() {
+  function sunChart() {
     var host = $('#lapSvg');
-    if (!host || !D.LAP) return;
-    var pick = $('#lapPick');
+    if (!host || !D.SUNCHASE) return;
+    var pickKm = $('#lapPick'), pickAir = $('#lapAir');
     var out = {
-      lap: $('#lLap'), night: $('#lNight'), store: $('#lStore'),
-      lift: $('#lLift'), wind: $('#lWind')
+      day: $('#lDay'), night: $('#lNight'), sun: $('#lSun'),
+      prop: $('#lProp'), store: $('#lStore'), wind: $('#lWind')
     };
+    var chase = (D.ALOFT && D.ALOFT.chase) || { dayKm: 51, airspeedMs: 10, nightKm: 55 };
+    var km = chase.dayKm, air = chase.airspeedMs;
 
-    var W = 920, H = 268, PAD = { l: 58, r: 58, t: 52, b: 26 };
+    var W = 920, H = 318, PAD = { l: 58, r: 58, t: 26, b: 26 };
     var IW = W - PAD.l - PAD.r;
     var s = svg('svg', {
       viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
       preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'One circumnavigation of Venus at the selected float altitude, showing the daylight and night halves and the battery state through the night'
+      'aria-label': 'One day and one night aboard the airship at the selected day-side altitude and airspeed: the altitude flown, the battery state, and the length of daylight and darkness'
     });
     host.appendChild(s);
 
-    /* altitude buttons */
-    D.LAP.forEach(function (row, i) {
-      var b = el('button', 'lap__btn' + (row.km === 52 ? ' is-on' : ''));
-      b.type = 'button';
-      b.textContent = row.km;
-      b.setAttribute('aria-pressed', row.km === 52 ? 'true' : 'false');
-      b.addEventListener('click', function () { select(i); });
-      pick.appendChild(b);
-      void 0;
-    });
+    function uniq(key) {
+      var seen = {}, list = [];
+      D.SUNCHASE.forEach(function (r) { if (!seen[r[key]]) { seen[r[key]] = 1; list.push(r[key]); } });
+      return list;
+    }
+    function buttons(pick, values, current, onpick) {
+      values.forEach(function (v) {
+        var b = el('button', 'lap__btn' + (v === current ? ' is-on' : ''));
+        b.type = 'button';
+        b.textContent = v;
+        b.setAttribute('aria-pressed', v === current ? 'true' : 'false');
+        b.addEventListener('click', function () {
+          Array.prototype.forEach.call(pick.children, function (c) {
+            var on = c === b;
+            c.classList.toggle('is-on', on);
+            c.setAttribute('aria-pressed', on ? 'true' : 'false');
+          });
+          onpick(v);
+        });
+        pick.appendChild(b);
+      });
+    }
+    buttons(pickKm, uniq('km'), km, function (v) { km = v; select(); });
+    buttons(pickAir, uniq('u'), air, function (v) { air = v; select(); });
+
+    function txt(x, y, t, o) {
+      o = o || {};
+      var n = svg('text', {
+        x: x, y: y, 'text-anchor': o.a || 'middle',
+        'font-family': o.f || '"IBM Plex Mono", monospace',
+        'font-size': o.s || 17, fill: o.c || '#8B8373',
+        'font-weight': o.w || 400, 'letter-spacing': o.ls || 0
+      });
+      n.textContent = t;
+      s.appendChild(n);
+      return n;
+    }
 
     function draw(row) {
       while (s.firstChild) s.removeChild(s.firstChild);
-      var hours = row.lapDays * 24;
-      var mid = PAD.l + IW / 2;
-      /* battery band on top, then a clear label row, then the day/night bar */
-      var topY = PAD.t, botY = PAD.t + 54;
-      var labelY = PAD.t + 78;
-      var barY = PAD.t + 86, barH = 44;
+      var hours = row.dayH + row.nightH;
+      var dayW = IW * row.dayH / hours;
+      var sunset = PAD.l + dayW;
+      var end = PAD.l + IW;
 
-      /* day / night halves */
+      /* rows, top to bottom: altitude flown, battery state, day/night bar, hour axis */
+      var altHi = PAD.t + 6, altLo = PAD.t + 34;
+      var topY = PAD.t + 76, botY = PAD.t + 124;
+      var labelY = PAD.t + 150;
+      var barY = PAD.t + 158, barH = 44;
+      var axisY = barY + barH + 16;
+
+      /* altitude: low and upwind by day, climb at sunset, coast high through the night */
+      var altD = 'M' + PAD.l + ' ' + altLo + ' L' + sunset + ' ' + altLo + ' L' + (sunset + 14) + ' ' + altHi +
+                 ' L' + (end - 14) + ' ' + altHi + ' L' + end + ' ' + altLo;
+      s.appendChild(svg('path', { d: altD, fill: 'none', stroke: '#8B8373', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      txt(PAD.l - 10, altLo + 5, row.km + ' km', { a: 'end', s: 14, c: '#5A5648' });
+      txt(end + 10, altHi + 5, chase.nightKm + ' km', { a: 'start', s: 14, c: '#5A5648' });
+      txt(PAD.l + dayW / 2, altLo - 10, row.u ? 'props on · ' + row.u + ' m/s upwind · ' + row.propKw + ' kW' : 'props off · drifting', { s: 14, c: '#8B8373' });
+      txt(sunset + (IW - dayW) / 2, altHi - 10, 'coasting', { s: 14, c: '#8B8373' });
+
+      /* day / night bar, widths in proportion to hours */
       var dayG = svg('linearGradient', { id: 'dayg', x1: 0, y1: 0, x2: 1, y2: 0 });
       dayG.appendChild(svg('stop', { offset: '0%', 'stop-color': '#5A4A2E' }));
       dayG.appendChild(svg('stop', { offset: '50%', 'stop-color': '#E8B33A' }));
       dayG.appendChild(svg('stop', { offset: '100%', 'stop-color': '#5A4A2E' }));
       var defs = svg('defs'); defs.appendChild(dayG); s.appendChild(defs);
-
-      s.appendChild(svg('rect', { x: PAD.l, y: barY, width: IW / 2, height: barH, fill: 'url(#dayg)' }));
-      s.appendChild(svg('rect', { x: mid, y: barY, width: IW / 2, height: barH, fill: '#141223', stroke: '#2A2740', 'stroke-width': 1 }));
-
-      function txt(x, y, t, o) {
-        o = o || {};
-        var n = svg('text', {
-          x: x, y: y, 'text-anchor': o.a || 'middle',
-          'font-family': o.f || '"IBM Plex Mono", monospace',
-          'font-size': o.s || 17, fill: o.c || '#8B8373',
-          'font-weight': o.w || 400, 'letter-spacing': o.ls || 0
-        });
-        n.textContent = t;
-        s.appendChild(n);
-        return n;
-      }
-
-      txt(PAD.l + IW / 4, barY + 27, 'DAYLIGHT  ' + Math.round(hours / 2) + ' h', { c: '#1A1408', s: 18, w: 500, ls: 1.4 });
-      txt(mid + IW / 4, barY + 27, 'NIGHT  ' + Math.round(row.nightH) + ' h', { c: '#F2E8D0', s: 18, w: 500, ls: 1.4 });
+      s.appendChild(svg('rect', { x: PAD.l, y: barY, width: dayW, height: barH, fill: 'url(#dayg)' }));
+      s.appendChild(svg('rect', { x: sunset, y: barY, width: IW - dayW, height: barH, fill: '#141223', stroke: '#2A2740', 'stroke-width': 1 }));
+      txt(PAD.l + dayW / 2, barY + 27, 'DAYLIGHT  ' + Math.round(row.dayH) + ' h', { c: '#1A1408', s: 18, w: 500, ls: 1.4 });
+      txt(sunset + (IW - dayW) / 2, barY + 27, 'NIGHT  ' + Math.round(row.nightH) + ' h', { c: '#F2E8D0', s: 18, w: 500, ls: 1.4 });
 
       /* hour axis */
-      var axisY = barY + barH + 16;
-      s.appendChild(svg('line', { x1: PAD.l, y1: axisY, x2: PAD.l + IW, y2: axisY, stroke: '#2A2740', 'stroke-width': 1 }));
-      var stepH = hours > 140 ? 24 : 12;
-      for (var t = 0; t <= hours + 0.01; t += stepH) {
+      s.appendChild(svg('line', { x1: PAD.l, y1: axisY, x2: end, y2: axisY, stroke: '#2A2740', 'stroke-width': 1 }));
+      for (var t = 0; t <= hours + 0.01; t += 24) {
         var x = PAD.l + (t / hours) * IW;
         s.appendChild(svg('line', { x1: x, y1: axisY, x2: x, y2: axisY + 6, stroke: '#2A2740', 'stroke-width': 1 }));
         txt(x, axisY + 24, String(Math.round(t)), { s: 14, c: '#5A5648' });
       }
       txt(PAD.l + IW / 2, axisY + 44, 'hours since local sunrise', { s: 14, c: '#5A5648' });
 
-      /* battery state through the lap */
-      s.appendChild(svg('line', { x1: PAD.l, y1: topY, x2: PAD.l + IW, y2: topY, stroke: '#1F1D33', 'stroke-width': 1 }));
-      s.appendChild(svg('line', { x1: PAD.l, y1: botY, x2: PAD.l + IW, y2: botY, stroke: '#1F1D33', 'stroke-width': 1 }));
+      /* battery: charging through the day, full at sunset, drawn down through the night */
+      s.appendChild(svg('line', { x1: PAD.l, y1: topY, x2: end, y2: topY, stroke: '#1F1D33', 'stroke-width': 1 }));
+      s.appendChild(svg('line', { x1: PAD.l, y1: botY, x2: end, y2: botY, stroke: '#1F1D33', 'stroke-width': 1 }));
       txt(PAD.l - 10, topY + 5, 'full', { a: 'end', s: 14, c: '#5A5648' });
       txt(PAD.l - 10, botY + 5, 'empty', { a: 'end', s: 14, c: '#5A5648' });
-
-      var d = 'M' + PAD.l + ' ' + botY;
-      d += ' L' + mid + ' ' + topY;          /* charging through the day */
-      d += ' L' + (PAD.l + IW) + ' ' + botY; /* discharging through the night */
+      var fullAt = PAD.l + dayW * 0.6; /* topped up well before sunset; the surplus runs the props */
+      var d = 'M' + PAD.l + ' ' + botY + ' L' + fullAt + ' ' + topY + ' L' + sunset + ' ' + topY + ' L' + end + ' ' + botY;
       s.appendChild(svg('path', { d: d, fill: 'none', stroke: '#5FD0C4', 'stroke-width': 3, 'stroke-linejoin': 'round' }));
-      s.appendChild(svg('circle', { cx: mid, cy: topY, r: 4.5, fill: '#5FD0C4' }));
-      txt(mid, topY - 12, Math.round(row.storageKwh) + ' kWh stored', { c: '#5FD0C4', s: 16 });
+      s.appendChild(svg('circle', { cx: sunset, cy: topY, r: 4.5, fill: '#5FD0C4' }));
+      txt(sunset, topY - 12, Math.round(row.storageKwh) + ' kWh stored', { c: '#5FD0C4', s: 16, a: sunset > end - 120 ? 'end' : 'middle' });
 
       /* sunrise / sunset markers */
-      [PAD.l, mid, PAD.l + IW].forEach(function (x) {
+      [PAD.l, sunset, end].forEach(function (x) {
         s.appendChild(svg('line', { x1: x, y1: labelY + 4, x2: x, y2: barY + barH + 6, stroke: '#5A5648', 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
       });
       txt(PAD.l, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'start' });
-      txt(mid, labelY, 'sunset', { s: 14, c: '#5A5648' });
-      txt(PAD.l + IW, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'end' });
+      txt(sunset, labelY, 'sunset', { s: 14, c: '#5A5648' });
+      txt(end, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'end' });
     }
 
-    function select(i) {
-      var row = D.LAP[i];
-      Array.prototype.forEach.call(pick.children, function (b, j) {
-        b.classList.toggle('is-on', j === i);
-        b.setAttribute('aria-pressed', j === i ? 'true' : 'false');
-      });
+    function select() {
+      var row = null;
+      D.SUNCHASE.forEach(function (r) { if (r.km === km && r.u === air) row = r; });
+      if (!row) return;
       draw(row);
-      out.lap.textContent = row.lapDays.toFixed(1);
+      out.day.textContent = Math.round(row.dayH);
       out.night.textContent = Math.round(row.nightH);
+      out.sun.textContent = row.sunPct;
+      out.prop.textContent = row.propKw;
       out.store.textContent = fmt(row.storageKwh, 0);
-      out.lift.textContent = row.lift.toFixed(1);
       out.wind.textContent = row.wind;
     }
 
-    select(2); /* 52 km */
+    select();
+  }
+
+  /* ---------- why not park under the sun: by latitude ----- */
+
+  function sunkeepRows() {
+    var wrap = $('#sunkeep');
+    if (!wrap || !D.SUNKEEP) return;
+    var lo = 1, hi = 0;
+    D.SUNKEEP.forEach(function (r) { hi = Math.max(hi, Math.log10(r.propKw)); });
+    function width(kw) { return Math.max(1.5, 100 * (Math.log10(Math.max(kw, 10)) - lo) / (hi - lo)); }
+    function kw(v) { return v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + ' MW' : v + ' kW'; }
+    D.SUNKEEP.forEach(function (r) {
+      var row = el('div', 'sk');
+      row.appendChild(el('span', 'sk__lat', r.lat + '°'));
+      var bars = el('div', 'sk__bars');
+      var need = el('div', 'sk__bar sk__bar--need'); need.style.width = width(r.propKw) + '%';
+      var have = el('div', 'sk__bar sk__bar--have'); have.style.width = width(r.solarKw) + '%';
+      bars.appendChild(need); bars.appendChild(have);
+      row.appendChild(bars);
+      var v = el('span', 'sk__v');
+      v.appendChild(el('b', null, kw(r.propKw) + ' to hold'));
+      v.appendChild(document.createTextNode(kw(r.solarKw) + ' of sun'));
+      row.appendChild(v);
+      wrap.appendChild(row);
+    });
+    var key = el('div', 'sk__key');
+    var k1 = el('span', null, 'to hold still'); k1.insertBefore(el('i', 'sk__bar--need'), k1.firstChild);
+    var k2 = el('span', null, 'from the array'); k2.insertBefore(el('i', 'sk__bar--have'), k2.firstChild);
+    key.appendChild(k1); key.appendChild(k2);
+    wrap.parentNode.insertBefore(key, wrap.nextSibling);
   }
 
   /* ---------- experience + crew --------------------------- */
@@ -1257,27 +1130,27 @@
     if (sky) starfield(sky);
     buildHero();
     buildLedger();
-    buildBars();
     buildPhases();
     buildWindows();
-    buildFleet();
     buildLaminate();
     buildAloft();
     buildScience();
     buildSampling();
-    buildAdvantage();
     buildConstruction();
     buildExperience();
     buildCrewDetail();
-    lapChart();
+    sunChart();
+    sunkeepRows();
     buildCost();
     buildRisks();
     buildSources();
-    cutaway();
+    /* three dimensions where WebGL is available; the 2D renderers stay as the fallback */
+    var three = null;
+    try { three = window.PHOS && PHOS.ACTS3D ? PHOS.ACTS3D.init(onTick, trackProgress) : null; } catch (e) { three = null; }
+    if (!three || !three.cutaway) cutaway();
     liftCalc();
-    descentStage();
-    ediStage();
-    if (PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
+    descentStage(three && three.descent);
+    if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
     rail();
     reveals();
 
