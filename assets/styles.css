@@ -279,7 +279,9 @@ section { position: relative; }
 .hero__sub b { color: var(--sulfur); font-weight: 600; }
 
 .hero__strip {
-  display: inline-flex;
+  display: flex;
+  width: max-content;
+  max-width: 100%;
   flex-wrap: wrap;
   gap: 1px;
   margin-top: clamp(2.5rem, 6vw, 4rem);
