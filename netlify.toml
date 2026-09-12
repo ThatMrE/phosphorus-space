@@ -1,0 +1,5 @@
+# Stamp every asset URL in index.html with a content hash at deploy time, so
+# a fresh page never runs against a browser's stale copy of the scripts.
+[build]
+  command = "python3 scripts/stamp_assets.py"
+  publish = "."

@@ -55,6 +55,7 @@ python3 compare.py           # Venus vs Mars, buoyancy table, envelope sizing
 python3 export_trajectory.py # regenerates assets/trajectory.js for the orbit plot
 python3 lapcycle.py          # what the lap and night would be if the ship only drifted
 python3 sunchase.py          # the sun-chasing cycle, and why parking under the sun does not close
+python3 stamp_assets.py      # re-hash the asset URLs in index.html (Netlify runs this on deploy)
 ```
 
 **Method.** Planet states come from JPL's *Approximate Positions of the Planets*
