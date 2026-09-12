@@ -165,21 +165,104 @@
 
   /* ---------- ledger -------------------------------------- */
 
-  function buildLedger() {
-    var wrap = $('#ledger');
-    if (!wrap) return;
-    var head = el('div', 'ledger__head');
-    ['', 'Venus', 'Mars', ''].forEach(function (t) { head.appendChild(el('div', null, t)); });
-    wrap.appendChild(head);
+  function compareStage(viz) {
+    var steps = $('#compareSteps');
+    var stage = $('#compare');
+    if (!steps || !stage || !D.LEDGER) return;
+    var track = $('.stage__track', stage);
+    var canvas = $('#compareCanvas');
 
-    D.LEDGER.forEach(function (row) {
-      var r = el('div', 'ledger__row');
-      r.setAttribute('data-win', row.win);
-      r.appendChild(el('div', 'ledger__metric', row.metric));
-      r.appendChild(el('div', 'ledger__v num', row.venus));
-      r.appendChild(el('div', 'ledger__m num', row.mars));
-      r.appendChild(el('div', 'ledger__note', row.note));
-      wrap.appendChild(r);
+    function fill(template, nums, decimals, k) {
+      return template.replace(/\{(\d)\}/g, function (_, i) {
+        var n = nums[+i] * k;
+        return decimals ? n.toFixed(decimals) : fmt(Math.round(n), 0);
+      });
+    }
+
+    var cards = D.LEDGER.map(function (row) {
+      var step = el('div', 'stage__step');
+      var card = el('article', 'stage__card cmp');
+      card.setAttribute('data-win', row.win);
+      card.appendChild(el('p', 'cmp__metric', row.metric));
+      var vals = el('div', 'cmp__vals');
+      var out = {};
+      [['v', 'Venus', row.venus, row.vt, row.vn, row.vd], ['m', 'Mars', row.mars, row.mt, row.mn, row.md]].forEach(function (side) {
+        var cell = el('div', 'cmp__val cmp__val--' + side[0]);
+        cell.appendChild(el('span', 'cmp__who', side[1]));
+        var n = el('b', 'cmp__n', side[2]);
+        cell.appendChild(n);
+        vals.appendChild(cell);
+        out[side[0]] = { node: n, t: side[3], n: side[4], d: side[5] };
+      });
+      card.appendChild(vals);
+      card.appendChild(el('p', 'cmp__note', row.note));
+      step.appendChild(card);
+      steps.appendChild(step);
+      return { card: card, out: out, row: row };
+    });
+
+    /* count the numbers up when a card takes the stage */
+    var active = -1, tween = null;
+    function activate(i) {
+      cards.forEach(function (c, j) {
+        c.card.classList.toggle('is-active', j === i);
+        /* anything already scrolled past shows its final numbers, no count */
+        if (j < i && !c.card.classList.contains('is-done')) {
+          c.card.classList.add('is-done');
+          ['v', 'm'].forEach(function (side) { var o = c.out[side]; if (o.n) o.node.textContent = fill(o.t, o.n, o.d, 1); });
+        }
+      });
+      var c = cards[i];
+      if (c.card.classList.contains('is-done')) { if (viz) viz.setStep(i, c.row); return; }
+      c.card.classList.add('is-done');
+      if (tween) cancelAnimationFrame(tween);
+      var t0 = performance.now(), dur = REDUCED ? 0 : 900;
+      (function frame(now) {
+        var k = dur ? Math.min(1, (now - t0) / dur) : 1;
+        k = 1 - Math.pow(1 - k, 3);
+        ['v', 'm'].forEach(function (side) {
+          var o = c.out[side];
+          if (o.n) o.node.textContent = fill(o.t, o.n, o.d, k);
+        });
+        if (k < 1) tween = requestAnimationFrame(frame);
+      })(t0);
+      if (viz) viz.setStep(i, c.row);
+    }
+
+    /* the 2D fallback: two shaded discs, so the cards still have company */
+    var ctx2 = null;
+    if (!viz && canvas) {
+      ctx2 = canvas.getContext('2d');
+      var draw2 = function () {
+        var dpr = Math.min(window.devicePixelRatio || 1, 2), w = canvas.clientWidth, h = canvas.clientHeight;
+        if (!w || !h) return;
+        canvas.width = w * dpr; canvas.height = h * dpr; ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx2.clearRect(0, 0, w, h);
+        var narrow = w < 760, r = narrow ? Math.min(w, h) * 0.16 : Math.min(w, h) * 0.2;
+        [[narrow ? w * 0.3 : w * 0.5, narrow ? h * 0.28 : h * 0.5, '#E3C878', '#8A6A2A', 'Venus'],
+         [narrow ? w * 0.7 : w * 0.78, narrow ? h * 0.28 : h * 0.5, '#C9673A', '#5A2A18', 'Mars']].forEach(function (pl) {
+          var g = ctx2.createRadialGradient(pl[0] - r * 0.4, pl[1] - r * 0.4, r * 0.1, pl[0], pl[1], r);
+          g.addColorStop(0, pl[2]); g.addColorStop(1, pl[3]);
+          ctx2.fillStyle = g; ctx2.beginPath(); ctx2.arc(pl[0], pl[1], r, 0, Math.PI * 2); ctx2.fill();
+          ctx2.fillStyle = '#F2E8D0'; ctx2.font = '600 16px Archivo, sans-serif'; ctx2.textAlign = 'center';
+          ctx2.fillText(pl[4], pl[0], pl[1] + r + 26);
+        });
+      };
+      draw2();
+      window.addEventListener('resize', draw2, { passive: true });
+    }
+
+    onTick(function (vh) {
+      /* the active card is the one nearest the middle of the screen */
+      var best = -1, bestD = Infinity;
+      for (var i = 0; i < cards.length; i++) {
+        var r = cards[i].card.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh) continue;
+        var d = Math.abs((r.top + r.bottom) / 2 - vh * (window.innerWidth < 760 ? 0.62 : 0.55));
+        if (d < bestD) { bestD = d; best = i; }
+      }
+      if (best < 0) { var p = trackProgress(track); best = p <= 0 ? 0 : cards.length - 1; }
+      if (best !== active) { active = best; activate(best); }
     });
   }
 
@@ -1125,7 +1208,6 @@
     var sky = $('#heroSky');
     if (sky) starfield(sky);
     buildHero();
-    buildLedger();
     buildPhases();
     buildWindows();
     buildLaminate();
@@ -1146,6 +1228,7 @@
     if (!three || !three.cutaway) cutaway();
     liftCalc();
     descentStage(three && three.descent);
+    compareStage(three && three.compare);
     if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
     rail();
     reveals();

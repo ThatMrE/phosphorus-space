@@ -366,7 +366,6 @@ section { position: relative; }
 
 /* ---------- ledger (Venus vs Mars) ------------------------ */
 
-.ledger { display: flex; flex-direction: column; gap: 1px; background: var(--line-soft); }
 .ledger__row {
   display: grid;
   grid-template-columns: 1fr;
@@ -1114,6 +1113,46 @@ input[type="range"]::-moz-range-thumb {
   .cut3d__label span { font-size: 0.62rem; }
   .cut3d__scale { display: none; }
   .act__caption { max-width: calc(100vw - 2 * var(--gutter)); bottom: 6.5rem; }
+}
+
+/* Venus against Mars: the comparison stage */
+.compare .stage__viz { background: var(--void); }
+#compareCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.compare .stage__step { min-height: 64svh; }
+.cmp__metric { font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.16em; text-transform: uppercase; color: var(--cream-dim); }
+.cmp__vals { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line-soft); }
+.cmp__val { background: var(--void); padding: 0.75rem 0.9rem 0.85rem; display: flex; flex-direction: column; gap: 0.3rem; }
+.cmp__who { font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.14em; text-transform: uppercase; color: var(--cream-faint); }
+.cmp__n { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: var(--step-2); line-height: 1.1; color: var(--cream-dim); font-weight: 500; }
+.cmp__val--v .cmp__n { color: var(--sulfur); }
+.cmp[data-win="mars"] .cmp__val--v .cmp__n { color: var(--cream-dim); }
+.cmp[data-win="mars"] .cmp__val--m .cmp__n { color: var(--aqua); }
+.cmp__n { opacity: 0; transform: translateY(0.3em); transition: opacity .5s ease, transform .5s ease; }
+.cmp.is-done .cmp__n { opacity: 1; transform: none; }
+.cmp__note { font-size: var(--step-0); color: var(--cream-2); margin: 0; }
+.cmp__call {
+  position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none;
+  transform: translate(-50%, -100%); opacity: 0; transition: opacity .35s ease;
+  max-width: 15rem; text-align: center;
+  font-family: var(--f-mono); font-size: var(--step--2); line-height: 1.4; color: var(--cream);
+  background: rgba(10, 9, 18, 0.78); padding: 0.4rem 0.6rem;
+}
+.cmp__call.is-on { opacity: 1; }
+.cmp__call--v { border-bottom: 2px solid var(--sulfur); }
+.cmp__call--m { border-bottom: 2px solid var(--ember); }
+.cmp__name {
+  position: absolute; left: 0; top: 0; z-index: 3; pointer-events: none; transform: translate(-50%, 0);
+  font-family: var(--f-display); font-size: var(--step-1); font-weight: 600; letter-spacing: -0.01em; color: var(--cream);
+}
+.cmp__lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+.cmp__lines line { stroke-width: 1.2; opacity: 0; transition: opacity .35s ease; }
+.cmp__lines line.is-on { opacity: 0.6; }
+.cmp__lines circle { opacity: 0; transition: opacity .35s ease; }
+.cmp__lines circle.is-on { opacity: 1; }
+@media (max-width: 760px) {
+  .compare .stage__step { min-height: 78svh; justify-content: flex-end; padding-bottom: 5vh; }
+  .cmp__call { max-width: 11rem; font-size: 0.62rem; }
+  .cmp__n { font-size: var(--step-1); }
 }
 
 .act__badge {
