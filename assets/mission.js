@@ -933,24 +933,37 @@
 
   /* ---------- construction -------------------------------- */
 
-  function buildConstruction() {
-    var wrap = $('#build');
-    if (!wrap) return;
-    D.BUILD.forEach(function (b) {
-      var a = el('article', 'bd');
-      var l = el('div', 'bd__l');
-      l.appendChild(el('p', 'bd__step', b.step));
-      l.appendChild(el('p', 'bd__where num', b.where));
-      var fig = el('div', 'bd__fig');
-      fig.appendChild(el('p', 'bd__num', b.num));
-      fig.appendChild(el('p', 'bd__numlab', b.numlab));
-      l.appendChild(fig);
-      a.appendChild(l);
-      var r = el('div', 'bd__r');
-      r.appendChild(el('h4', 'bd__head', b.head));
-      r.appendChild(el('p', 'bd__body', b.body));
-      a.appendChild(r);
-      wrap.appendChild(a);
+  function buildConstruction(viz) {
+    var steps = $('#buildSteps');
+    var stage = $('#build');
+    if (!steps || !stage || !D.BUILD) return;
+    var track = $('.stage__track', stage);
+    var cards = D.BUILD.map(function (b) {
+      var step = el('div', 'stage__step');
+      var c = el('article', 'stage__card bcard');
+      var top = el('p', 'bcard__step');
+      top.appendChild(el('span', null, b.step));
+      top.appendChild(el('span', 'bcard__where', b.where));
+      c.appendChild(top);
+      c.appendChild(el('h3', null, b.head));
+      c.appendChild(el('p', null, b.body));
+      var fig = el('p', 'bcard__fig');
+      fig.appendChild(el('b', 'num', b.num));
+      fig.appendChild(el('span', null, b.numlab));
+      c.appendChild(fig);
+      step.appendChild(c);
+      steps.appendChild(step);
+      return c;
+    });
+    var active = -1;
+    onTick(function () {
+      var p = trackProgress(track);
+      var i = Math.min(cards.length - 1, Math.floor(p * cards.length));
+      if (i !== active) {
+        active = i;
+        cards.forEach(function (c, j) { c.classList.toggle('is-active', j === i); });
+      }
+      if (viz) viz.update(p);
     });
   }
 
@@ -1214,7 +1227,6 @@
     buildAloft();
     buildScience();
     buildSampling();
-    buildConstruction();
     buildExperience();
     buildCrewDetail();
     sunChart();
@@ -1229,6 +1241,7 @@
     liftCalc();
     descentStage(three && three.descent);
     compareStage(three && three.compare);
+    buildConstruction(three && three.build);
     if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
     rail();
     reveals();
