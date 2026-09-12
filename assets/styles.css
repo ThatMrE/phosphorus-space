@@ -1225,6 +1225,7 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid var(--line);
   padding: 1rem 1.15rem 1.1rem;
 }
+.journey__note:empty { display: none; }
 .journey__note {
   font-size: var(--step--1);
   color: var(--cream-dim);
