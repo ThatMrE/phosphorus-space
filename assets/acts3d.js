@@ -1718,23 +1718,23 @@
     }
     function place(p) {
       var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
-      var narrow = v.w() < 760, nk = narrow ? Math.min(2, 1.05 * v.h() / Math.max(1, v.w())) : 1;
+      var narrow = v.w() < 760, nk = narrow ? Math.min(2.4, 1.15 * v.h() / Math.max(1, v.w())) : 1;
       /* the ship drifts between its band altitudes over the first part of a card */
       var shipKm = lerp(i ? SHIP_KM[i - 1] : SHIP_KM[0], SHIP_KM[i], ease(seg(local, 0, 0.45)));
       shipG.position.set(0, shipKm * U, 0);
       var bottom = shipKm * U - 2.8, topY = shipKm * U + 1.8;
       up.visible = down.visible = probe.visible = lander.visible = tether.visible = false;
-      var lookUp = narrow ? 2.2 : 0;
+      var lookUp = narrow ? 1.2 : 0;
       if (i === 0) {
         var km = lerp(52, 62, ease(local));
         up.visible = tether.visible = true; up.position.set(1.5, km * U, 0);
         tether.geometry.setFromPoints([new THREE.Vector3(0, topY, 0), up.position]);
         follow(up, [4.5, 1.2, 7], lookUp * 0.6); focusKm = km;
       } else if (i === 1 || i === 3) {
-        follow(shipG, [18 * nk, 3 * nk, 26 * nk], lookUp * 3); focusKm = shipKm;
+        follow(shipG, [20 * nk, 3.5 * nk, 29 * nk], lookUp * 3); focusKm = shipKm;
       } else if (i === 2) {
         tmp.set(0, shipKm * U - 2.2, 0);
-        wantPos.set(6 * nk, shipKm * U - 1.4, 9 * nk); wantLook.copy(tmp); wantLook.y += lookUp; focusKm = shipKm;
+        wantPos.set(14 * nk, shipKm * U - 0.2, 20 * nk); wantLook.copy(tmp); wantLook.y += lookUp * 2 + 0.6; focusKm = shipKm;
       } else if (i === 4) {
         var km4 = lerp(50, 45, ease(local));
         down.visible = tether.visible = true; down.position.set(1.2, km4 * U, 0);
@@ -1752,11 +1752,17 @@
         var offHi = [4, 1.5, 6.5], offLo = [3.6, 0.9, 5.2];
         follow(lander, [lerp(offHi[0], offLo[0], landed), lerp(offHi[1], offLo[1], landed), lerp(offHi[2], offLo[2], landed)], lookUp * 0.6 + 0.4 * (1 - landed)); focusKm = km6;
       }
+      /* wide screens: slide the view so what the camera follows sits right of the cards */
+      if (!narrow) {
+        var dv = new THREE.Vector3().subVectors(wantLook, wantPos), dist = dv.length(); dv.normalize();
+        var rt = new THREE.Vector3().crossVectors(dv, new THREE.Vector3(0, 1, 0)).normalize();
+        wantPos.addScaledVector(rt, -dist * 0.26); wantLook.addScaledVector(rt, -dist * 0.26);
+      }
       var sky = skyAt(focusKm);
       scene.background.copy(sky); scene.fog.color.copy(sky);
       var inCloud = focusKm > 47.5 && focusKm < 63;
       scene.fog.near = inCloud ? 6 : 12;
-      scene.fog.far = inCloud ? lerp(55, 90, seg(focusKm, 50, 62)) : (focusKm > 40 ? 160 : lerp(90, 260, seg(focusKm, 0, 30)));
+      scene.fog.far = (inCloud ? lerp(55, 90, seg(focusKm, 50, 62)) : (focusKm > 40 ? 160 : lerp(90, 260, seg(focusKm, 0, 30)))) * nk;
       var dark = seg(focusKm, 47, 25);
       hemi.intensity = 1.0 - 0.55 * dark; sun.intensity = 0.6 - 0.45 * dark;
       setHud(focusKm < 0.05 ? 0 : focusKm);

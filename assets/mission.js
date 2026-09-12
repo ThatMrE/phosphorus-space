@@ -905,33 +905,6 @@
 
   /* ---------- the bill, step by step ---------------------- */
 
-  function buildBill() {
-    var wrap = $('#billBars');
-    if (!wrap || !D.COSTS) return;
-    var max = Math.max.apply(null, D.COSTS.phases.map(function (c) { return c.usd; }));
-    D.COSTS.phases.forEach(function (c, i) {
-      var st = D.PHASES[i] ? D.PHASES[i].status : '';
-      var b = el('div', 'pbar' + (st === 'flagship' ? ' pbar--crew' : st === 'funded' ? ' pbar--funded' : ''));
-      var top = el('p', 'pbar__top'); top.appendChild(el('span', null, c.name)); top.appendChild(el('b', null, '$' + c.usd.toFixed(1) + ' bn'));
-      b.appendChild(top);
-      var tr = el('div', 'pbar__track'); var f = el('div', 'pbar__fill');
-      f.style.width = '0%'; f.setAttribute('data-w', (c.usd / max * 100).toFixed(1) + '%');
-      tr.appendChild(f); b.appendChild(tr);
-      b.appendChild(el('p', 'pbar__note', c.note));
-      wrap.appendChild(b);
-    });
-    var fired = false;
-    onTick(function (vh) {
-      if (fired) return;
-      if (wrap.getBoundingClientRect().top < vh * 0.9) {
-        fired = true;
-        Array.prototype.forEach.call(wrap.querySelectorAll('.pbar__fill'), function (n, i) {
-          setTimeout(function () { n.style.width = n.getAttribute('data-w'); }, REDUCED ? 0 : i * 70);
-        });
-      }
-    });
-  }
-
   /* ---------- the fleet, exploded ------------------------- */
 
   /* ---------- thirty days, lap by lap --------------------- */
@@ -1120,7 +1093,6 @@
     buildWalk(three && three.walk);
     buildStay(three && three.stay);
     programStage();
-    buildBill();
     buildScience(three && three.learn);
     buildSampling(three && three.samples);
     if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
