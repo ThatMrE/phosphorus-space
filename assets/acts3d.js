@@ -574,8 +574,8 @@
     var fadeEl = canvas.parentNode.querySelector('.act__fade');
     var lastP = -1, lastPhase = -1;
     var PHASES = [
-      [0.00, 'Leaving Earth',  'One burn, and you are on your way.'],
-      [0.33, 'Four months out', 'Sunlight gets stronger the whole way in.'],
+      [0.00, 'Leaving Earth',  ''],
+      [0.33, 'Four months out', ''],
       [0.66, 'Venus ahead',    'The atmosphere does the braking, not the engines.'],
       [0.74, 'Splitting up',   'Two stay with Hesperus. Two go in direct.'],
       [0.80, 'Aerobraking',    '11.3 km/s in, 7.2 km/s out. No propellant spent.'],
@@ -667,7 +667,6 @@
       else live = shotC(seg(p, 0.66, 1));
       if (hud.day) {
         hud.day.firstChild.nodeValue = String(Math.round(p * 124));
-        if (hud.speed && PHOS.TRIP_SPEED) { var sp = PHOS.TRIP_SPEED(p); hud.speed.textContent = sp.v.toFixed(1); hud.frame.textContent = sp.frame; }
         var idx = 0;
         for (var i = 0; i < PHASES.length; i++) if (p >= PHASES[i][0]) idx = i;
         if (idx !== lastPhase) {
@@ -1109,8 +1108,7 @@
       if (b) {
         var cb = swapCanvas(b);
         var okB = actJourney(cb, onTick, trackProgress, {
-          day: document.getElementById('jDay'), phase: document.getElementById('jPhase'), note: document.getElementById('jNote'),
-          speed: document.getElementById('jSpeed'), frame: document.getElementById('jFrame')
+          day: document.getElementById('jDay'), phase: document.getElementById('jPhase'), note: document.getElementById('jNote')
         });
         if (okB) b.hidden = true; else cb.parentNode.removeChild(cb);
         out.acts = out.acts && okB;

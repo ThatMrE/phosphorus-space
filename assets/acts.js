@@ -447,41 +447,6 @@
      boot
      ============================================================ */
 
-  /* Speed through the trip, and what it is measured against. LEO at 7.67
-     km/s, the 3.5 km/s burn, Earth's pull bleeding it down to the 2.66 km/s
-     departure v-infinity, the heliocentric cruise from the real arc, then
-     Venus' pull taking the 4.71 km/s arrival v-infinity up to 11.29 at the
-     entry interface, and the aerobraking pass leaving Hesperus at 7.15 in
-     a 300 km orbit. */
-  var cruiseV = null;
-  PHOS.TRIP_SPEED = function (p) {
-    if (p < 0.33) {
-      var t = seg(p, 0, 0.33);
-      if (t < 0.28) return { v: 7.67, frame: 'vs Earth' };
-      if (t < 0.42) return { v: lerp(7.67, 11.17, seg(t, 0.28, 0.42)), frame: 'vs Earth' };
-      return { v: lerp(11.17, 2.66, easeOut(seg(t, 0.42, 1))), frame: 'vs Earth' };
-    }
-    if (p < 0.66) {
-      var T = PHOS.TRAJ;
-      if (!cruiseV && T && T.outbound) {
-        cruiseV = [];
-        for (var i = 0; i + 1 < T.outbound.length; i++) {
-          var dx = T.outbound[i + 1][0] - T.outbound[i][0], dy = T.outbound[i + 1][1] - T.outbound[i][1];
-          cruiseV.push(Math.sqrt(dx * dx + dy * dy) * 1731.46 / 2);
-        }
-        if (cruiseV.length > 1) cruiseV[cruiseV.length - 1] = cruiseV[cruiseV.length - 2];
-      }
-      var u = seg(p, 0.33, 0.66);
-      var v = cruiseV && cruiseV.length ? cruiseV[Math.min(cruiseV.length - 1, Math.round(u * (cruiseV.length - 1)))] : lerp(26.8, 37.8, u);
-      return { v: v, frame: 'vs the Sun' };
-    }
-    var a = seg(p, 0.66, 1);
-    if (a < 0.5) return { v: lerp(4.71, 11.29, easeIn(seg(a, 0, 0.5))), frame: 'vs Venus' };
-    if (a < 0.8) return { v: lerp(11.29, 7.15, ease(seg(a, 0.5, 0.8))), frame: 'vs Venus' };
-    return { v: 7.15, frame: 'in orbit' };
-  };
-  function easeIn(t) { return t * t * t; }
-
   PHOS.ACTS = function (onTick, trackProgress) {
     var a = document.getElementById('assemblyCanvas');
     var b = document.getElementById('journeyCanvas');
@@ -498,14 +463,12 @@
       var trackB = b.closest('.stage').querySelector('.stage__track');
       var out = {
         day: document.getElementById('jDay'),
-        speed: document.getElementById('jSpeed'),
-        frame: document.getElementById('jFrame'),
         phase: document.getElementById('jPhase'),
         note: document.getElementById('jNote')
       };
       var PHASES = [
-        [0.00, 'Leaving Earth', 'One burn, and you are on your way.'],
-        [0.33, 'Four months out', 'Sunlight gets stronger the whole way in.'],
+        [0.00, 'Leaving Earth', ''],
+        [0.33, 'Four months out', ''],
         [0.66, 'Venus ahead', 'The atmosphere does the braking, not the engines.'],
         [0.88, 'Splitting up', 'Two stay in orbit. Two head for the clouds.']
       ];
@@ -517,7 +480,6 @@
         if (!out.day) return;
         var day = Math.round(p * 124);
         out.day.firstChild.nodeValue = String(day);
-        if (out.speed) { var sp = PHOS.TRIP_SPEED(p); out.speed.textContent = sp.v.toFixed(1); out.frame.textContent = sp.frame; }
         var idx = 0;
         for (var i = 0; i < PHASES.length; i++) if (p >= PHASES[i][0]) idx = i;
         if (idx !== lastPhase) {
