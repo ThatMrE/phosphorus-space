@@ -804,100 +804,6 @@
   }
 
   /* ============================================================
-     THE SHIP — a labeled cutaway in three dimensions
-     ============================================================ */
-
-  function cutaway3d(host) {
-    var THREE = window.THREE;
-    if (!THREE || !PHOS.MODELS) return false;
-    host.innerHTML = '';
-    host.classList.add('cut3d');
-    var canvas = document.createElement('canvas');
-    var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    overlay.setAttribute('class', 'cut3d__lines');
-    host.appendChild(canvas); host.appendChild(overlay);
-    var v = makeView(canvas, { fov: 30, near: 1, far: 4000, alpha: true, watch: host });
-    if (!v) { host.classList.remove('cut3d'); host.innerHTML = ''; return false; }
-    var scene = new THREE.Scene();
-    lights(THREE, scene, [1, 1.2, 0.8], 1.1);
-    var fill = new THREE.DirectionalLight(0x5FD0C4, 0.3); fill.position.set(-1, -0.5, -0.6); scene.add(fill);
-    var ship = model(THREE, 'phosphorus_airship');
-    ship.traverse(function (o) {
-      if (!o.isMesh) return;
-      if (o.userData.material === 'hull') { o.material.transparent = true; o.material.opacity = 0.26; o.material.depthWrite = false; }
-    });
-    scene.add(ship);
-
-    var CALLS = [
-      { at: [-38, 4, 8],    side: 'l', t: 'Helium lift cells',        v: '46 000 m³ · 66.8 t lift', c: '#E8B33A' },
-      { at: [-30, -6, 6],   side: 'l', t: 'Ballonets',                v: 'buoyancy and thermal trim', c: '#C9BFA8' },
-      { at: [-7, -22.5, 2.6], side: 'l', t: 'Habitat module',         v: '2 crew · 30 days · 1 atm', c: '#5FD0C4' },
-      { at: [8, 17, 0],     side: 'r', t: 'Thin-film photovoltaics',  v: '~1 000 m² · 2 601 W/m²', c: '#E8B33A' },
-      { at: [26, -7, 14],   side: 'r', t: 'Breathable-air volume',    v: '31 500 m³ · 16.8 t · ambient', c: '#5FD0C4' },
-      { at: [9, -28, 1.8],  side: 'r', t: 'Vesper ascent vehicle',    v: '~8.0 km/s to Venus orbit', c: '#FF7A45' }
-    ];
-    var labels = CALLS.map(function (c, i) {
-      var el = document.createElement('div');
-      el.className = 'cut3d__label cut3d__label--' + c.side;
-      el.innerHTML = '<b>' + c.t + '</b><span style="color:' + c.c + '">' + c.v + '</span>';
-      host.appendChild(el);
-      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('stroke', c.c); line.setAttribute('stroke-width', '1.2'); line.setAttribute('opacity', '0.55');
-      overlay.appendChild(line);
-      var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      dot.setAttribute('r', '3.5'); dot.setAttribute('fill', c.c);
-      overlay.appendChild(dot);
-      return { el: el, line: line, dot: dot, at: new THREE.Vector3(c.at[0], c.at[1], c.at[2]), side: c.side, slot: i % 3 };
-    });
-    var scaleNote = document.createElement('p');
-    scaleNote.className = 'cut3d__scale';
-    scaleNote.textContent = '129 m — longer than a Boeing 747 (70.6 m) · drag to turn';
-    host.appendChild(scaleNote);
-
-    var theta = 0.62, phi = 1.32, radius = 205, dragging = false, lx = 0, ly = 0, idle = 0;
-    var target = new THREE.Vector3(0, -6, 0), tmp = new THREE.Vector3();
-    function render() {
-      var w = v.w(), h = v.h();
-      if (!w || !h) return;
-      var r = radius * (w < 640 ? 1.9 : w < 900 ? 1.35 : 1);
-      v.camera.position.set(target.x + r * Math.sin(phi) * Math.cos(theta), target.y + r * Math.cos(phi), target.z + r * Math.sin(phi) * Math.sin(theta));
-      v.camera.lookAt(target);
-      v.render(scene);
-      /* project the anchors and lay the labels out in two columns */
-      labels.forEach(function (L) {
-        tmp.copy(L.at).project(v.camera);
-        var sx = (tmp.x + 1) / 2 * w, sy = (1 - tmp.y) / 2 * h;
-        var lw = L.el.offsetWidth, lh = L.el.offsetHeight;
-        var slotY = 12 + L.slot * (h - 24 - lh) / 2;
-        var lxp = L.side === 'l' ? 8 : w - lw - 8;
-        L.el.style.transform = 'translate(' + lxp.toFixed(1) + 'px,' + slotY.toFixed(1) + 'px)';
-        var ex = L.side === 'l' ? lxp + lw + 6 : lxp - 6;
-        var ey = slotY + lh / 2;
-        L.line.setAttribute('x1', sx); L.line.setAttribute('y1', sy);
-        L.line.setAttribute('x2', ex); L.line.setAttribute('y2', ey);
-        L.dot.setAttribute('cx', sx); L.dot.setAttribute('cy', sy);
-      });
-    }
-    canvas.addEventListener('pointerdown', function (e) { dragging = true; idle = 0; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', function (e) {
-      if (!dragging) return;
-      theta -= (e.clientX - lx) * 0.008;
-      phi = clamp(phi - (e.clientY - ly) * 0.006, 0.4, 1.5);
-      lx = e.clientX; ly = e.clientY;
-      render();
-    });
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { canvas.addEventListener(n, function () { dragging = false; }); });
-    function loop() {
-      if (v.visible() && !dragging && !REDUCED) { idle++; if (idle > 60) { theta += 0.0018; render(); } }
-      requestAnimationFrame(loop);
-    }
-    v.onResize = render;
-    render();
-    requestAnimationFrame(loop);
-    return true;
-  }
-
-  /* ============================================================
      VENUS AGAINST MARS — two planets turning, one callout each
      ============================================================ */
 
@@ -1235,6 +1141,852 @@
   }
 
   /* ============================================================
+     WALKING ON SUNSHINE — out of the airlock and over the hull
+     ============================================================ */
+
+  /* a rAF loop that only does work while the view is on screen */
+  function ticker(v, fn) {
+    var last = 0;
+    function loop(now) {
+      requestAnimationFrame(loop);
+      if (!v.visible()) { last = now; return; }
+      var raw = last ? (now - last) / 1000 : 0;
+      last = now;
+      fn(Math.min(0.05, raw), Math.min(1, raw));
+    }
+    requestAnimationFrame(loop);
+  }
+
+  /* a 1.8 m figure in a yellow coverall with an air pack; feet at the origin, facing +z */
+  function figure(THREE) {
+    var g = new THREE.Group();
+    var suit = new THREE.MeshStandardMaterial({ color: 0xE8B33A, roughness: 0.75 });
+    var dark = new THREE.MeshStandardMaterial({ color: 0x2A2430, roughness: 0.6 });
+    var visor = new THREE.MeshStandardMaterial({ color: 0x5FD0C4, roughness: 0.2, metalness: 0.3, emissive: 0x1E5A55 });
+    function limb(r, len, x, y, mat) {
+      var geo = new THREE.CylinderGeometry(r, r * 0.9, len, 8); geo.translate(0, -len / 2, 0);
+      var m = new THREE.Mesh(geo, mat); m.position.set(x, y, 0); return m;
+    }
+    var legs = [limb(0.09, 0.85, -0.12, 0.85, suit), limb(0.09, 0.85, 0.12, 0.85, suit)];
+    var arms = [limb(0.06, 0.6, -0.3, 1.45, suit), limb(0.06, 0.6, 0.3, 1.45, suit)];
+    var torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.65, 10), suit); torso.position.y = 1.175;
+    var head = new THREE.Mesh(new THREE.SphereGeometry(0.15, 12, 10), suit); head.position.y = 1.66;
+    var face = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.06), visor); face.position.set(0, 1.68, 0.12);
+    var pack = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5, 0.18), dark); pack.position.set(0, 1.2, -0.26);
+    [legs[0], legs[1], arms[0], arms[1], torso, head, face, pack].forEach(function (m) { g.add(m); });
+    g.userData.legs = legs; g.userData.arms = arms;
+    return g;
+  }
+
+  function walk3d(canvas, hud) {
+    var v = makeView(canvas, { fov: 50, near: 0.2, far: 1500, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    var DAY = new THREE.Color(0xE6D5A6), DUSK = new THREE.Color(0x3A2F3C);
+    scene.background = DAY.clone();
+    scene.fog = new THREE.Fog(DAY.clone(), 40, 380);
+    var hemi = new THREE.HemisphereLight(0xFFF6DC, 0xC9A968, 1.05); scene.add(hemi);
+    var sun = new THREE.DirectionalLight(0xFFF3D6, 0.55); sun.position.set(0.3, 1, 0.4); scene.add(sun);
+
+    /* the ship, with a deck of plant on the gondola roof and a hatch forward */
+    var A = 64.5, B = 17.0, GY = -B - 5.5, ROOF = GY + 3.25;
+    var shipG = new THREE.Group(); scene.add(shipG);
+    var ship = model(THREE, 'phosphorus_airship', function (n) {
+      return ['helium_cells', 'breathable_air_volume', 'ballonets', 'person'].indexOf(n) < 0;
+    });
+    shipG.add(ship);
+    var steel = new THREE.MeshStandardMaterial({ color: 0x6E6A78, roughness: 0.6, metalness: 0.4 });
+    var hatch = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 2.2), steel); hatch.position.set(0, ROOF + 0.35, 0); shipG.add(hatch);
+    var rail = new THREE.Mesh(new THREE.BoxGeometry(26, 0.06, 0.06), steel); rail.position.set(0, ROOF + 1.05, 3.2); shipG.add(rail);
+    for (var rx = -12; rx <= 12; rx += 4) { var post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.05, 6), steel); post.position.set(rx, ROOF + 0.52, 3.2); shipG.add(post); }
+    var PLANTS = [
+      { x: -10,  color: 0x5FD0C4, tall: 1.7 },  /* oxygen: the electrolysis stack */
+      { x: -6.5, color: 0x5FB0E0, tall: 1.4 },  /* water: the droplet catcher */
+      { x: 3.5,  color: 0xE8DCC0, tall: 1.2 },  /* nitrogen */
+      { x: 7,    color: 0xE8B33A, tall: 1.5 }   /* lift gas, piped up to the hull */
+    ];
+    var plants = PLANTS.map(function (P) {
+      var box = new THREE.Mesh(new THREE.BoxGeometry(2.4, P.tall, 2.0), new THREE.MeshStandardMaterial({ color: 0x8A8496, roughness: 0.55, metalness: 0.35 }));
+      box.position.set(P.x, ROOF + P.tall / 2, -1.6); shipG.add(box);
+      var intake = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.25, 0.9), new THREE.MeshStandardMaterial({ color: 0x2A2430 }));
+      intake.position.set(P.x, ROOF + P.tall + 0.12, -1.6); shipG.add(intake);
+      var mark = glow(THREE, P.color, 3); mark.position.set(P.x, ROOF + P.tall + 0.9, -1.6); mark.material.opacity = 0; shipG.add(mark);
+      return { mark: mark };
+    });
+    var pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.3, 8), steel); pipe.position.set(7, ROOF + 1.5 + 1.1, -1.6); shipG.add(pipe);
+    /* propellers at each end: a two-blade disc spun about the long axis */
+    var props = [-1, 1].map(function (sx) {
+      var blade = new THREE.Mesh(new THREE.BoxGeometry(0.25, 10.5, 0.9), new THREE.MeshStandardMaterial({ color: 0x2A2430, roughness: 0.5 }));
+      blade.position.set(sx * (A + 3.2), 0, 0); shipG.add(blade); return blade;
+    });
+    /* a seam line down the crown for the walk on top */
+    var seam = new THREE.Mesh(new THREE.BoxGeometry(A * 1.2, 0.05, 0.12), new THREE.MeshStandardMaterial({ color: 0x2A2430 }));
+    seam.position.set(0, B * 1.006 + 0.03, 0); shipG.add(seam);
+
+    var person = figure(THREE); shipG.add(person);
+
+    /* cloud puffs drifting past, and wind streaks over the hull */
+    if (!glowTex) glowTex = glowTexture(THREE);
+    var puffs = [];
+    var pseed = 4409; function prnd() { pseed = (pseed * 1103515245 + 12345) & 0x7fffffff; return pseed / 0x7fffffff; }
+    for (var i = 0; i < 70; i++) {
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xF6ECD2, transparent: true, opacity: 0.25 + prnd() * 0.3, depthWrite: false }));
+      var sz = 30 + prnd() * 60;
+      sp.scale.set(sz, sz * 0.6, 1);
+      sp.position.set(prnd() * 520 - 260, prnd() * 220 - 120, prnd() * 520 - 260);
+      sp.userData.v = 4 + prnd() * 6;
+      scene.add(sp); puffs.push(sp);
+    }
+    var streakPts = [], streakN = 40;
+    for (var k = 0; k < streakN; k++) { var sx0 = prnd() * 160 - 80, sy0 = 10 + prnd() * 18, sz0 = prnd() * 60 - 30; streakPts.push(sx0, sy0, sz0, sx0 - 3, sy0, sz0); }
+    var streakGeo = new THREE.BufferGeometry(); streakGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(streakPts), 3));
+    var streaks = new THREE.LineSegments(streakGeo, new THREE.LineBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0 })); shipG.add(streaks);
+
+    /* where the crew member stands for each card, and the route between spots */
+    function ring(th) { var r = B * Math.sqrt(1 - (7 / A) * (7 / A)); return [7, r * Math.sin(th), r * Math.cos(th), Math.PI / 2 - th]; }
+    var climb = [[2.6, ROOF, 0, 0], ring(-1.22), ring(-0.52), ring(0.35), ring(1.05), ring(Math.PI / 2)];
+    var TOP = B * Math.sqrt(1 - (12 / A) * (12 / A)) * 1.006;
+    var SPOTS = [
+      { pos: [0, ROOF + 0.7, 0], face: 0 },
+      { pos: [-2, ROOF, 2.0], face: 0 },
+      { pos: [-2, ROOF, 2.7], face: 0 },
+      { pos: [-2, ROOF, 2.7], face: 0 },
+      { pos: [-10, ROOF, 0.9], face: Math.PI },
+      { pos: [-6.5, ROOF, 0.9], face: Math.PI },
+      { pos: [3.5, ROOF, 0.9], face: Math.PI },
+      { pos: [7, ROOF, 0.9], face: Math.PI },
+      { pos: [7, B * 0.985, 0], face: -Math.PI / 2, via: climb, window: 0.5 },
+      { pos: [-12, TOP, 0], face: -Math.PI / 2 },
+      { pos: [0, ROOF + 0.7, 0], face: 0, via: climb.slice().reverse(), window: 0.6 },
+      { pos: [0, ROOF - 1.6, 0], face: 0, hide: true }
+    ];
+    /* camera shots: offset from the figure and where to look, in the figure's frame (+z is ahead) */
+    var SHOTS = [
+      { off: [3.2, 1.9, 4.6], look: [0, 1.2, 0] },
+      { off: [-4.2, 2.2, 6.0], look: [0, 1.0, 0] },
+      { off: [-1.6, 1.9, -3.0], look: [0.6, 1.4, 14] },
+      { off: [-2.0, 1.3, -2.6], look: [0, 10, 22] },
+      { off: [-3.6, 2.6, 6.2], look: [0.4, 0.7, -1.2] },
+      { off: [-3.6, 2.6, 6.2], look: [0.4, 0.7, -1.2] },
+      { off: [-3.6, 2.6, 6.2], look: [0.4, 0.7, -1.2] },
+      { off: [-3.6, 2.6, 6.2], look: [0.4, 0.7, -1.2] },
+      { off: [-14, 4, 16], look: [0, 1.6, 0] },
+      { off: [-9, 3.6, 10], look: [3, 0.9, 0] },
+      { off: [4.2, 2.4, 5.2], look: [0, 0.9, 0] },
+      { abs: [-70, -26, 150], look: [0, -6, 0] }
+    ];
+    var N = SPOTS.length;
+    var tmpA = new THREE.Vector3();
+    function pathAt(i, k) {
+      /* position + tilt along the route from spot i to spot i+1, k in [0,1] */
+      var from = SPOTS[i], to = SPOTS[i + 1];
+      var pts = [[from.pos[0], from.pos[1], from.pos[2], 0]].concat(to.via || []).concat([[to.pos[0], to.pos[1], to.pos[2], 0]]);
+      var lens = [0];
+      for (var q = 1; q < pts.length; q++) { var dx = pts[q][0] - pts[q - 1][0], dy = pts[q][1] - pts[q - 1][1], dz = pts[q][2] - pts[q - 1][2]; lens.push(lens[q - 1] + Math.sqrt(dx * dx + dy * dy + dz * dz)); }
+      var d = k * lens[lens.length - 1], q2 = 1;
+      while (q2 < lens.length - 1 && lens[q2] < d) q2++;
+      var f = (lens[q2] - lens[q2 - 1]) > 0 ? (d - lens[q2 - 1]) / (lens[q2] - lens[q2 - 1]) : 1;
+      var P = pts[q2 - 1], Q = pts[q2];
+      return { x: lerp(P[0], Q[0], f), y: lerp(P[1], Q[1], f), z: lerp(P[2], Q[2], f), tilt: lerp(P[3], Q[3], f),
+               face: Math.atan2(Q[0] - P[0], Q[2] - P[2]) };
+    }
+    var camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
+    var o0 = { p: new THREE.Vector3(), l: new THREE.Vector3() }, o1 = { p: new THREE.Vector3(), l: new THREE.Vector3() };
+    var progress = 0, moving = 0, t = 0, night = 0, camInit = false, stageEl = canvas.closest('.stage');
+
+    function setHud(step, out, time) {
+      if (!hud.step) return;
+      hud.step.textContent = step; hud.out.textContent = out; hud.time.textContent = time;
+    }
+
+    function place(p) {
+      var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
+      var spot = SPOTS[i], next = SPOTS[i + 1];
+      var w = next ? (1 - (next.window || 0.35)) : 1;
+      var k = next ? seg(local, w, 1) : 0;
+      var pos, tilt, face;
+      if (k > 0 && k < 1) {
+        var r = pathAt(i, ease(k));
+        pos = [r.x, r.y, r.z]; tilt = r.tilt; face = r.face;
+        moving = 1;
+      } else {
+        var sp = k >= 1 ? next : spot;
+        pos = sp.pos; tilt = 0; face = sp.face; moving = 0;
+      }
+      person.position.set(pos[0], pos[1], pos[2]);
+      person.rotation.set(tilt, face, 0, 'YXZ');
+      person.visible = !(k >= 1 ? next : spot).hide;
+      plants.forEach(function (pl, j) { pl.mark.material.opacity = (i === 4 + j && k < 1) ? 0.8 : 0; });
+      /* the wind you feel up top */
+      streaks.material.opacity = 0.35 * (i === 8 ? seg(local, 0.1, 0.4) : i === 9 ? 1 - seg(local, 0.6, 1) : 0);
+      night = i === N - 1 ? ease(seg(local, 0, 0.8)) : 0;
+      if (stageEl) stageEl.classList.toggle('is-night', night > 0.5);
+      /* camera */
+      var s0 = SHOTS[i], s1 = SHOTS[Math.min(N - 1, i + 1)], m = ease(k);
+      function shot(S, out) {
+        if (S.abs) { out.p.set(S.abs[0], S.abs[1], S.abs[2]); out.l.set(S.look[0], S.look[1], S.look[2]); return; }
+        var cs = Math.cos(face), sn = Math.sin(face);
+        out.p.set(pos[0] + S.off[0] * cs + S.off[2] * sn, pos[1] + S.off[1], pos[2] - S.off[0] * sn + S.off[2] * cs);
+        out.l.set(pos[0] + S.look[0] * cs + S.look[2] * sn, pos[1] + S.look[1], pos[2] - S.look[0] * sn + S.look[2] * cs);
+      }
+      shot(s0, o0); shot(s1, o1);
+      wantPos.copy(o0.p).lerp(o1.p, m); wantLook.copy(o0.l).lerp(o1.l, m);
+      /* the HUD */
+      var mins = Math.round(150 * seg(p, 1 / N, 10.6 / N));
+      var out = (i === N - 1 && night > 0.5) ? '27 °C · 55 km · night' : '60 °C · 1 atm';
+      setHud(PHOS.WALK ? PHOS.WALK[i].step : '', out, i === 0 ? '0:00' : Math.floor(mins / 60) + ':' + String(mins % 60).padStart(2, '0'));
+    }
+
+    function frame(dt, rdt) {
+      t += dt;
+      var swing = moving ? Math.sin(t * 9) * 0.55 : 0;
+      person.userData.legs[0].rotation.x = swing; person.userData.legs[1].rotation.x = -swing;
+      person.userData.arms[0].rotation.x = -swing * 0.7; person.userData.arms[1].rotation.x = swing * 0.7;
+      /* the ship rides the air: a slow heave, bigger while the weather card is up */
+      var i = Math.min(N - 1, Math.floor(progress * N));
+      var heave = i === 9 ? 1.6 : 0.35;
+      shipG.position.y = Math.sin(t * 0.6) * heave;
+      shipG.rotation.z = Math.sin(t * 0.45) * 0.004 * heave;
+      var spin = 1 - night;
+      props.forEach(function (b) { b.rotation.x += dt * 14 * spin; });
+      puffs.forEach(function (sp) { sp.position.x -= sp.userData.v * dt; if (sp.position.x < -280) sp.position.x += 560; });
+      var arr = streaks.geometry.attributes.position.array;
+      for (var q = 0; q < arr.length; q += 6) { arr[q] -= dt * 28; arr[q + 3] -= dt * 28; if (arr[q] < -85) { arr[q] += 170; arr[q + 3] += 170; } }
+      streaks.geometry.attributes.position.needsUpdate = true;
+      /* sky: bright overcast by day, the void at dusk */
+      scene.background.copy(DAY).lerp(DUSK, night); scene.fog.color.copy(scene.background);
+      hemi.intensity = 1.05 - 0.75 * night; sun.intensity = 0.55 - 0.45 * night;
+      /* camera eases toward the shot */
+      var a = camInit ? 1 - Math.exp(-(rdt || dt) * 7) : 1; camInit = true;
+      camPos.lerp(wantPos, a); camLook.lerp(wantLook, a);
+      v.camera.position.copy(camPos).add(shipG.position);
+      v.camera.lookAt(tmpA.copy(camLook).add(shipG.position));
+      v.render(scene);
+    }
+    place(0);
+    ticker(v, frame);
+    return {
+      update: function (p) { if (Math.abs(p - progress) < 0.0005) return; progress = p; place(p); }
+    };
+  }
+
+  /* ============================================================
+     WHAT WE'D LEARN — one animated icon per question
+     ============================================================ */
+
+  function learn3d(canvas) {
+    var v = makeView(canvas, { fov: 40, near: 0.5, far: 400, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    scene.add(starfield(THREE, 400, 300, 5151));
+    lights(THREE, scene, [0.8, 1, 0.9], 1.2);
+    var fill = new THREE.DirectionalLight(0x5FD0C4, 0.35); fill.position.set(-1, -0.5, -0.4); scene.add(fill);
+    if (!glowTex) glowTex = glowTexture(THREE);
+    var R = 10, root = new THREE.Group(); scene.add(root);
+    var icons = [];
+    var seed = 977; function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+    function add(g, tick) { g.visible = false; g.scale.setScalar(0.001); root.add(g); icons.push({ g: g, tick: tick, s: 0 }); }
+    function std(color, extra) { var o = { color: color, roughness: 0.6, metalness: 0.05 }; for (var k in (extra || {})) o[k] = extra[k]; return new THREE.MeshStandardMaterial(o); }
+    function line(pts, color, opacity) {
+      var g = new THREE.BufferGeometry().setFromPoints(pts.map(function (p) { return new THREE.Vector3(p[0], p[1], p[2]); }));
+      return new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: opacity }));
+    }
+
+    /* 01 life: a cloud droplet with something moving inside, under the reticle */
+    (function () {
+      var g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.SphereGeometry(6.5, 48, 32), std(0xE8B33A, { transparent: true, opacity: 0.3, roughness: 0.15, depthWrite: false })));
+      g.add(new THREE.Mesh(new THREE.SphereGeometry(6.6, 48, 32), new THREE.MeshBasicMaterial({ color: 0xF6ECD2, transparent: true, opacity: 0.22, side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite: false })));
+      var cells = new THREE.Group(); g.add(cells);
+      var cm = std(0x5FD0C4, { emissive: 0x1E5A55, roughness: 0.4 });
+      for (var i = 0; i < 34; i++) {
+        var c = new THREE.Mesh(new THREE.SphereGeometry(0.3, 10, 8), cm);
+        c.scale.set(1, 1, 2.2);
+        var u = rnd() * 2 - 1, th = rnd() * Math.PI * 2, r = 5 * Math.cbrt(rnd()), q = Math.sqrt(1 - u * u);
+        c.position.set(r * q * Math.cos(th), r * u, r * q * Math.sin(th));
+        c.rotation.set(rnd() * 3, rnd() * 3, 0);
+        c.userData.w = 0.4 + rnd();
+        cells.add(c);
+      }
+      var ret = new THREE.Group(); g.add(ret);
+      ret.add(new THREE.Mesh(new THREE.TorusGeometry(8.2, 0.07, 8, 96), new THREE.MeshBasicMaterial({ color: 0xF2E8D0, transparent: true, opacity: 0.55 })));
+      ret.add(line([[-9.4, 0, 0], [-7.2, 0, 0], [7.2, 0, 0], [9.4, 0, 0], [0, -9.4, 0], [0, -7.2, 0], [0, 7.2, 0], [0, 9.4, 0]], 0xF2E8D0, 0.55));
+      add(g, function (dt, t) {
+        cells.rotation.y += dt * 0.18;
+        cells.children.forEach(function (c) { c.rotation.z += dt * c.userData.w * 0.6; });
+        ret.rotation.z = Math.sin(t * 0.3) * 0.08;
+      });
+    })();
+
+    /* 02 chemistry: sunlight going into the upper cloud and half not coming out */
+    (function () {
+      var g = new THREE.Group();
+      var sun = glow(THREE, 0xE8B33A, 9); sun.position.set(-7, 9.5, 0); g.add(sun);
+      var slab = new THREE.Group(); g.add(slab);
+      slab.add(new THREE.Mesh(new THREE.BoxGeometry(17, 3.2, 9), std(0xE8B33A, { transparent: true, opacity: 0.12, depthWrite: false })));
+      var grit = std(0x2A2430, { roughness: 0.9 });
+      for (var i = 0; i < 90; i++) {
+        var m = new THREE.Mesh(new THREE.TetrahedronGeometry(0.22 + rnd() * 0.3), grit);
+        m.position.set(rnd() * 16 - 8, rnd() * 2.8 - 1.4, rnd() * 8 - 4);
+        m.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
+        m.userData.w = (rnd() - 0.5) * 2;
+        slab.add(m);
+      }
+      var inPts = [], outPts = [];
+      for (var k = 0; k < 7; k++) {
+        var x = -6 + k * 2.2;
+        inPts.push([-7, 9.5, 0], [x, 1.6, 0]);
+        if (k % 2 === 0) outPts.push([x, -1.6, 0], [x + 1.8, -8.5, 0]);
+      }
+      var rays = line(inPts, 0xF6ECD2, 0.7), through = line(outPts, 0xF6ECD2, 0.3);
+      g.add(rays); g.add(through);
+      add(g, function (dt, t) {
+        slab.rotation.y = Math.sin(t * 0.25) * 0.35;
+        slab.children.forEach(function (m, i) { if (i) m.rotation.x += dt * m.userData.w; });
+        rays.material.opacity = 0.55 + 0.25 * Math.sin(t * 2.2);
+        through.material.opacity = 0.18 + 0.12 * Math.sin(t * 2.2 + 1);
+      });
+    })();
+
+    /* 03 weather: the planet turns once while the sky laps it sixty times */
+    (function () {
+      var g = new THREE.Group();
+      var body = new THREE.Mesh(new THREE.SphereGeometry(6.2, 64, 40), std(0xC08F43, { map: venusTexture(THREE), roughness: 0.9 }));
+      var sky = new THREE.Mesh(new THREE.SphereGeometry(6.5, 64, 40), new THREE.MeshStandardMaterial({ map: cloudTexture(THREE), color: 0xF2E8D0, transparent: true, opacity: 0.75, roughness: 1, depthWrite: false }));
+      g.add(body); g.add(sky);
+      var ring = new THREE.Mesh(new THREE.TorusGeometry(8.6, 0.05, 6, 120), new THREE.MeshBasicMaterial({ color: 0xF2E8D0, transparent: true, opacity: 0.35 }));
+      ring.rotation.x = Math.PI / 2; g.add(ring);
+      var fast = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 10), std(0x5FD0C4, { emissive: 0x2A7A72 }));
+      var slow = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 10), std(0xFF7A45, { emissive: 0x7A2E12 }));
+      g.add(fast); g.add(slow);
+      g.rotation.z = 0.15;
+      add(g, function (dt, t) {
+        body.rotation.y -= dt * 0.012; sky.rotation.y -= dt * 0.72;
+        fast.position.set(8.6 * Math.cos(-t * 0.72), 0, 8.6 * Math.sin(-t * 0.72));
+        slow.position.set(8.6 * Math.cos(-t * 0.012), 0, 8.6 * Math.sin(-t * 0.012));
+      });
+    })();
+
+    /* 04 climate: an ocean that left */
+    (function () {
+      var g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.SphereGeometry(6.2, 64, 40), std(0xC08F43, { map: venusTexture(THREE), roughness: 0.9 })));
+      var ocean = new THREE.Mesh(new THREE.SphereGeometry(6.3, 64, 40), std(0x2A6FB0, { transparent: true, opacity: 0.85, roughness: 0.3, depthWrite: false }));
+      g.add(ocean);
+      var mols = [];
+      for (var i = 0; i < 48; i++) {
+        var m = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 6), new THREE.MeshBasicMaterial({ color: 0x5FD0C4, transparent: true, opacity: 0.9 }));
+        var u = rnd() * 2 - 1, th = rnd() * Math.PI * 2, q = Math.sqrt(1 - u * u);
+        m.userData.dir = new THREE.Vector3(q * Math.cos(th), u, q * Math.sin(th));
+        m.userData.ph = rnd() * 6;
+        g.add(m); mols.push(m);
+      }
+      add(g, function (dt, t) {
+        g.rotation.y += dt * 0.08;
+        var cyc = (t * 0.06) % 1;                        /* the ocean goes over ~17 s, then comes back */
+        var left = cyc < 0.7 ? cyc / 0.7 : 1 - (cyc - 0.7) / 0.3;
+        ocean.material.opacity = 0.85 * (1 - left);
+        ocean.scale.setScalar(1 - 0.02 * left);
+        mols.forEach(function (m) {
+          var d = ((t * 1.4 + m.userData.ph) % 6);
+          m.position.copy(m.userData.dir).multiplyScalar(6.4 + d);
+          m.material.opacity = (cyc < 0.7 ? 0.9 : 0) * (1 - d / 6);
+        });
+      });
+    })();
+
+    /* 05 geology: a volcano that may be erupting right now, and the radar that would see it */
+    (function () {
+      var g = new THREE.Group();
+      var cone = new THREE.Mesh(new THREE.ConeGeometry(8.5, 6.5, 40), std(0x3B2A2A, { roughness: 0.95 })); cone.position.y = -3.2; g.add(cone);
+      var vent = glow(THREE, 0xFF7A45, 4); vent.position.set(0, 0.2, 0); g.add(vent);
+      var plume = [];
+      for (var i = 0; i < 70; i++) {
+        var pm = new THREE.Mesh(new THREE.SphereGeometry(0.25 + rnd() * 0.35, 8, 6), new THREE.MeshBasicMaterial({ color: rnd() < 0.3 ? 0xFF7A45 : 0x8A7A70, transparent: true, opacity: 0.8 }));
+        pm.userData.ph = rnd() * 8; pm.userData.ang = rnd() * Math.PI * 2; pm.userData.spread = 0.6 + rnd() * 2.4;
+        g.add(pm); plume.push(pm);
+      }
+      var orbit = new THREE.Mesh(new THREE.TorusGeometry(9.5, 0.04, 6, 100), new THREE.MeshBasicMaterial({ color: 0x5FD0C4, transparent: true, opacity: 0.35 }));
+      orbit.rotation.x = Math.PI / 2; orbit.position.y = 8.5; g.add(orbit);
+      var sat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.3, 0.3), std(0x5FD0C4, { emissive: 0x2A7A72 })); g.add(sat);
+      var beam = new THREE.Mesh(new THREE.ConeGeometry(2.2, 8.5, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0x5FD0C4, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false }));
+      g.add(beam);
+      add(g, function (dt, t) {
+        plume.forEach(function (pm) {
+          var y = (t * 2.2 + pm.userData.ph) % 8;
+          var r = pm.userData.spread * (y / 8) + 0.2;
+          pm.position.set(r * Math.cos(pm.userData.ang + y * 0.3), y, r * Math.sin(pm.userData.ang + y * 0.3));
+          pm.material.opacity = 0.85 * (1 - y / 8);
+        });
+        vent.scale.setScalar(4 + Math.sin(t * 7) * 0.6);
+        var a = t * 0.5;
+        sat.position.set(9.5 * Math.cos(a), 8.5, 9.5 * Math.sin(a));
+        beam.position.set(9.5 * Math.cos(a) * 0.5, 4.25, 9.5 * Math.sin(a) * 0.5);
+        beam.lookAt(0, 0, 0); beam.rotateX(Math.PI / 2);
+      });
+    })();
+
+    /* 06 living there: the loop, with someone standing in it */
+    (function () {
+      var g = new THREE.Group();
+      g.add(new THREE.Mesh(new THREE.TorusGeometry(7.4, 0.28, 12, 100), std(0xE6DCC4)));
+      var COLORS = [0x5FD0C4, 0x5FB0E0, 0xE8DCC0, 0xE8B33A];
+      COLORS.forEach(function (c, i) {
+        var n = new THREE.Mesh(new THREE.SphereGeometry(1.05, 20, 14), std(c, { emissive: c, emissiveIntensity: 0.25 }));
+        var a = i * Math.PI / 2; n.position.set(7.4 * Math.cos(a), 7.4 * Math.sin(a), 0); g.add(n);
+      });
+      var dots = [];
+      for (var i = 0; i < 28; i++) {
+        var d = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 6), std(COLORS[i % 4], { emissive: COLORS[i % 4], emissiveIntensity: 0.5 }));
+        d.userData.ph = i / 28 * Math.PI * 2; g.add(d); dots.push(d);
+      }
+      var who = figure(THREE); who.scale.setScalar(2.6); who.position.y = -2.4; g.add(who);
+      add(g, function (dt, t) {
+        dots.forEach(function (d) { var a = t * 0.55 + d.userData.ph; d.position.set(7.4 * Math.cos(a), 7.4 * Math.sin(a), 0.5 * Math.sin(a * 3)); });
+        who.rotation.y = Math.sin(t * 0.4) * 0.5;
+      });
+    })();
+
+    var active = 0, t = 0;
+    function layout() {
+      var w = v.w(), h = v.h(), narrow = w < 760;
+      var halfH = 42 * Math.tan(Math.PI * 20 / 180), halfW = halfH * (w / h);
+      if (narrow) {
+        var s2 = Math.min(1, halfW / (R * 1.25), halfH / (R * 1.25));
+        root.position.set(0, 0, 0); root.scale.setScalar(s2);
+      } else {
+        root.position.set(0.15 * halfW + R * 1.05, 0, 0); root.scale.setScalar(1);
+      }
+      v.camera.position.set(0, 0, 42); v.camera.lookAt(0, 0, 0);
+    }
+    layout();
+    v.onResize = layout;
+    ticker(v, function (dt) {
+      t += dt;
+      icons.forEach(function (ic, i) {
+        var want = i === active ? 1 : 0;
+        ic.s += (want - ic.s) * (1 - Math.exp(-dt * 6));
+        var s = Math.max(0.001, ease(clamp(ic.s, 0, 1)));
+        ic.g.visible = ic.s > 0.01;
+        ic.g.scale.setScalar(s);
+        ic.g.rotation.y = (1 - s) * 1.4;
+        if (ic.g.visible) ic.tick(dt, t);
+      });
+      v.render(scene);
+    });
+    return {
+      update: function (p) { active = Math.min(icons.length - 1, Math.floor(p * icons.length)); }
+    };
+  }
+
+  /* ============================================================
+     WHERE THE SAMPLES COME FROM — packages up, bins down
+     ============================================================ */
+
+  function samples3d(canvas, hud) {
+    var v = makeView(canvas, { fov: 45, near: 0.3, far: 3000, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    var U = 100;                                   /* scene units per km: 1 unit = 10 m */
+    scene.background = new THREE.Color(0xE6D5A6);
+    scene.fog = new THREE.Fog(0xE6D5A6, 8, 80);
+    var hemi = new THREE.HemisphereLight(0xFFF6DC, 0xC9A968, 1.0); scene.add(hemi);
+    var sun = new THREE.DirectionalLight(0xFFF3D6, 0.6); sun.position.set(0.3, 1, 0.5); scene.add(sun);
+    if (!glowTex) glowTex = glowTexture(THREE);
+    var seed = 31337; function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+    function std(color, extra) { var o = { color: color, roughness: 0.6, metalness: 0.1 }; for (var k in (extra || {})) o[k] = extra[k]; return new THREE.MeshStandardMaterial(o); }
+
+    /* the ship at a tenth scale, and the deck of cloud it lives in */
+    var ship = model(THREE, 'phosphorus_airship', function (n) { return ['helium_cells', 'breathable_air_volume', 'ballonets', 'person'].indexOf(n) < 0; });
+    var shipG = new THREE.Group(); shipG.add(ship); shipG.scale.setScalar(0.1); shipG.rotation.y = 0.5; scene.add(shipG);
+    var puffs = [];
+    for (var i = 0; i < 240; i++) {
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xF6ECD2, transparent: true, opacity: 0.2 + rnd() * 0.3, depthWrite: false }));
+      var sz = 14 + rnd() * 34; sp.scale.set(sz, sz * 0.6, 1);
+      sp.position.set(rnd() * 160 - 80, (47.5 + rnd() * 17) * U, rnd() * 160 - 80);
+      sp.userData.v = 1 + rnd() * 2; scene.add(sp); puffs.push(sp);
+    }
+    /* haze below the cloud base: thinner, browner */
+    for (var j = 0; j < 40; j++) {
+      var hz = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xC79A55, transparent: true, opacity: 0.12 + rnd() * 0.12, depthWrite: false }));
+      var hs = 40 + rnd() * 60; hz.scale.set(hs, hs * 0.5, 1);
+      hz.position.set(rnd() * 300 - 150, (20 + rnd() * 27) * U, rnd() * 300 - 150);
+      hz.userData.v = 0.5 + rnd(); scene.add(hz); puffs.push(hz);
+    }
+    /* the ground: dark rock lit by its own heat */
+    var ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000), std(0x2A1812, { roughness: 1, emissive: 0x3A1206, emissiveIntensity: 0.55 }));
+    ground.rotation.x = -Math.PI / 2; scene.add(ground);
+    var rock = std(0x1E1210, { roughness: 1 });
+    for (var r = 0; r < 90; r++) {
+      var rk = new THREE.Mesh(new THREE.DodecahedronGeometry(0.4 + rnd() * 2.2, 0), rock);
+      rk.position.set(rnd() * 160 - 80, 0.2, rnd() * 160 - 80); rk.rotation.set(rnd() * 3, rnd() * 3, 0); scene.add(rk);
+    }
+    for (var l = 0; l < 14; l++) {
+      var lv = glow(THREE, 0xFF7A45, 14 + rnd() * 30); lv.material.opacity = 0.16;
+      lv.position.set(rnd() * 200 - 100, 0.6, rnd() * 200 - 100); scene.add(lv);
+    }
+
+    /* what goes up and what goes down */
+    var tetherGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+    var tether = new THREE.Line(tetherGeo, new THREE.LineBasicMaterial({ color: 0xF2E8D0, transparent: true, opacity: 0.8 })); scene.add(tether);
+    function box(w, h, d, color) { return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), std(color)); }
+    var up = new THREE.Group();
+    var bal = new THREE.Mesh(new THREE.SphereGeometry(0.55, 20, 14), std(0xF2E8D0, { roughness: 0.4 })); bal.position.y = 1.3; up.add(bal);
+    up.add(box(0.28, 0.28, 0.28, 0x8A8496));
+    up.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0.14, 0), new THREE.Vector3(0, 0.8, 0)]), new THREE.LineBasicMaterial({ color: 0xF2E8D0 })));
+    scene.add(up);
+    var down = new THREE.Group();
+    down.add(box(0.34, 0.44, 0.34, 0x8A8496));
+    [0, 1, 2, 3].forEach(function (k) { var fin = box(0.05, 0.3, 0.22, 0xE8B33A); fin.position.set(k < 2 ? (k ? 0.2 : -0.2) : 0, -0.3, k < 2 ? 0 : (k === 2 ? 0.2 : -0.2)); down.add(fin); });
+    scene.add(down);
+    var probe = new THREE.Group();
+    var cone = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 16), std(0xE8B33A)); cone.rotation.x = Math.PI; probe.add(cone);
+    var canopy = new THREE.Mesh(new THREE.SphereGeometry(0.75, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), std(0xF2E8D0, { side: THREE.DoubleSide, roughness: 0.9 })); canopy.position.y = 1.7; probe.add(canopy);
+    var lp = []; for (var q = 0; q < 8; q++) { var th = q / 8 * Math.PI * 2; lp.push(new THREE.Vector3(0.75 * Math.cos(th), 1.7, 0.75 * Math.sin(th)), new THREE.Vector3(0, 0.3, 0)); }
+    probe.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lp), new THREE.LineBasicMaterial({ color: 0xF2E8D0, transparent: true, opacity: 0.7 })));
+    scene.add(probe);
+    var lander = new THREE.Group();
+    lander.add(new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 14), std(0xC9BFA8, { metalness: 0.4, roughness: 0.4 })));
+    var shield = new THREE.Mesh(new THREE.ConeGeometry(0.62, 0.3, 24), std(0x2A2430)); shield.position.y = -0.4; shield.rotation.x = Math.PI; lander.add(shield);
+    var lflare = glow(THREE, 0xFF7A45, 2.2); lflare.position.y = -0.6; lflare.material.opacity = 0; lander.add(lflare);
+    scene.add(lander);
+
+    /* sky and fog by altitude */
+    var SKY = [[65, 0xF4E9C9], [58, 0xEBDCAE], [52, 0xE6D5A6], [48, 0xD9BE7A], [45, 0xC79A55], [38, 0xA8703A], [30, 0x7A4A28], [15, 0x4E2A18], [0, 0x2A1410]];
+    var skyCols = SKY.map(function (s) { return new THREE.Color(s[1]); });
+    var skyTmp = new THREE.Color();
+    function skyAt(km) {
+      for (var i = 0; i < SKY.length - 1; i++) {
+        if (km <= SKY[i][0] && km >= SKY[i + 1][0]) {
+          var f = (SKY[i][0] - km) / (SKY[i][0] - SKY[i + 1][0]);
+          return skyTmp.copy(skyCols[i]).lerp(skyCols[i + 1], f);
+        }
+      }
+      return skyTmp.copy(km > 60 ? skyCols[0] : skyCols[SKY.length - 1]);
+    }
+    var PROF = PHOS.PROFILE || [];
+    function atmo(km) {
+      for (var i = 0; i < PROF.length - 1; i++) {
+        if (km >= PROF[i].km && km <= PROF[i + 1].km) {
+          var f = (km - PROF[i].km) / (PROF[i + 1].km - PROF[i].km);
+          return { tC: lerp(PROF[i].tC, PROF[i + 1].tC, f), atm: Math.exp(lerp(Math.log(PROF[i].atm), Math.log(PROF[i + 1].atm), f)) };
+        }
+      }
+      var e = PROF[PROF.length - 1]; return e ? { tC: e.tC, atm: e.atm } : { tC: 0, atm: 0 };
+    }
+    function setHud(km) {
+      if (!hud.alt) return;
+      var a = atmo(km);
+      hud.alt.innerHTML = km.toFixed(1) + '<small> km</small>';
+      hud.temp.innerHTML = Math.round(a.tC) + '<small> °C</small>';
+      hud.pres.innerHTML = (a.atm >= 10 ? a.atm.toFixed(0) : a.atm >= 1 ? a.atm.toFixed(1) : a.atm.toFixed(2)) + '<small> atm</small>';
+    }
+
+    /* where the ship floats through each card */
+    var SHIP_KM = [52, 54, 52, 50, 50, 50, 50];
+    var N = 7, progress = 0, t = 0, camInit = false;
+    var camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
+    var focusKm = 52, tmp = new THREE.Vector3();
+    function follow(obj, off, lookUp) {
+      wantPos.set(obj.position.x + off[0], obj.position.y + off[1], obj.position.z + off[2]);
+      wantLook.set(obj.position.x, obj.position.y + (lookUp || 0), obj.position.z);
+    }
+    function place(p) {
+      var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
+      var narrow = v.w() < 760;
+      /* the ship drifts between its band altitudes over the first part of a card */
+      var shipKm = lerp(i ? SHIP_KM[i - 1] : SHIP_KM[0], SHIP_KM[i], ease(seg(local, 0, 0.45)));
+      shipG.position.set(0, shipKm * U, 0);
+      var bottom = shipKm * U - 2.8, topY = shipKm * U + 1.8;
+      up.visible = down.visible = probe.visible = lander.visible = tether.visible = false;
+      var lookUp = narrow ? 2.2 : 0;
+      if (i === 0) {
+        var km = lerp(52, 62, ease(local));
+        up.visible = tether.visible = true; up.position.set(1.5, km * U, 0);
+        tether.geometry.setFromPoints([new THREE.Vector3(0, topY, 0), up.position]);
+        follow(up, [4.5, 1.2, 7], lookUp * 0.6); focusKm = km;
+      } else if (i === 1 || i === 3) {
+        follow(shipG, [18, 3, 26], lookUp * 3); focusKm = shipKm;
+      } else if (i === 2) {
+        tmp.set(0, shipKm * U - 2.2, 0);
+        wantPos.set(6, shipKm * U - 1.4, 9); wantLook.copy(tmp); wantLook.y += lookUp; focusKm = shipKm;
+      } else if (i === 4) {
+        var km4 = lerp(50, 45, ease(local));
+        down.visible = tether.visible = true; down.position.set(1.2, km4 * U, 0);
+        tether.geometry.setFromPoints([new THREE.Vector3(0, bottom, 0), down.position]);
+        follow(down, [4.5, 1.6, 7], lookUp * 0.6); focusKm = km4;
+      } else if (i === 5) {
+        var km5 = lerp(50, 30, local);
+        probe.visible = true; probe.position.set(2 + 2 * local, km5 * U, 0); probe.rotation.z = Math.sin(t * 1.3) * 0.08;
+        follow(probe, [4, 1.5, 6.5], lookUp * 0.6 + 0.6); focusKm = km5;
+      } else {
+        var km6 = Math.max(0.006, lerp(30, 0, ease(seg(local, 0, 0.75))));
+        var landed = seg(local, 0.72, 0.8);
+        lander.visible = true; lander.position.set(6, km6 * U + 0.55, 3);
+        lflare.material.opacity = km6 > 0.5 ? 0.6 : 0;
+        var offHi = [4, 1.5, 6.5], offLo = [3.6, 0.9, 5.2];
+        follow(lander, [lerp(offHi[0], offLo[0], landed), lerp(offHi[1], offLo[1], landed), lerp(offHi[2], offLo[2], landed)], lookUp * 0.6 + 0.4 * (1 - landed)); focusKm = km6;
+      }
+      var sky = skyAt(focusKm);
+      scene.background.copy(sky); scene.fog.color.copy(sky);
+      var inCloud = focusKm > 47.5 && focusKm < 63;
+      scene.fog.near = inCloud ? 6 : 12;
+      scene.fog.far = inCloud ? lerp(55, 90, seg(focusKm, 50, 62)) : (focusKm > 40 ? 160 : lerp(90, 260, seg(focusKm, 0, 30)));
+      var dark = seg(focusKm, 47, 25);
+      hemi.intensity = 1.0 - 0.55 * dark; sun.intensity = 0.6 - 0.45 * dark;
+      setHud(focusKm < 0.05 ? 0 : focusKm);
+    }
+    ticker(v, function (dt, rdt) {
+      t += dt;
+      place(progress);
+      puffs.forEach(function (sp) { sp.position.x -= sp.userData.v * dt; if (sp.position.x < -110) sp.position.x += 220; });
+      /* frame-rate independent, and a jump rather than a long flight when the target is far off */
+      var a = camInit ? 1 - Math.exp(-(rdt || dt) * 5) : 1; camInit = true;
+      if (camPos.distanceTo(wantPos) > 120) a = 1;
+      camPos.lerp(wantPos, a); camLook.lerp(wantLook, a);
+      v.camera.position.copy(camPos); v.camera.lookAt(camLook);
+      v.render(scene);
+    });
+    return { update: function (p) { progress = p; } };
+  }
+
+  /* ============================================================
+     THE FLEET — each vehicle, exploded part by part as you scroll
+     ============================================================ */
+
+  function fleet3d(canvas, host) {
+    var v = makeView(canvas, { fov: 38, near: 0.5, far: 6000, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    scene.add(starfield(THREE, 600, 2500, 8123));
+    scene.add(new THREE.HemisphereLight(0xF2E8D0, 0x12101F, 0.85));
+    var key = new THREE.DirectionalLight(0xFFF3D6, 0.9); key.position.set(1, 1.2, 0.8); scene.add(key);
+    var fill = new THREE.DirectionalLight(0x5FD0C4, 0.25); fill.position.set(-1, -0.4, -0.6); scene.add(fill);
+    var overlay = document.createElement('div'); overlay.className = 'fx__labels'; host.appendChild(overlay);
+    var SPECS = PHOS.FLEET3D || [];
+    var tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
+
+    var vehicles = SPECS.map(function (spec) {
+      var obj = model(THREE, spec.key);
+      var box = new THREE.Box3().setFromObject(obj);
+      var size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+      var span = Math.max(size.x, size.y, size.z);
+      obj.position.set(-center.x, -center.y, -center.z);
+      obj.traverse(function (o) {
+        if (!o.isMesh) return;
+        if (o.userData.material === 'hull' && spec.seeThrough) { o.material.transparent = true; o.material.opacity = 0.3; o.material.depthWrite = false; }
+      });
+      var parts = spec.parts.map(function (P, i) {
+        var meshes = obj.children.filter(function (m) { return P.groups.indexOf(m.name) >= 0; });
+        var pb = new THREE.Box3(); meshes.forEach(function (m) { pb.expandByObject(m); });
+        var pc = pb.getCenter(new THREE.Vector3());
+        var dir = P.dir ? new THREE.Vector3(P.dir[0], P.dir[1], P.dir[2]) : pc.clone().sub(center);
+        if (dir.length() < span * 0.03) dir.set(0.3, 0.8, 0.5);
+        dir.normalize();
+        var dist = span * (P.dist || 0.32);
+        var el = document.createElement('div'); el.className = 'fx__label';
+        el.innerHTML = '<b></b><span></span>'; el.firstChild.textContent = P.label; el.lastChild.textContent = P.note || '';
+        el.style.opacity = 0; overlay.appendChild(el);
+        return { meshes: meshes, at: pc, dir: dir, dist: dist, el: el, k: 0 };
+      });
+      obj.visible = false;
+      scene.add(obj);
+      return { spec: spec, obj: obj, parts: parts, span: span, size: size };
+    });
+    var N = vehicles.length, cards = null;
+    var theta = 0.85, phi = 1.12, drag = 0, dragging = false, lx = 0, ly = 0, t = 0;
+    var progress = 0, active = -1, camRadius = 100, wantRadius = 100;
+
+    canvas.addEventListener('pointerdown', function (e) { dragging = true; lx = e.clientX; ly = e.clientY; canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); });
+    canvas.addEventListener('pointermove', function (e) { if (!dragging) return; drag -= (e.clientX - lx) * 0.008; phi = clamp(phi - (e.clientY - ly) * 0.006, 0.3, 1.5); lx = e.clientX; ly = e.clientY; });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (n) { canvas.addEventListener(n, function () { dragging = false; }); });
+
+    function layout(p) {
+      var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
+      var V = vehicles[i];
+      if (i !== active) {
+        vehicles.forEach(function (o, j) { o.obj.visible = j === i; o.parts.forEach(function (P) { P.el.style.opacity = 0; }); });
+        active = i;
+        if (!cards) cards = Array.prototype.slice.call(host.closest('.stage').querySelectorAll('.stage__card'));
+      }
+      var kAll = ease(seg(local, 0.1, 0.72));
+      fade(V.obj, seg(local, 0, 0.1));
+      var n = V.parts.length;
+      var list = cards && cards[i] ? cards[i].querySelectorAll('.part') : null;
+      V.parts.forEach(function (P, j) {
+        var k = ease(seg(local, 0.1 + 0.5 * j / n, 0.32 + 0.5 * j / n));
+        P.k = k;
+        P.meshes.forEach(function (m) { m.position.copy(P.dir).multiplyScalar(P.dist * k); });
+        if (list && list[j]) list[j].classList.toggle('is-on', k > 0.35);
+      });
+      var wideModel = V.size.x > V.span * 0.8 || V.size.z > V.span * 0.8;
+      wantRadius = V.span * (V.size.y > V.span * 0.8 ? 1.85 : wideModel ? 1.75 : 1.5) * (1 + 0.45 * kAll);
+    }
+
+    function frame(dt, rdt) {
+      t += dt;
+      if (!dragging) theta += dt * 0.07;
+      camRadius += (wantRadius - camRadius) * (1 - Math.exp(-(rdt || dt) * 4));
+      var w = v.w(), h = v.h(), wide = w >= 760;
+      var V = vehicles[active < 0 ? 0 : active];
+      var th = theta + drag;
+      var target = new THREE.Vector3(0, 0, 0);
+      var pos = new THREE.Vector3(camRadius * Math.sin(phi) * Math.cos(th), camRadius * Math.cos(phi), camRadius * Math.sin(phi) * Math.sin(th));
+      /* slide the whole view so the model sits right of the cards on wide screens */
+      var dir = target.clone().sub(pos).normalize();
+      var right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+      var sh = wide ? camRadius * 0.27 : 0;
+      pos.addScaledVector(right, -sh); target.addScaledVector(right, -sh);
+      v.camera.position.copy(pos); v.camera.lookAt(target);
+      v.render(scene);
+      /* project the part labels */
+      if (V && V.obj.visible) {
+        var items = [];
+        V.parts.forEach(function (P) {
+          var on = P.k > 0.35;
+          P.el.style.opacity = on ? 1 : 0;
+          if (!on) return;
+          tmp.copy(P.at).addScaledVector(P.dir, P.dist * P.k);
+          V.obj.localToWorld(tmp);
+          tmp2.copy(tmp).project(v.camera);
+          var lw = P.el.offsetWidth || 120, lh = P.el.offsetHeight || 30;
+          items.push({ P: P, x: clamp((tmp2.x + 1) / 2 * w + 12, 8, w - lw - 8), y: (1 - tmp2.y) / 2 * h - 8, w: lw, h: lh });
+        });
+        /* stack labels that would land on top of each other */
+        items.sort(function (a, b) { return a.y - b.y; });
+        var placed = [];
+        var low = 0;
+        items.forEach(function (it) {
+          placed.forEach(function (q) { if (it.x < q.x + q.w + 6 && q.x < it.x + it.w + 6 && it.y < q.y + q.h + 5) it.y = q.y + q.h + 5; });
+          it.y = Math.max(8, it.y);
+          placed.push(it);
+          low = Math.max(low, it.y + it.h);
+        });
+        var over = Math.max(0, low - (h - 8));
+        placed.forEach(function (it) { it.P.el.style.transform = 'translate(' + it.x.toFixed(1) + 'px,' + (it.y - over).toFixed(1) + 'px)'; });
+      }
+    }
+    layout(0);
+    ticker(v, frame);
+    return { update: function (p) { progress = p; layout(p); } };
+  }
+
+  /* ============================================================
+     THIRTY DAYS — down to the operating latitude, then lap by lap
+     ============================================================ */
+
+  function stay3d(canvas, hud) {
+    var v = makeView(canvas, { fov: 40, near: 0.1, far: 5000, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    scene.add(starfield(THREE, 700, 3000, 6061));
+    scene.add(new THREE.HemisphereLight(0xF2E8D0, 0x0A0912, 0.12));
+    var sun = new THREE.DirectionalLight(0xFFF3D6, 1.5); sun.position.set(1, 0.05, 0); scene.add(sun);
+    var R = 60;
+    var venus = planet(THREE, { radius: R, map: venusTexture(THREE), rim: 0xE8B33A, rimOpacity: 0.22, rimScale: 1.03 });
+    scene.add(venus);
+    var sunGlow = glow(THREE, 0xFFF3D6, 40); sunGlow.position.set(900, 40, 0); scene.add(sunGlow);
+    /* the ship, big enough to see against a planet: a symbol, not to scale */
+    var ship = model(THREE, 'phosphorus_airship', function (n) { return ['helium_cells', 'breathable_air_volume', 'ballonets', 'person'].indexOf(n) < 0; });
+    var shipG = new THREE.Group(); shipG.add(ship); ship.scale.setScalar(3.2 / 129); scene.add(shipG);
+    var dot = glow(THREE, 0xE8B33A, 5); scene.add(dot);
+    var MAXP = 900;
+    var trailGeo = new THREE.BufferGeometry();
+    trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAXP * 3), 3));
+    trailGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(MAXP * 3), 3));
+    trailGeo.setDrawRange(0, 0);
+    var trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9 }));
+    scene.add(trail);
+    var trailDays = [], trailN = 0;
+
+    var LAT = 10, DAY_H = 87.6, NIGHT_H = 53.9, LAP = DAY_H + NIGHT_H;
+    var GROUND_DAY = 1.95, GROUND_NIGHT = 3.26;    /* degrees of longitude per hour over the ground */
+    function lapState(hours) {
+      var tl = hours % LAP, laps = Math.floor(hours / LAP);
+      var day = tl < DAY_H;
+      var lon = day ? -90 + 180 * tl / DAY_H : 90 + 180 * (tl - DAY_H) / NIGHT_H;   /* sun-relative: 0 is noon */
+      var lit = laps * DAY_H + Math.min(tl, DAY_H);
+      var ground = laps * (DAY_H * GROUND_DAY + NIGHT_H * GROUND_NIGHT) + (day ? tl * GROUND_DAY : DAY_H * GROUND_DAY + (tl - DAY_H) * GROUND_NIGHT);
+      return { day: day, lon: lon, lit: lit, laps: laps, groundLon: 120 - ground, alt: day ? 51 : 55, tl: tl };
+    }
+    function onGlobe(lat, lon, alt, out) {
+      var r = R + alt, la = lat * Math.PI / 180, lo = lon * Math.PI / 180;
+      return out.set(r * Math.cos(la) * Math.cos(lo), r * Math.sin(la), -r * Math.cos(la) * Math.sin(lo));
+    }
+    var DAYS = (PHOS.STAY || []).map(function (s) { return s.days; });
+    var N = DAYS.length, progress = 0, t = 0, camInit = false;
+    var camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
+    var pos = new THREE.Vector3(), nxt = new THREE.Vector3(), radial = new THREE.Vector3(), tmp = new THREE.Vector3();
+    var cDay = new THREE.Color(0xE8B33A), cNight = new THREE.Color(0x5FD0C4);
+
+    function setHud(day, st) {
+      if (!hud.day) return;
+      hud.day.innerHTML = day.toFixed(1) + '<small> of 30</small>';
+      var gl = ((st.groundLon % 360) + 540) % 360 - 180;
+      hud.pos.textContent = LAT + '° N · ' + Math.abs(gl).toFixed(0) + '° ' + (gl >= 0 ? 'E' : 'W');
+      hud.sun.textContent = (st.day ? 'day · ' : 'night · ') + st.alt + ' km';
+      hud.lit.innerHTML = (day > 0 ? Math.round(100 * st.lit / (day * 24)) : 100) + '<small> % in the sun</small>';
+    }
+
+    function place(p) {
+      var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
+      var rng = DAYS[i] || [0, 0];
+      var day = lerp(rng[0], rng[1], ease(local));
+      var st = lapState(day * 24);
+      var altU = st.day ? 0.9 : 2.4;
+      onGlobe(LAT, st.lon, altU, pos);
+      var st2 = lapState(day * 24 + 1);
+      onGlobe(LAT, st2.lon, altU, nxt);
+      shipG.position.copy(pos);
+      radial.copy(pos).normalize();
+      shipG.up.copy(radial); shipG.lookAt(nxt); shipG.rotateY(Math.PI / 2);
+      dot.position.copy(pos);
+      dot.material.color.copy(st.day ? cDay : cNight);
+      /* the trail: rebuilt from the start whenever the day steps back */
+      if (trailN && trailDays[trailN - 1] > day) { while (trailN && trailDays[trailN - 1] > day) trailN--; }
+      if (!trailN || day - trailDays[trailN - 1] > 0.05) {
+        var arr = trailGeo.attributes.position.array, col = trailGeo.attributes.color.array;
+        var from = trailN ? trailDays[trailN - 1] : 0;
+        while (trailN < MAXP && from <= day) {
+          var s = lapState(from * 24);
+          onGlobe(LAT, s.lon, s.day ? 0.9 : 2.4, tmp);
+          arr[trailN * 3] = tmp.x; arr[trailN * 3 + 1] = tmp.y; arr[trailN * 3 + 2] = tmp.z;
+          var c = s.day ? cDay : cNight; col[trailN * 3] = c.r; col[trailN * 3 + 1] = c.g; col[trailN * 3 + 2] = c.b;
+          trailDays[trailN] = from; trailN++;
+          if (from >= day) break;
+          from = Math.min(day, from + 0.05);
+        }
+        trailGeo.attributes.position.needsUpdate = true; trailGeo.attributes.color.needsUpdate = true;
+      }
+      trailGeo.setDrawRange(0, trailN);
+      /* camera: card one pulls back from the ship to the whole planet, then rides along */
+      var wide = v.w() >= 760;
+      var pull = i === 0 ? ease(seg(local, 0.05, 0.95)) : 1;
+      var radius = lerp(5, 175, pull);
+      var east = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), radial).normalize();
+      wantPos.copy(pos).addScaledVector(radial, radius * 0.72).addScaledVector(east, radius * 0.5).addScaledVector(new THREE.Vector3(0, 1, 0), radius * 0.32);
+      wantLook.copy(pos).multiplyScalar(1 - pull * 0.85);   /* from the ship toward the planet's center */
+      if (wide) {
+        var d = new THREE.Vector3().subVectors(wantLook, wantPos).normalize();
+        var right = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize();
+        wantPos.addScaledVector(right, -radius * 0.24 * pull); wantLook.addScaledVector(right, -radius * 0.24 * pull);
+      }
+      ship.visible = true;
+      dot.scale.setScalar(lerp(0.01, 5, pull));
+      setHud(day, st);
+    }
+    ticker(v, function (dt, rdt) {
+      t += dt;
+      var a = camInit ? 1 - Math.exp(-(rdt || dt) * 5) : 1; camInit = true;
+      camPos.lerp(wantPos, a); camLook.lerp(wantLook, a);
+      v.camera.position.copy(camPos); v.camera.lookAt(camLook);
+      v.render(scene);
+    });
+    place(0);
+    return { update: function (p) { progress = p; place(p); } };
+  }
+
+  /* ============================================================
      boot
      ============================================================ */
 
@@ -1257,11 +2009,10 @@
       try { gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl'); } catch (e) { gl = null; }
       if (!gl) return null;
 
-      var out = { acts: false, descent: null, cutaway: false, compare: null, build: null };
+      var out = { acts: false, descent: null, cutaway: false, compare: null, build: null, walk: null, learn: null, samples: null, fleet: null, stay: null };
       var a = document.getElementById('assemblyCanvas');
       var b = document.getElementById('journeyCanvas');
       var d = document.getElementById('descentCanvas');
-      var s = document.getElementById('shipSvg');
 
       if (a) {
         var ca = swapCanvas(a);
@@ -1285,12 +2036,41 @@
         out.descent = descent3d(cd);
         if (!out.descent) cd.parentNode.removeChild(cd);
       }
-      if (s) out.cutaway = cutaway3d(s);
       var bc = document.getElementById('buildCanvas');
       if (bc) {
         var cb2 = swapCanvas(bc);
         out.build = build3d(cb2, { step: document.getElementById('bStep'), key: document.getElementById('bKey'), val: document.getElementById('bVal'), unit: document.getElementById('bUnit') });
         if (out.build) bc.hidden = true; else cb2.parentNode.removeChild(cb2);
+      }
+      var wc = document.getElementById('walkCanvas');
+      if (wc) {
+        var cw2 = swapCanvas(wc);
+        out.walk = walk3d(cw2, { step: document.getElementById('wStep'), out: document.getElementById('wOut'), time: document.getElementById('wTime') });
+        if (out.walk) wc.hidden = true; else cw2.parentNode.removeChild(cw2);
+      }
+      var lc = document.getElementById('learnCanvas');
+      if (lc) {
+        var cl2 = swapCanvas(lc);
+        out.learn = learn3d(cl2);
+        if (out.learn) lc.hidden = true; else cl2.parentNode.removeChild(cl2);
+      }
+      var sc = document.getElementById('samplesCanvas');
+      if (sc) {
+        var cs2 = swapCanvas(sc);
+        out.samples = samples3d(cs2, { alt: document.getElementById('sAlt'), temp: document.getElementById('sTemp'), pres: document.getElementById('sPres') });
+        if (out.samples) sc.hidden = true; else cs2.parentNode.removeChild(cs2);
+      }
+      var fc = document.getElementById('fleetCanvas');
+      if (fc) {
+        var cf2 = swapCanvas(fc);
+        out.fleet = fleet3d(cf2, fc.parentNode);
+        if (out.fleet) fc.hidden = true; else cf2.parentNode.removeChild(cf2);
+      }
+      var yc = document.getElementById('stayCanvas');
+      if (yc) {
+        var cy2 = swapCanvas(yc);
+        out.stay = stay3d(cy2, { day: document.getElementById('yDay'), pos: document.getElementById('yPos'), sun: document.getElementById('ySun'), lit: document.getElementById('yLit') });
+        if (out.stay) yc.hidden = true; else cy2.parentNode.removeChild(cy2);
       }
       var cmp = document.getElementById('compareCanvas');
       if (cmp) {

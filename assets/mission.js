@@ -28,6 +28,8 @@
   }
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function lerp(a, b, t) { return a + (b - a) * t; }
+  function seg(t, a, b) { return clamp((t - a) / (b - a || 1), 0, 1); }
+  function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
   function fmt(n, dp) {
     var s = Math.abs(n) >= 1000 ? Number(n).toLocaleString('en-GB', {
       minimumFractionDigits: dp || 0, maximumFractionDigits: dp || 0
@@ -535,192 +537,9 @@
 
   /* ---------- program phases ---------------------------- */
 
-  function buildPhases() {
-    var wrap = $('#phases');
-    if (!wrap) return;
-    D.PHASES.forEach(function (ph) {
-      var p = el('article', 'phase');
-      p.setAttribute('data-status', ph.status);
-
-      var id = el('div', 'phase__id');
-      id.appendChild(el('p', 'phase__tag', ph.tag));
-      id.appendChild(el('h3', 'phase__name', ph.name));
-      id.appendChild(el('p', 'phase__years num', ph.years));
-      if (ph.window) id.appendChild(el('p', 'phase__years num', '◷ ' + ph.window));
-      id.appendChild(el('span', 'phase__badge', ph.status === 'funded' ? 'Funded or committed' : ph.status === 'flagship' ? 'Flagship' : 'Proposed'));
-      p.appendChild(id);
-
-      var body = el('div', 'phase__body');
-      body.appendChild(el('p', 'phase__thesis', ph.thesis));
-      var items = el('div', 'phase__items');
-      ph.items.forEach(function (it) {
-        var row = el('div', 'phase__item');
-        var hd = el('div', 'phase__item-h');
-        hd.appendChild(el('p', 'phase__item-n', it.name));
-        hd.appendChild(el('p', 'phase__item-w', it.who + (it.when ? ' · ' + it.when : '')));
-        row.appendChild(hd);
-        row.appendChild(el('p', 'phase__item-d', it.what));
-        items.appendChild(row);
-      });
-      body.appendChild(items);
-      p.appendChild(body);
-      wrap.appendChild(p);
-    });
-
-    var nodes = Array.prototype.slice.call(wrap.querySelectorAll('.phase'));
-    onTick(function (vh) {
-      for (var i = 0; i < nodes.length; i++) {
-        var r = nodes[i].getBoundingClientRect();
-        var on = r.top < vh * 0.6 && r.bottom > vh * 0.25;
-        nodes[i].classList.toggle('is-active', on);
-      }
-    });
-  }
-
   /* ---------- launch-window table ------------------------- */
 
-  function buildWindows() {
-    var body = $('#windowRows');
-    if (!body) return;
-    D.WINDOWS.forEach(function (w) {
-      var tr = el('tr');
-      if (w.use && w.use.indexOf('PHASE 4') === 0) tr.setAttribute('data-flag', 'crew');
-      [
-        [prettyDate(w.open) + ' → ' + prettyDate(w.close), 'left'],
-        [prettyDate(w.best), null],
-        [prettyDate(w.arrive), null],
-        [w.tof + ' d', null],
-        [w.c3.toFixed(2), null],
-        [w.vinf.toFixed(2), null]
-      ].forEach(function (c) {
-        var td = el('td', null, c[0]);
-        if (c[1] === 'left') td.style.textAlign = 'left';
-        tr.appendChild(td);
-      });
-      var use = el('td', 'use', w.use || '—');
-      tr.appendChild(use);
-      body.appendChild(tr);
-    });
-  }
-
   /* ---------- airship cutaway ----------------------------- */
-
-  function cutaway() {
-    var host = $('#shipSvg');
-    if (!host) return;
-    var W = 1440, H = 560;
-    var s = svg('svg', {
-      viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
-      preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'Cutaway of the Phosphorus airship: a 129 meter envelope carrying sealed helium lift cells above an ambient-pressure breathable-air volume, with a gondola holding the habitat module and the Vesper ascent vehicle'
-    });
-
-    var cx = 720, cy = 190, a = 340, b = 92;
-    var LX = 318, RX = 1126;        /* label columns */
-
-    var defs = svg('defs');
-    var lg = svg('linearGradient', { id: 'env', x1: 0, y1: 0, x2: 0, y2: 1 });
-    lg.appendChild(svg('stop', { offset: '0%', 'stop-color': '#232037' }));
-    lg.appendChild(svg('stop', { offset: '100%', 'stop-color': '#12101F' }));
-    defs.appendChild(lg);
-    s.appendChild(defs);
-
-    s.appendChild(svg('ellipse', { cx: cx, cy: cy, rx: a, ry: b, fill: 'url(#env)', stroke: '#F2E8D0', 'stroke-width': 2.2 }));
-
-    /* sealed helium lift cells */
-    [-0.58, -0.195, 0.195, 0.58].forEach(function (f) {
-      s.appendChild(svg('ellipse', {
-        cx: cx + a * f, cy: cy - b * 0.22, rx: a * 0.17, ry: b * 0.48,
-        fill: 'rgba(232,179,58,0.16)', stroke: 'rgba(232,179,58,0.72)', 'stroke-width': 1.6
-      }));
-    });
-
-    /* ambient-pressure breathable-air volume, lower hull */
-    s.appendChild(svg('path', {
-      d: 'M' + (cx - a * 0.78) + ' ' + (cy + b * 0.36) +
-         ' Q' + cx + ' ' + (cy + b * 1.62) + ' ' + (cx + a * 0.78) + ' ' + (cy + b * 0.36) +
-         ' Q' + cx + ' ' + (cy + b * 0.26) + ' ' + (cx - a * 0.78) + ' ' + (cy + b * 0.36) + 'Z',
-      fill: 'rgba(95,208,196,0.20)', stroke: 'rgba(95,208,196,0.8)', 'stroke-width': 1.6
-    }));
-
-    /* ballonets */
-    [-0.46, 0.46].forEach(function (f) {
-      s.appendChild(svg('ellipse', {
-        cx: cx + a * f, cy: cy + b * 0.38, rx: a * 0.095, ry: b * 0.19,
-        fill: 'rgba(242,232,208,0.07)', stroke: 'rgba(242,232,208,0.45)', 'stroke-width': 1.2, 'stroke-dasharray': '5 4'
-      }));
-    });
-
-    /* solar crown */
-    s.appendChild(svg('path', {
-      d: 'M' + (cx - a * 0.76) + ' ' + (cy - b * 0.62) + ' Q' + cx + ' ' + (cy - b * 1.32) + ' ' + (cx + a * 0.76) + ' ' + (cy - b * 0.62),
-      fill: 'none', stroke: '#E8B33A', 'stroke-width': 6, 'stroke-linecap': 'round'
-    }));
-
-    /* gondola and suspension */
-    var gw = 196, gh = 50, gx = cx - gw / 2, gy = cy + b + 34;
-    [-0.30, -0.10, 0.10, 0.30].forEach(function (f) {
-      s.appendChild(svg('line', {
-        x1: cx + gw * f, y1: gy, x2: cx + a * f * 1.1, y2: cy + b * 0.95,
-        stroke: 'rgba(242,232,208,0.3)', 'stroke-width': 1.2
-      }));
-    });
-    s.appendChild(svg('rect', { x: gx, y: gy, width: gw, height: gh, fill: '#141223', stroke: '#5FD0C4', 'stroke-width': 2 }));
-    s.appendChild(svg('rect', { x: gx + 9, y: gy + 9, width: 72, height: gh - 18, fill: 'rgba(95,208,196,0.28)' }));
-    s.appendChild(svg('rect', { x: gx + 88, y: gy + 9, width: 42, height: gh - 18, fill: 'rgba(232,179,58,0.24)' }));
-    s.appendChild(svg('rect', { x: gx + 137, y: gy + 9, width: 50, height: gh - 18, fill: 'rgba(255,122,69,0.30)' }));
-
-    [cx - a - 8, cx + a + 8].forEach(function (px) {
-      s.appendChild(svg('ellipse', { cx: px, cy: cy, rx: 7, ry: 24, fill: 'none', stroke: '#8B8373', 'stroke-width': 2 }));
-    });
-
-    /* scale bar */
-    var sy = H - 26;
-    s.appendChild(svg('line', { x1: cx - a, y1: sy, x2: cx + a, y2: sy, stroke: '#5A5648', 'stroke-width': 1.2 }));
-    [-a, a].forEach(function (o) {
-      s.appendChild(svg('line', { x1: cx + o, y1: sy - 7, x2: cx + o, y2: sy + 7, stroke: '#5A5648', 'stroke-width': 1.2 }));
-    });
-    var sl = svg('text', { x: cx, y: sy - 14, 'text-anchor': 'middle', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 18, fill: '#8B8373' });
-    sl.textContent = '129 m — longer than a Boeing 747 (70.6 m)';
-    s.appendChild(sl);
-
-    /* callouts in two clean columns, single straight leaders */
-    var CALLS = [
-      { x: cx - a * 0.58, y: cy - b * 0.70, ex: LX, ey: 74,  anchor: 'end',
-        t: 'Helium lift cells', v: '46 000 m³ · 66.8 t lift', c: '#E8B33A' },
-      { x: cx - a * 0.46, y: cy + b * 0.38, ex: LX, ey: 246, anchor: 'end',
-        t: 'Ballonets', v: 'buoyancy and thermal trim', c: '#C9BFA8' },
-      { x: gx + 45, y: gy + gh, ex: LX, ey: 420, anchor: 'end',
-        t: 'Habitat module', v: '2 crew · 30 days · 1 atm', c: '#5FD0C4' },
-      { x: cx + a * 0.14, y: cy - b * 1.16, ex: RX, ey: 74,  anchor: 'start',
-        t: 'Thin-film photovoltaics', v: '~1 000 m² · 2 601 W/m²', c: '#E8B33A' },
-      { x: cx + a * 0.40, y: cy + b * 1.00, ex: RX, ey: 246, anchor: 'start',
-        t: 'Breathable-air volume', v: '31 500 m³ · 16.8 t · ambient', c: '#5FD0C4' },
-      { x: gx + 162, y: gy + gh, ex: RX, ey: 420, anchor: 'start',
-        t: 'Vesper ascent vehicle', v: '~8.0 km/s to Venus orbit', c: '#FF7A45' }
-    ];
-    CALLS.forEach(function (c) {
-      var tip = c.ex + (c.anchor === 'start' ? -14 : 14);
-      s.appendChild(svg('line', {
-        x1: c.x, y1: c.y, x2: tip, y2: c.ey - 6,
-        stroke: c.c, 'stroke-width': 1.2, opacity: 0.5
-      }));
-      s.appendChild(svg('circle', { cx: c.x, cy: c.y, r: 3.5, fill: c.c }));
-      var t1 = svg('text', {
-        x: c.ex, y: c.ey, 'text-anchor': c.anchor,
-        'font-family': 'Archivo, sans-serif', 'font-size': 20, 'font-weight': 600, fill: '#F2E8D0'
-      });
-      t1.textContent = c.t;
-      var t2 = svg('text', {
-        x: c.ex, y: c.ey + 22, 'text-anchor': c.anchor,
-        'font-family': '"IBM Plex Mono", monospace', 'font-size': 16, fill: c.c
-      });
-      t2.textContent = c.v;
-      s.appendChild(t1); s.appendChild(t2);
-    });
-
-    host.appendChild(s);
-  }
 
   /* ---------- lift calculator ----------------------------- */
 
@@ -776,49 +595,73 @@
     });
   }
 
-  function buildAloft() {
-    var wrap = $('#loops');
+  function buildRisks() {
+    var wrap = $('#risks');
     if (!wrap) return;
-    D.ALOFT.loops.forEach(function (l) {
-      var c = el('article', 'loop');
-      c.appendChild(el('h4', 'loop__n', l.name));
-      var flow = el('p', 'loop__flow');
-      flow.appendChild(el('span', 'loop__in', l.in));
-      flow.appendChild(el('span', 'loop__arrow', '→'));
-      flow.appendChild(el('span', 'loop__out', l.out));
-      c.appendChild(flow);
-      c.appendChild(el('p', 'loop__how', l.how));
-      wrap.appendChild(c);
+    var open = null;
+    D.RISKS.forEach(function (r, i) {
+      var a = el('article', 'risk');
+      a.setAttribute('data-sev', r.severity);
+      var btn = el('button', 'risk__toggle');
+      btn.type = 'button';
+      btn.setAttribute('aria-expanded', 'false');
+      btn.setAttribute('aria-controls', 'risk-' + r.rank);
+      btn.appendChild(el('span', 'risk__rank num', String(r.rank).padStart(2, '0')));
+      btn.appendChild(el('span', 'risk__n', r.name));
+      btn.appendChild(el('span', 'risk__sev', r.severity));
+      btn.appendChild(el('span', 'risk__chev', '+'));
+      a.appendChild(btn);
+      var body = el('div', 'risk__body'); body.id = 'risk-' + r.rank;
+      var inner = el('div', 'risk__inner');
+      inner.appendChild(el('p', 'risk__what', r.what));
+      var fix = el('p', 'risk__fix');
+      fix.appendChild(el('b', null, 'What we do about it'));
+      fix.appendChild(document.createTextNode(r.fix));
+      inner.appendChild(fix);
+      body.appendChild(inner);
+      a.appendChild(body);
+      wrap.appendChild(a);
+      function set(on) {
+        a.classList.toggle('is-open', on);
+        btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+        btn.lastChild.textContent = on ? '−' : '+';
+      }
+      btn.addEventListener('click', function () {
+        var on = !a.classList.contains('is-open');
+        if (open && open !== set) open(false);
+        set(on);
+        open = on ? set : null;
+      });
+      if (i === 0) { set(true); open = set; }
     });
   }
 
-  function buildCost() {
-    var wrap = $('#costBars');
-    if (!wrap) return;
-    var max = Math.max.apply(null, D.COSTS.phases.map(function (p) { return p.usd; }));
-    D.COSTS.phases.forEach(function (p, i) {
-      var b = el('div', 'costbar');
-      if (i === 4) b.setAttribute('data-flag', 'crew');
-      if (i === 0) b.setAttribute('data-flag', 'funded');
-      var top = el('div', 'costbar__top');
-      top.appendChild(el('span', null, p.name));
-      top.appendChild(el('b', null, '$' + p.usd.toFixed(1) + ' bn'));
-      b.appendChild(top);
-      var tr = el('div', 'costbar__track');
-      var fi = el('div', 'costbar__fill');
-      fi.style.width = '0%';
-      fi.setAttribute('data-w', (p.usd / max * 100).toFixed(1) + '%');
-      tr.appendChild(fi); b.appendChild(tr);
-      b.appendChild(el('p', 'note', p.note));
-      wrap.appendChild(b);
-    });
+  /* ---------- what it costs, Venus against Mars ----------- */
 
-    var cmp = $('#costCompare');
-    if (cmp) {
-      var rows = [{ label: 'Project Phosphorus, all five phases', usd: D.COSTS.total, venus: true }]
-        .concat(D.COSTS.marsEstimates.map(function (m) { return { label: m.label, usd: m.usd }; }));
+  function buildCostVs() {
+    var wrap = $('#costVs');
+    if (!wrap || !D.COST_VS) return;
+    [['venus', 'Venus', 'Project Phosphorus'], ['mars', 'Mars', 'published estimates']].forEach(function (side) {
+      var col = el('div', 'costvs__col costvs__col--' + side[0]);
+      var h = el('p', 'costvs__who');
+      h.appendChild(el('b', null, side[1]));
+      h.appendChild(document.createTextNode(' · ' + side[2]));
+      col.appendChild(h);
+      D.COST_VS[side[0]].forEach(function (r) {
+        var row = el('div', 'costvs__row');
+        row.appendChild(el('p', 'costvs__k', r.k));
+        var v = el('p', 'costvs__v num');
+        v.appendChild(document.createTextNode('$' + (r.v >= 1000 ? (r.v / 1000).toFixed(0) + ' tn' : fmt(r.v, r.v < 100 ? 1 : 0) + ' ' + r.unit)));
+        row.appendChild(v);
+        row.appendChild(el('p', 'costvs__d', r.d));
+        col.appendChild(row);
+      });
+      wrap.appendChild(col);
+    });
+    var bars = $('#costVsBars');
+    if (bars) {
       var mx = 1000;
-      rows.forEach(function (r) {
+      D.COST_VS.bars.forEach(function (r) {
         var row = el('div', 'compare__row' + (r.venus ? ' compare__row--venus' : ''));
         row.appendChild(el('p', 'compare__label', r.label));
         var tr = el('div', 'compare__track');
@@ -828,43 +671,19 @@
         tr.appendChild(f);
         row.appendChild(tr);
         row.appendChild(el('p', 'compare__val', '$' + fmt(r.usd, r.usd < 100 ? 1 : 0) + ' bn'));
-        cmp.appendChild(row);
+        bars.appendChild(row);
+      });
+      var fired = false;
+      onTick(function (vh) {
+        if (fired) return;
+        if (bars.getBoundingClientRect().top < vh * 0.9) {
+          fired = true;
+          Array.prototype.forEach.call(bars.querySelectorAll('.compare__fill'), function (n, i) {
+            setTimeout(function () { n.style.width = n.getAttribute('data-w'); }, REDUCED ? 0 : i * 70);
+          });
+        }
       });
     }
-
-    var fired = false;
-    onTick(function (vh) {
-      if (fired) return;
-      var r = wrap.getBoundingClientRect();
-      if (r.top < vh * 0.9) {
-        fired = true;
-        Array.prototype.forEach.call(document.querySelectorAll('.costbar__fill, .compare__fill'), function (n, i) {
-          setTimeout(function () { n.style.width = n.getAttribute('data-w'); }, REDUCED ? 0 : i * 70);
-        });
-      }
-    });
-  }
-
-  function buildRisks() {
-    var wrap = $('#risks');
-    if (!wrap) return;
-    D.RISKS.forEach(function (r) {
-      var a = el('article', 'risk');
-      a.setAttribute('data-sev', r.severity);
-      var h = el('div', 'risk__h');
-      h.appendChild(el('p', 'risk__rank num', 'RISK ' + String(r.rank).padStart(2, '0')));
-      h.appendChild(el('h3', 'risk__n', r.name));
-      h.appendChild(el('span', 'risk__sev', r.severity));
-      a.appendChild(h);
-      var b = el('div', 'risk__body');
-      b.appendChild(el('p', 'risk__what', r.what));
-      var fix = el('p', 'risk__fix');
-      fix.appendChild(el('b', null, 'What we do about it'));
-      fix.appendChild(document.createTextNode(r.fix));
-      b.appendChild(fix);
-      a.appendChild(b);
-      wrap.appendChild(a);
-    });
   }
 
   function buildSources() {
@@ -884,73 +703,38 @@
 
   /* ---------- science: open questions --------------------- */
 
-  function buildScience() {
-    var wrap = $('#science');
-    if (!wrap) return;
-    D.SCIENCE.forEach(function (q) {
-      var a = el('article', 'q');
-      var h = el('div', 'q__h');
-      h.appendChild(el('p', 'q__n num', String(q.n).padStart(2, '0')));
-      h.appendChild(el('p', 'q__tag', q.tag));
-      a.appendChild(h);
-      var b = el('div', 'q__b');
-      b.appendChild(el('h3', 'q__name', q.name));
-      b.appendChild(el('p', 'q__known', q.known));
-      var split = el('div', 'q__split');
-      [['A probe can', q.probe, 'probe'], ['A crew can', q.crew, 'crew']].forEach(function (c) {
-        var col = el('div', 'q__col q__col--' + c[2]);
-        col.appendChild(el('p', 'q__col-k', c[0]));
-        col.appendChild(el('p', 'q__col-v', c[1]));
-        split.appendChild(col);
-      });
-      b.appendChild(split);
-      a.appendChild(b);
-      wrap.appendChild(a);
-    });
+  function buildScience(viz) {
+    stageSteps('learn', D.SCIENCE, function (q) {
+      var extra = el('div', 'qcard');
+      var c1 = el('div', 'qcard__col qcard__col--crew');
+      c1.appendChild(el('p', 'qcard__k', 'What the crew does'));
+      c1.appendChild(el('p', 'qcard__v', q.crew));
+      var c2 = el('div', 'qcard__col');
+      c2.appendChild(el('p', 'qcard__k', 'What a probe gets'));
+      c2.appendChild(el('p', 'qcard__v', q.probe));
+      extra.appendChild(c1); extra.appendChild(c2);
+      return stepCard({ step: String(q.n).padStart(2, '0'), where: q.tag, head: q.name, body: q.known, extra: extra, cls: 'stage__card--aqua' });
+    }, viz);
   }
 
-  function buildSampling() {
-    var wrap = $('#sampling');
-    if (!wrap) return;
-    D.SAMPLING.forEach(function (st) {
+  function buildSampling(viz) {
+    stageSteps('samples', D.SAMPLING, function (st) {
       var band = st.km >= 50 && st.km <= 54;
-      var row = el('div', 'st' + (band ? ' st--band' : ''));
-      var alt = el('div', 'st__alt');
-      alt.appendChild(el('span', 'st__km num', String(st.km)));
-      alt.appendChild(el('span', 'st__unit', 'km'));
-      row.appendChild(alt);
-      var body = el('div', 'st__b');
-      var top = el('div', 'st__top');
-      top.appendChild(el('h4', 'st__n', st.name));
-      top.appendChild(el('span', 'st__dur num', st.dur));
-      body.appendChild(top);
-      body.appendChild(el('p', 'st__gets', st.gets));
-      body.appendChild(el('p', 'st__kit num', st.kit));
-      row.appendChild(body);
-      wrap.appendChild(row);
-    });
+      return stepCard({ step: st.km + ' km', where: st.dur, head: st.name, body: st.gets,
+        extra: el('p', 'bcard__kit', st.kit), cls: band ? 'stage__card--aqua' : '' });
+    }, viz);
   }
 
   /* ---------- construction -------------------------------- */
 
-  function buildConstruction(viz) {
-    var steps = $('#buildSteps');
-    var stage = $('#build');
-    if (!steps || !stage || !D.BUILD) return;
-    var track = $('.stage__track', stage);
-    var cards = D.BUILD.map(function (b) {
+  /* one card per row; the card for floor(p * n) is active and the 3D view gets p */
+  function stageSteps(stageId, rows, make, viz) {
+    var stage = $('#' + stageId);
+    if (!stage || !rows) return;
+    var steps = $('.stage__steps', stage), track = $('.stage__track', stage);
+    var cards = rows.map(function (r, i) {
       var step = el('div', 'stage__step');
-      var c = el('article', 'stage__card bcard');
-      var top = el('p', 'bcard__step');
-      top.appendChild(el('span', null, b.step));
-      top.appendChild(el('span', 'bcard__where', b.where));
-      c.appendChild(top);
-      c.appendChild(el('h3', null, b.head));
-      c.appendChild(el('p', null, b.body));
-      var fig = el('p', 'bcard__fig');
-      fig.appendChild(el('b', 'num', b.num));
-      fig.appendChild(el('span', null, b.numlab));
-      c.appendChild(fig);
+      var c = make(r, i);
       step.appendChild(c);
       steps.appendChild(step);
       return c;
@@ -965,6 +749,239 @@
       }
       if (viz) viz.update(p);
     });
+  }
+
+  function stepCard(o) {
+    var c = el('article', 'stage__card bcard' + (o.cls ? ' ' + o.cls : ''));
+    var top = el('p', 'bcard__step');
+    top.appendChild(el('span', null, o.step));
+    if (o.where) top.appendChild(el('span', 'bcard__where', o.where));
+    c.appendChild(top);
+    if (o.head) c.appendChild(el('h3', null, o.head));
+    if (o.body) c.appendChild(el('p', null, o.body));
+    if (o.extra) c.appendChild(o.extra);
+    if (o.num) {
+      var fig = el('p', 'bcard__fig');
+      fig.appendChild(el('b', 'num', o.num));
+      fig.appendChild(el('span', null, o.numlab || ''));
+      c.appendChild(fig);
+    }
+    return c;
+  }
+
+  function buildConstruction(viz) {
+    stageSteps('build', D.BUILD, function (b) { return stepCard(b); }, viz);
+  }
+
+  /* ---------- the program: a timeline that runs as you scroll --- */
+
+  function yearOf(iso) {
+    var p = iso.split('-');
+    return +p[0] + ((+p[1] - 1) * 30.4 + (+p[2] || 1)) / 365.25;
+  }
+
+  function programStage() {
+    var stage = $('#program');
+    if (!stage || !D.PHASES) return;
+    var canvas = $('#programCanvas'), ctx = canvas.getContext('2d');
+    var hud = { year: $('#pYear'), spent: $('#pSpent'), next: $('#pNext') };
+    var phases = D.PHASES.map(function (ph, i) {
+      var yy = ph.years.split('—').map(function (s) { return +s.trim(); });
+      return { ph: ph, y0: yy[0], y1: yy[1] + 0.999, cost: D.COSTS.phases[i].usd, note: D.COSTS.phases[i].note, n: i };
+    });
+    var windows = D.WINDOWS.map(function (w) {
+      var m = /step (\d)/i.exec(w.use || '');
+      return { w: w, best: yearOf(w.best), arrive: yearOf(w.arrive), open: yearOf(w.open), close: yearOf(w.close), step: m ? +m[1] : -1, crew: /PEOPLE/.test(w.use || '') };
+    });
+    var Y0 = 2026, Y1 = 2056;
+    var costTotal = D.COSTS.total;
+
+    /* the cards */
+    var rows = phases.map(function (P) {
+      var items = el('div', 'pitems');
+      P.ph.items.forEach(function (it) {
+        var row = el('div', 'pitem');
+        var h = el('p', 'pitem__n'); h.appendChild(el('b', null, it.name)); h.appendChild(el('span', null, it.who + (it.when ? ' · ' + it.when : '')));
+        row.appendChild(h);
+        row.appendChild(el('p', 'pitem__d', it.what));
+        items.appendChild(row);
+      });
+      return { step: P.ph.tag, where: P.ph.years + (P.ph.window ? ' · ' + P.ph.window : ''), head: P.ph.name, body: P.ph.thesis, extra: items,
+               num: '$' + P.cost.toFixed(1) + ' bn', numlab: P.note, cls: P.ph.status === 'flagship' ? 'stage__card--ember' : P.ph.status === 'funded' ? 'stage__card--aqua' : '' };
+    });
+    var winList = el('div', 'pwins');
+    windows.forEach(function (W) {
+      var row = el('p', 'pwin' + (W.crew ? ' pwin--crew' : W.step >= 0 ? ' pwin--used' : ''));
+      row.appendChild(el('b', null, prettyDate(W.w.best)));
+      row.appendChild(el('span', null, '→ ' + prettyDate(W.w.arrive) + ' · ' + W.w.tof + ' d · C₃ ' + W.w.c3.toFixed(1) + ' · V∞ ' + W.w.vinf.toFixed(1)));
+      row.appendChild(el('i', null, W.w.use || 'spare'));
+      winList.appendChild(row);
+    });
+    rows.push({ step: 'Every chance to go', where: 'between now and 2050', head: 'A window opens every 584 days.',
+      body: 'Mars opens every 780. Over twenty years that is four extra chances to go — and four extra chances to bring somebody home early. Cheapest departure in each window, from the trajectory search.',
+      extra: winList, num: '13', numlab: 'windows · 9 used' });
+    var bars = el('div', 'pbars');
+    phases.forEach(function (P) {
+      var b = el('div', 'pbar' + (P.ph.status === 'flagship' ? ' pbar--crew' : P.ph.status === 'funded' ? ' pbar--funded' : ''));
+      var top = el('p', 'pbar__top'); top.appendChild(el('span', null, P.ph.tag + ' — ' + P.ph.name)); top.appendChild(el('b', null, '$' + P.cost.toFixed(1) + ' bn'));
+      b.appendChild(top);
+      var tr = el('div', 'pbar__track'); var f = el('div', 'pbar__fill'); f.style.width = (P.cost / 17.8 * 100).toFixed(1) + '%'; tr.appendChild(f); b.appendChild(tr);
+      bars.appendChild(b);
+    });
+    rows.push({ step: 'The bill', where: '2026 dollars · order of magnitude', head: 'Forty-four billion over twenty years, and launch is barely one percent of it.',
+      body: 'Getting people to Venus takes about 450 tons in low Earth orbit. At the prices a Starship-class vehicle is aiming for, that is $90–225 million of launch — half a percent of the whole thing. The ascent vehicle and twenty years of payroll are what cost money.',
+      extra: bars, num: '$2.2 bn', numlab: 'a year, averaged across the program' });
+    var NC = rows.length;
+
+    /* the drawing */
+    var W = 0, H = 0, dpr = 1;
+    function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = canvas.clientWidth; H = canvas.clientHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    }
+    var COL = { line: 'rgba(242,232,208,0.16)', dim: 'rgba(242,232,208,0.35)', cream: '#F2E8D0', sulfur: '#E8B33A', ember: '#FF7A45', aqua: '#5FD0C4', void2: '#0F0D1A' };
+    function draw(p) {
+      if (!W || !H) size();
+      if (!W) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      var wide = W >= 760;
+      var i = Math.min(NC - 1, Math.floor(p * NC)), local = p * NC - i;
+      var year, allWin = i === NC - 2, bill = i === NC - 1;
+      if (i < phases.length) year = lerp(phases[i].y0, phases[i].y1, local);
+      else if (allWin) year = lerp(Y0, 2051, ease(local));
+      else year = 2055.99;
+      var x0 = wide ? W * 0.56 : 20, x1 = W - (wide ? 36 : 20);
+      var top = wide ? H * 0.16 : H * 0.6, bot = wide ? H * 0.72 : H * 0.96;
+      var yA = top + (bot - top) * 0.55;
+      function X(y) { return x0 + (x1 - x0) * (y - Y0) / (Y1 - Y0); }
+      var mono = '11px "IBM Plex Mono", ui-monospace, monospace';
+      ctx.font = mono; ctx.textBaseline = 'middle';
+      /* axis */
+      ctx.strokeStyle = COL.line; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x0, yA); ctx.lineTo(x1, yA); ctx.stroke();
+      for (var y = Y0; y <= Y1; y++) {
+        var big = y % 5 === 0;
+        ctx.beginPath(); ctx.moveTo(X(y), yA); ctx.lineTo(X(y), yA + (big ? 8 : 4)); ctx.stroke();
+        if (big) { ctx.fillStyle = COL.dim; ctx.textAlign = 'center'; ctx.fillText(String(y), X(y), yA + 20); }
+      }
+      /* the steps: one lane each above the axis */
+      var laneH = wide ? 13 : 10;
+      phases.forEach(function (P, j) {
+        var on = j === i, past = year >= P.y0;
+        var yy = yA - 26 - (phases.length - 1 - j) * (laneH + 5);
+        var c = P.ph.status === 'flagship' ? COL.ember : P.ph.status === 'funded' ? COL.aqua : COL.sulfur;
+        ctx.globalAlpha = on ? 1 : (past || allWin || bill ? 0.45 : 0.18);
+        ctx.fillStyle = c;
+        var xa = X(P.y0), xb = X(Math.min(P.y1, on ? Math.max(year, P.y0 + 0.2) : P.y1));
+        if (!on && !past && !allWin && !bill) xb = X(P.y1);
+        ctx.fillRect(xa, yy - laneH / 2, Math.max(2, xb - xa), laneH);
+        ctx.globalAlpha = on ? 1 : 0.5;
+        ctx.fillStyle = on ? COL.cream : COL.dim; ctx.textAlign = 'right';
+        ctx.fillText(P.ph.tag, xa - 6, yy);
+        ctx.globalAlpha = 1;
+      });
+      /* windows: an arc from leaving Earth to arriving, above the axis */
+      windows.forEach(function (Wn) {
+        var used = Wn.step >= 0, mine = i < phases.length && Wn.step === i;
+        var passed = year >= Wn.best - 0.05;
+        var xa = X(Wn.best), xb = X(Wn.arrive), hh = 10 + Wn.w.tof / 9;
+        var c = Wn.crew ? COL.ember : used ? COL.sulfur : COL.cream;
+        ctx.globalAlpha = mine ? 1 : passed || allWin ? (used ? 0.8 : 0.35) : 0.14;
+        ctx.strokeStyle = c; ctx.lineWidth = mine ? 2 : 1.2;
+        ctx.beginPath(); ctx.moveTo(xa, yA); ctx.quadraticCurveTo((xa + xb) / 2, yA - hh * 2, xb, yA); ctx.stroke();
+        ctx.fillStyle = c;
+        ctx.beginPath(); ctx.arc(xa, yA, mine ? 3.5 : 2.5, 0, Math.PI * 2); ctx.fill();
+        if (mine || (allWin && wide)) {
+          ctx.textAlign = 'center'; ctx.fillStyle = mine ? COL.cream : COL.dim;
+          ctx.fillText(prettyDate(Wn.w.best).replace(/ \d{4}$/, ''), xa, yA - hh * 1.2 - 12 - (windows.indexOf(Wn) % 2) * 14);
+        }
+        ctx.globalAlpha = 1;
+      });
+      /* the bill: what has been spent by this year, as a rising area under the axis */
+      var cH = bot - yA - 30, base = bot;
+      function spentBy(yr) {
+        var s = 0;
+        phases.forEach(function (P) { s += P.cost * clamp((yr - P.y0) / (P.y1 - P.y0), 0, 1); });
+        return s;
+      }
+      var reveal = bill ? lerp(Y0, Y1, ease(seg(local, 0, 0.6))) : year;
+      ctx.beginPath(); ctx.moveTo(X(Y0), base);
+      for (var yr = Y0; yr <= Math.min(reveal, Y1); yr += 0.1) ctx.lineTo(X(yr), base - cH * spentBy(yr) / costTotal);
+      var endY = Math.min(reveal, Y1);
+      ctx.lineTo(X(endY), base); ctx.closePath();
+      ctx.fillStyle = 'rgba(232,179,58,0.22)'; ctx.fill();
+      ctx.strokeStyle = COL.sulfur; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (var yr2 = Y0; yr2 <= endY; yr2 += 0.1) { var px = X(yr2), py = base - cH * spentBy(yr2) / costTotal; yr2 === Y0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py); }
+      ctx.stroke();
+      var spent = spentBy(bill ? reveal : year);
+      ctx.fillStyle = COL.sulfur; ctx.textAlign = 'left';
+      ctx.fillText('$' + spent.toFixed(1) + ' bn', Math.min(X(endY) + 6, x1 - 60), base - cH * spent / costTotal - 8);
+      ctx.fillStyle = COL.dim; ctx.textAlign = 'left';
+      ctx.fillText('spent, cumulative', x0, base + 12);
+      /* cursor */
+      if (!bill) {
+        ctx.strokeStyle = 'rgba(242,232,208,0.5)'; ctx.setLineDash([3, 4]);
+        ctx.beginPath(); ctx.moveTo(X(year), top); ctx.lineTo(X(year), bot); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = COL.cream; ctx.textAlign = 'center'; ctx.font = '600 13px Archivo, system-ui, sans-serif';
+        ctx.fillText(String(Math.floor(year)), X(year), top - 10);
+        ctx.font = mono;
+      }
+      /* HUD */
+      if (hud.year) {
+        hud.year.textContent = bill ? '2026 → 2055' : String(Math.floor(year));
+        hud.spent.innerHTML = '$' + spent.toFixed(1) + '<small> bn</small>';
+        var nx = null;
+        for (var k = 0; k < windows.length; k++) if (windows[k].best >= year) { nx = windows[k]; break; }
+        hud.next.textContent = bill ? '13 by 2050' : nx ? prettyDate(nx.w.best) + (nx.w.use ? ' · ' + nx.w.use.replace(/^STEP 4 — PEOPLE$/, 'Step 4 — People') : ' · spare') : '—';
+      }
+    }
+    var last = -1;
+    stageSteps('program', rows, function (r) { return stepCard(r); }, { update: function (p) { if (Math.abs(p - last) < 0.0005) return; last = p; draw(p); } });
+    window.addEventListener('resize', function () { size(); draw(last < 0 ? 0 : last); }, { passive: true });
+    size(); draw(0);
+  }
+
+  /* ---------- the fleet, exploded ------------------------- */
+
+  function buildFleet(viz) {
+    var specs = D.FLEET || [];
+    stageSteps('fleet', D.FLEET3D, function (V) {
+      var sheet = specs.filter(function (f) { return f.name === V.name; })[0];
+      var extra = el('div', 'parts');
+      V.parts.forEach(function (P) {
+        var li = el('p', 'part');
+        li.appendChild(el('b', null, P.label));
+        if (P.note) li.appendChild(el('span', null, P.note));
+        extra.appendChild(li);
+      });
+      if (sheet) {
+        var sp = el('div', 'fspecs');
+        sheet.specs.forEach(function (row) {
+          var r = el('p', 'fspec'); r.appendChild(el('span', null, row[0])); r.appendChild(el('b', null, row[1])); sp.appendChild(r);
+        });
+        extra.appendChild(sp);
+      }
+      var dl = el('a', 'fdl', 'Download the model (.obj)');
+      dl.href = 'models/' + V.key + '.obj'; dl.setAttribute('download', V.key + '.obj');
+      extra.appendChild(dl);
+      return stepCard({ step: V.name, where: V.role, head: V.human, body: sheet ? sheet.line : '', extra: extra,
+        num: sheet ? sheet.mass : '', numlab: sheet ? 'crew of ' + sheet.crew : '' });
+    }, viz);
+  }
+
+  /* ---------- thirty days, lap by lap --------------------- */
+
+  function buildStay(viz) {
+    stageSteps('stay', D.STAY, function (c) { return stepCard(c); }, viz);
+  }
+
+  /* ---------- walking on sunshine: a trip outside --------- */
+
+  function buildWalk(viz) {
+    stageSteps('walk', D.WALK, function (w) { return stepCard(w); }, viz);
   }
 
   /* ---------- chasing the sun: one day and one night ------ */
@@ -1136,47 +1153,34 @@
     wrap.parentNode.insertBefore(key, wrap.nextSibling);
   }
 
+  function latitudeRows() {
+    var wrap = $('#latitude');
+    if (!wrap || !D.LATITUDE) return;
+    D.LATITUDE.forEach(function (r) {
+      var ok = r.bestPct > 0;
+      var row = el('div', 'sk' + (ok ? ' is-close' : ''));
+      row.appendChild(el('span', 'sk__lat', r.lat + '°'));
+      var bars = el('div', 'sk__bars');
+      var sun = el('div', 'sk__bar sk__bar--sun'); sun.style.width = Math.max(1.5, r.bestPct) + '%';
+      var light = el('div', 'sk__bar sk__bar--light'); light.style.width = Math.max(1.5, r.dayLight) + '%';
+      bars.appendChild(sun); bars.appendChild(light);
+      row.appendChild(bars);
+      var v = el('span', 'sk__v');
+      v.appendChild(el('b', null, ok ? r.bestPct + '% in daylight' : 'cannot power the cabin'));
+      v.appendChild(document.createTextNode(ok
+        ? r.wind + ' m/s wind · fly ' + r.bestU + ' m/s'
+        : r.wind + ' m/s wind · ' + r.dayLight + '% of the light'));
+      row.appendChild(v);
+      wrap.appendChild(row);
+    });
+    var key = el('div', 'sk__key');
+    var k1 = el('span', null, 'share of the stay in daylight'); k1.insertBefore(el('i', 'sk__bar--sun'), k1.firstChild);
+    var k2 = el('span', null, 'daytime light vs equator noon'); k2.insertBefore(el('i', 'sk__bar--light'), k2.firstChild);
+    key.appendChild(k1); key.appendChild(k2);
+    wrap.parentNode.insertBefore(key, wrap.nextSibling);
+  }
+
   /* ---------- experience + crew --------------------------- */
-
-  function buildExperience() {
-    var wrap = $('#experience');
-    if (!wrap) return;
-    D.EXPERIENCE.forEach(function (x) {
-      var a = el('article', 'xp');
-      var h = el('div', 'xp__h');
-      h.appendChild(el('p', 'xp__k', x.k));
-      h.appendChild(el('p', 'xp__v num', x.v));
-      a.appendChild(h);
-      a.appendChild(el('p', 'xp__d', x.d));
-      wrap.appendChild(a);
-    });
-  }
-
-  function buildCrewDetail() {
-    var wrap = $('#crewDetail');
-    if (!wrap) return;
-    D.CREW_DETAIL.forEach(function (c) {
-      var a = el('article', 'cw' + (c.days === 30 ? ' cw--aloft' : ''));
-      var h = el('div', 'cw__h');
-      h.appendChild(el('h4', 'cw__r', c.role));
-      h.appendChild(el('p', 'cw__s num', c.station));
-      var bar = el('div', 'cw__bar');
-      var fill = el('div', 'cw__fill');
-      fill.style.width = (c.days / 459 * 100).toFixed(1) + '%';
-      if (c.days === 30) fill.style.marginLeft = (124 / 459 * 100).toFixed(1) + '%';
-      bar.appendChild(fill);
-      h.appendChild(bar);
-      h.appendChild(el('p', 'cw__d num', c.days + ' days on station'));
-      a.appendChild(h);
-      var b = el('div', 'cw__b');
-      var ul = el('ul', 'cw__duties');
-      c.duties.forEach(function (d) { ul.appendChild(el('li', null, d)); });
-      b.appendChild(ul);
-      b.appendChild(el('p', 'cw__why', c.why));
-      a.appendChild(b);
-      wrap.appendChild(a);
-    });
-  }
 
   /* ---------- reveal on scroll ---------------------------- */
 
@@ -1221,27 +1225,26 @@
     var sky = $('#heroSky');
     if (sky) starfield(sky);
     buildHero();
-    buildPhases();
-    buildWindows();
     buildLaminate();
-    buildAloft();
-    buildScience();
-    buildSampling();
-    buildExperience();
-    buildCrewDetail();
     sunChart();
     sunkeepRows();
-    buildCost();
+    latitudeRows();
     buildRisks();
+    buildCostVs();
     buildSources();
     /* three dimensions where WebGL is available; the 2D renderers stay as the fallback */
     var three = null;
     try { three = window.PHOS && PHOS.ACTS3D ? PHOS.ACTS3D.init(onTick, trackProgress) : null; } catch (e) { three = null; }
-    if (!three || !three.cutaway) cutaway();
     liftCalc();
     descentStage(three && three.descent);
     compareStage(three && three.compare);
     buildConstruction(three && three.build);
+    buildWalk(three && three.walk);
+    buildFleet(three && three.fleet);
+    buildStay(three && three.stay);
+    programStage();
+    buildScience(three && three.learn);
+    buildSampling(three && three.samples);
     if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
     rail();
     reveals();
