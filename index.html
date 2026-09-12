@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=1a689ee0">
+<link rel="stylesheet" href="assets/styles.css?v=b481de5c">
 </head>
 <body>
 
@@ -387,16 +387,27 @@
       </p>
     </div>
 
-    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
-      <p class="eyebrow" style="margin-bottom:1rem">How it gets made</p>
-      <div class="builds" id="build"></div>
-      <p class="note" style="margin-top:1.6rem; max-width:64ch">
-        That last step is why the program is shaped the way it is. Thirty-four tons of
-        breathable air is more than the ship can carry, so it has to be made on site —
-        and making it takes years. The 2034 flight is not a rehearsal that happens to go
-        first. It is the start of something that has to finish before 2042 is even possible.
-      </p>
+  </div>
+</section>
+
+<!-- ============================ HOW IT GETS MADE ============================ -->
+<section class="stage build" id="build" data-rail="How it gets made">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="buildCanvas" aria-label="The Phosphorus hull cut into 69 panels and welded into a hull, folded into its entry shell, inflated at Venus, and filled with breathable air"></canvas>
+      <p class="act__badge"><span>Phosphorus</span> how it gets made</p>
+      <div class="journey__hud build__hud" role="status" aria-live="polite" aria-atomic="true">
+        <div class="readout__row">
+          <span class="readout__k">Step</span>
+          <span class="readout__v readout__v--sm" id="bStep">Cut</span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k" id="bKey">Panels welded</span>
+          <span class="readout__v"><span id="bVal">0</span><small id="bUnit"> / 69</small></span>
+        </div>
+      </div>
     </div>
+    <div class="stage__steps" id="buildSteps"></div>
   </div>
 </section>
 
@@ -729,8 +740,8 @@
 <script src="assets/models.js?v=611cf507"></script>
 <script src="assets/acts.js?v=feb8cc3e"></script>
 <script src="assets/vendor/three.min.js?v=7a7802bf"></script>
-<script src="assets/acts3d.js?v=b765d5bf"></script>
-<script src="assets/mission.js?v=5a334995"></script>
+<script src="assets/acts3d.js?v=e741a833"></script>
+<script src="assets/mission.js?v=ef585838"></script>
 <script src="assets/viewer.js?v=8c860163"></script>
 </body>
 </html>

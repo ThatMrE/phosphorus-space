@@ -1071,6 +1071,170 @@
   }
 
   /* ============================================================
+     HOW IT GETS MADE — cut, fold, inflate, fill
+     ============================================================ */
+
+  function build3d(canvas, hud) {
+    var v = makeView(canvas, { fov: 40, near: 0.5, far: 6000, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    scene.add(starfield(THREE, 500, 3000, 2207));
+    scene.add(new THREE.HemisphereLight(0xF2E8D0, 0x1A1420, 0.55));
+    var key = new THREE.DirectionalLight(0xFFF3D6, 1.1); key.position.set(0.6, 1, 0.8); scene.add(key);
+    var fill = new THREE.DirectionalLight(0x5FD0C4, 0.3); fill.position.set(-1, -0.4, -0.5); scene.add(fill);
+
+    /* ---- the 69 gores: each one morphs from its flat cut shape onto the hull ---- */
+    var A = 64.5, B = 17.0, N = 69, NU = 22, GAP = 0.965;
+    /* meridian arc length, so the flat panels have the right length */
+    var arc = [0];
+    for (var i = 1; i <= 200; i++) {
+      var u0 = Math.PI * (i - 1) / 200, u1 = Math.PI * i / 200;
+      var dx = A * (Math.cos(u1) - Math.cos(u0)), dy = B * (Math.sin(u1) - Math.sin(u0));
+      arc.push(arc[i - 1] + Math.sqrt(dx * dx + dy * dy));
+    }
+    var L = arc[200];
+    function sOf(u) { var f = u / Math.PI * 200, i = Math.floor(f); return i >= 200 ? L : lerp(arc[i], arc[i + 1], f - i); }
+    var gores = [], goreGroup = new THREE.Group();
+    var goreMat = new THREE.MeshStandardMaterial({ color: 0xE6DCC4, roughness: 0.7, metalness: 0.05, side: THREE.DoubleSide, transparent: true, opacity: 1 });
+    var flatW = 2 * Math.PI * B / N;                      /* one panel's width at the equator */
+    for (var g = 0; g < N; g++) {
+      var flat = [], hull = [];
+      var v0 = 2 * Math.PI * g / N, dv = 2 * Math.PI / N * GAP;
+      var lx = (g - (N - 1) / 2) * flatW * 1.06;            /* laid side by side on the floor */
+      for (var iu = 0; iu <= NU; iu++) {
+        var u = Math.PI * iu / NU;
+        var w = B * Math.sin(u) * dv;                      /* panel width at this station */
+        for (var side = 0; side < 2; side++) {
+          var vv = v0 + dv * side;
+          hull.push(A * Math.cos(u), B * Math.sin(u) * Math.cos(vv), B * Math.sin(u) * Math.sin(vv));
+          flat.push(sOf(u) - L / 2, -40, lx + (side ? w / 2 : -w / 2));
+        }
+      }
+      var idx = [];
+      for (var q = 0; q < NU; q++) { var k0 = q * 2; idx.push(k0, k0 + 1, k0 + 2, k0 + 1, k0 + 3, k0 + 2); }
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(hull.length), 3));
+      geo.setIndex(idx);
+      var mesh = new THREE.Mesh(geo, goreMat);
+      goreGroup.add(mesh);
+      gores.push({ mesh: mesh, flat: new Float32Array(flat), hull: new Float32Array(hull), k: -1 });
+    }
+    scene.add(goreGroup);
+    function setGores(kAll, stagger) {
+      /* stagger: panels wrap one after another around the hull */
+      for (var g = 0; g < N; g++) {
+        var start = stagger * g / N, k = ease(seg(kAll, start, start + (1 - stagger)));
+        var G = gores[g];
+        if (Math.abs(k - G.k) < 0.002) continue;
+        G.k = k;
+        var pos = G.mesh.geometry.attributes.position.array;
+        for (var i = 0; i < pos.length; i++) pos[i] = G.flat[i] + (G.hull[i] - G.flat[i]) * k;
+        G.mesh.geometry.attributes.position.needsUpdate = true;
+        G.mesh.geometry.computeVertexNormals();
+      }
+    }
+    var floor = new THREE.Mesh(new THREE.PlaneGeometry(240, 150), new THREE.MeshBasicMaterial({ color: 0x5FD0C4, transparent: true, opacity: 0.05, side: THREE.DoubleSide }));
+    floor.rotation.x = -Math.PI / 2; floor.position.y = -40.2;
+    scene.add(floor);
+
+    /* ---- the finished ship, its shell, and the air that fills it ---- */
+    var ship = model(THREE, 'phosphorus_airship', function (n) { return n !== 'person'; });
+    var shipG = new THREE.Group(); shipG.add(ship); scene.add(shipG);
+    var air = null, helium = [], envelope = null;
+    ship.traverse(function (o) {
+      if (!o.isMesh) return;
+      if (o.userData.material === 'air') air = o;
+      if (o.userData.material === 'helium') helium.push(o);
+      if (o.name === 'envelope') envelope = o;
+    });
+    if (envelope) { envelope.material.transparent = true; }
+    var shell = model(THREE, 'entry_vehicle', function (n) { return n === 'heatshield' || n === 'backshell'; });
+    var shellG = new THREE.Group(); shellG.add(shell); shellG.rotation.z = -Math.PI / 2; scene.add(shellG);
+    var packed = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 2.3, 6.2, 28), new THREE.MeshStandardMaterial({ color: 0xE6DCC4, roughness: 0.8 }));
+    packed.rotation.z = -Math.PI / 2; scene.add(packed);
+    var person = model(THREE, 'phosphorus_airship', function (n) { return n === 'person'; });
+    scene.add(person);
+
+    var lookAt = new THREE.Vector3(0, -4, 0), last = -1;
+    function cam(radius, theta, phi, ty) {
+      lookAt.y = ty;
+      v.camera.position.set(lookAt.x + radius * Math.sin(phi) * Math.cos(theta), lookAt.y + radius * Math.cos(phi), lookAt.z + radius * Math.sin(phi) * Math.sin(theta));
+      v.camera.lookAt(lookAt);
+    }
+    function setHud(step, key, val, unit) {
+      if (!hud.step) return;
+      hud.step.textContent = step; hud.key.textContent = key; hud.val.textContent = val; hud.unit.textContent = unit;
+    }
+
+    function frame(p) {
+      var cut = seg(p, 0, 0.25), fold = seg(p, 0.25, 0.5), inflate = seg(p, 0.5, 0.75), fillT = seg(p, 0.75, 1);
+      /* CUT: panels lie flat, then wrap one by one; the model takes over at the end */
+      goreGroup.visible = cut < 1 || fold < 0.02;
+      if (goreGroup.visible) setGores(cut, 0.6);
+      goreMat.opacity = 1 - seg(fold, 0, 0.05);
+      floor.material.opacity = 0.05 * (1 - cut);
+      var modelIn = cut >= 1;
+      shipG.visible = modelIn;
+      /* FOLD: the hull deflates to a flat sheet, then rolls into its 2.5 m³ bundle inside
+         the shell. INFLATE unrolls and swells at the same time. */
+      var f, r;
+      if (inflate > 0) { var k = ease(inflate); f = 1 - k; r = 1 - k; }
+      else { f = ease(seg(fold, 0.05, 0.5)); r = ease(seg(fold, 0.5, 1)); }
+      shipG.scale.set(lerp(1, 0.05, r), lerp(1, 0.04, f), lerp(1, 0.55, f) * lerp(1, 0.08, r));
+      /* see inside once the helium starts flowing */
+      if (envelope) { envelope.material.opacity = inflate > 0 ? 0.42 : 1; envelope.material.depthWrite = inflate <= 0; }
+      packed.visible = modelIn && r > 0.6;
+      packed.scale.setScalar(seg(r, 0.6, 1));
+      shellG.visible = modelIn && r > 0.7;
+      fade(shell, seg(r, 0.7, 1));
+      shellG.position.set(-7 * seg(inflate, 0, 0.3), 0, 0);
+      /* FILL: breathable air rises in the lower hull over eight years */
+      if (air) {
+        air.visible = modelIn && fillT > 0;
+        var fk = ease(fillT);
+        /* rise from the floor of the hull: scale about the ellipsoid's bottom */
+        var bottom = -B * 0.42 - B * 0.50;
+        air.scale.set(1, Math.max(0.02, fk), 1);
+        air.position.y = bottom * (1 - Math.max(0.02, fk));
+        air.material.opacity = 0.42;
+      }
+      helium.forEach(function (h) { h.material.opacity = 0.55 * (inflate > 0 ? seg(inflate, 0.35, 1) : (fold > 0 ? 0 : 0.55)); h.visible = h.material.opacity > 0.02; });
+      person.visible = modelIn && r < 0.6;
+
+      /* camera: floor-level for the cut, pulling in for the bundle, out again for the ship */
+      var theta = 0.55 + p * 1.1, phi = lerp(1.05, 1.25, cut);
+      var radius = cut < 1 ? lerp(300, 235, cut) : lerp(235, 34, r);
+      if (fillT > 0) radius = 235 + 25 * fillT;
+      cam(radius, theta, fold > 0 && inflate <= 0 ? lerp(1.25, 0.9, f) : phi, cut < 1 ? -8 : -4);
+
+      if (cut < 1) {
+        var welded = Math.round(N * clamp((cut - 0.02) / 0.9, 0, 1));
+        setHud('Cut', 'Seam welded', (9.4 * welded / N).toFixed(1), ' km · ' + welded + ' / 69 panels');
+      } else if (fold < 1 || (inflate <= 0)) {
+        var vol = Math.round(lerp(77500, 2.5, ease(fold)));
+        setHud('Fold', 'Volume', vol >= 1000 ? (vol / 1000).toFixed(1) + 'k' : String(vol), ' m³ · ' + (fold > 0.98 ? '30,700 : 1' : 'packing'));
+      } else if (inflate < 1) {
+        var he = (6.8 * ease(inflate)).toFixed(1), km = (72 - 20 * inflate).toFixed(0);
+        setHud('Inflate', 'Helium in', he, ' t · ' + km + ' km');
+      } else {
+        var t = (33.6 * ease(fillT)).toFixed(1), day = Math.round(2912 * fillT);
+        setHud('Fill', 'Breathable air', t, ' t · day ' + day.toLocaleString());
+      }
+      v.render(scene);
+    }
+    frame(0);
+    v.onResize = function () { frame(last < 0 ? 0 : last); };
+    v.onVisible = function () { if (last >= 0) frame(last); };
+    return {
+      update: function (p) {
+        if (!v.visible() && last >= 0) return;
+        if (Math.abs(p - last) < 0.0008) return;
+        last = p; frame(p);
+      }
+    };
+  }
+
+  /* ============================================================
      boot
      ============================================================ */
 
@@ -1093,7 +1257,7 @@
       try { gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl'); } catch (e) { gl = null; }
       if (!gl) return null;
 
-      var out = { acts: false, descent: null, cutaway: false, compare: null };
+      var out = { acts: false, descent: null, cutaway: false, compare: null, build: null };
       var a = document.getElementById('assemblyCanvas');
       var b = document.getElementById('journeyCanvas');
       var d = document.getElementById('descentCanvas');
@@ -1122,6 +1286,12 @@
         if (!out.descent) cd.parentNode.removeChild(cd);
       }
       if (s) out.cutaway = cutaway3d(s);
+      var bc = document.getElementById('buildCanvas');
+      if (bc) {
+        var cb2 = swapCanvas(bc);
+        out.build = build3d(cb2, { step: document.getElementById('bStep'), key: document.getElementById('bKey'), val: document.getElementById('bVal'), unit: document.getElementById('bUnit') });
+        if (out.build) bc.hidden = true; else cb2.parentNode.removeChild(cb2);
+      }
       var cmp = document.getElementById('compareCanvas');
       if (cmp) {
         var cc = swapCanvas(cmp);
