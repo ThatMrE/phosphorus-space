@@ -148,13 +148,9 @@
     var wrap = $('#heroStats');
     if (!wrap) return;
     var M = D.MISSION;
+    /* one number up top; the rest live in the ledger below */
     var rows = [
-      ['Round trip', fmt(M.totalDays), 'days'],
-      ['Same trip to Mars', fmt(D.MARS_TRIPS[0].total), 'days'],
-      ['Float altitude', D.FLOAT_BAND.lo + '–' + D.FLOAT_BAND.hi, 'km'],
-      ['Cabin pressure', '1.05', 'atm'],
-      ['Gravity', D.VENUS.gravityG.toFixed(3), 'g'],
-      ['Program cost', '$' + D.COSTS.total.toFixed(1), 'bn']
+      ['Round trip', fmt(M.totalDays), 'days']
     ];
     rows.forEach(function (r) {
       var d = el('div', 'hero__stat');
