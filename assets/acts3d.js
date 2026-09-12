@@ -578,7 +578,7 @@
       [0.33, 'Four months out', 'Sunlight gets stronger the whole way in.'],
       [0.66, 'Venus ahead',    'The atmosphere does the braking, not the engines.'],
       [0.74, 'Splitting up',   'Two stay with Hesperus. Two go in direct.'],
-      [0.80, 'Aerobraking',    'Skimming the upper air at 11 km/s. No propellant spent.'],
+      [0.80, 'Aerobraking',    '11.3 km/s in, 7.2 km/s out. No propellant spent.'],
       [0.93, 'Captured',       'Hesperus is in orbit. The airship is going in.']
     ];
 
