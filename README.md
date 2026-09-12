@@ -141,8 +141,8 @@ assets/trajectory.js    generated — heliocentric geometry for the orbit plot
 assets/mission.js       scroll engine, canvas and SVG renderers
 assets/acts3d.js        the three acts in WebGL: Starship launches and orbital assembly,
                         departure, cruise and the aerobraking pass, entry and inflation,
-                        plus the fleet exploded part by part, the cloudwalk, the
-                        thirty-day stay, the science icons and the sample drop
+                        plus the ship skin to sky, the cloudwalk, the thirty-day
+                        stay, the science icons and the sample drop
 assets/acts.js          the same three acts drawn in 2D canvas — the fallback when WebGL is off
 assets/models.js        generated — OBJ text for the 3D viewer
 assets/vendor/          three.js r128 (MIT — license alongside)
@@ -155,8 +155,8 @@ scripts/*.py            the orbital mechanics and the model generator
 Why Venus (with the Venus/Mars ledger) · **Act 01 — getting ready**, Starship flights and the stack
 assembling in orbit · **Act 02 — the trip**, one camera from leaving Earth through
 the computed transfer to the aerobraking pass at Venus · **Act 03 — going down**, the descent
-through the atmosphere to the floor · **the fleet, exploded as you scroll** with each
-vehicle's spec sheet · the ship in numbers (skin, how it floats) · how it gets made ·
+through the atmosphere to the floor (each vehicle's spec sheet and model download ride
+in the Act 01 cards) · the ship, skin to sky (laminate, cut, fold, inflate, fill, float) ·
 life up there and the thirty-day stay lap by lap · walking on sunshine · the
 crew · what we'd learn · the program and launch windows · the bill · what could go
 wrong · so.
@@ -185,7 +185,7 @@ environment, and nothing that exists elsewhere is this specific vehicle anyway.
 Outputs are `models/*.obj` + `.mtl` (the design files) and `assets/models.js`, the
 same geometry as JS strings so the page works from `file://` without a fetch. The
 viewer parses OBJ in about thirty lines and renders with vendored three.js; drag to
-turn; each vehicle comes apart into its labelled parts as you scroll.
+turn.
 
 No build step, no dependencies, no framework. Open `index.html` directly or serve
 the directory; both work.

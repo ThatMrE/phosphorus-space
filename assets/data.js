@@ -307,85 +307,6 @@ PHOS.FLEET = [
   }
 ];
 
-/* ---- The fleet, exploded ----------------------------------
-   Which model groups make up each part, and what to call them. Parts
-   fly apart radially from the vehicle's center unless `dir` says
-   otherwise; `dist` is a fraction of the vehicle's longest dimension. */
-PHOS.FLEET3D = [
-  { key: 'phosphorus_airship', name: 'Phosphorus', role: 'The cloud ship', seeThrough: true,
-    human: 'Longer than a 747. That dot by the gondola is a person.',
-    parts: [
-      { groups: ['envelope'],              label: 'Envelope',        note: '129 m × 34 m · 77,500 m³',        dir: [0, 1, 0],       dist: 0.42 },
-      { groups: ['solar_crown'],           label: 'Solar crown',     note: '~1,000 m² thin film',            dir: [0, 1, 0],       dist: 0.55 },
-      { groups: ['helium_cells'],          label: 'Helium cells',    note: '46,000 m³ · 66.8 t of lift',     dir: [0, 0.35, 1],    dist: 0.30 },
-      { groups: ['breathable_air_volume'], label: 'Breathable air',  note: '31,500 m³ · the house',          dir: [0, -0.25, -1],  dist: 0.34 },
-      { groups: ['ballonets'],             label: 'Ballonets',       note: 'trim and thermal',               dir: [0, -0.6, 0.8],  dist: 0.24 },
-      { groups: ['gondola'],               label: 'Gondola',         note: 'lab, plant deck, Vesper cradle', dir: [0, -1, 0],      dist: 0.18 },
-      { groups: ['crew_module'],           label: 'Crew module',     note: '2 crew · 30 days · 1 atm',       dir: [0, -1, 0.7],    dist: 0.26 },
-      { groups: ['suspension'],            label: 'Suspension',      note: 'load lines to the hull',         dir: [0, -0.5, 0],    dist: 0.08 },
-      { groups: ['propulsors'],            label: 'Propulsors',      note: '2 × 9 m electric props',         dir: [0, 0, -1],      dist: 0.2 },
-      { groups: ['vesper_stage_1', 'vesper_stage_2', 'vesper_capsule', 'vesper_engines'], label: 'Vesper', note: 'the ride back up, hung below', dir: [0.3, -1, -0.5], dist: 0.34 }
-    ] },
-  { key: 'hesperus_transit_habitat', name: 'Hesperus', role: 'The ride there and back',
-    human: 'About the room of a modest house, for four people and fifteen months.',
-    parts: [
-      { groups: ['habitat'],       label: 'Habitat',        note: '~180 m³ for four' },
-      { groups: ['storm_shelter'], label: 'Storm shelter',  note: 'water wall + polyethylene' },
-      { groups: ['docking_node'],  label: 'Docking node',   note: 'Lucifer rides here' },
-      { groups: ['solar_wings'],   label: 'Solar wings',    note: '+40% sun at Venus', dist: 0.4 },
-      { groups: ['propellant'],    label: 'Propellant',     note: '3.6 km/s to leave Venus' },
-      { groups: ['truss'],         label: 'Truss',          note: 'the spine' },
-      { groups: ['engine'],        label: 'Engine',         note: 'LOX/methane' }
-    ] },
-  { key: 'vesper_ascent_vehicle', name: 'Vesper', role: 'The ride back up',
-    human: 'Twenty meters tall. It has to leave from a balloon.',
-    parts: [
-      { groups: ['stage_1'], label: 'Stage 1', note: 'LOX/methane, lit below the hull' },
-      { groups: ['stage_2'], label: 'Stage 2', note: 'to 7.15 km/s orbit' },
-      { groups: ['capsule'], label: 'Capsule', note: '2 crew and the samples' },
-      { groups: ['engines'], label: 'Engines', note: '~8 km/s from 50 km up', dist: 0.4 }
-    ] },
-  { key: 'lucifer_return_capsule', name: 'Lucifer', role: 'The heat shield home',
-    human: 'Five meters across, four people, and the fastest reentry anyone has ever flown.',
-    parts: [
-      { groups: ['heatshield'],   label: 'Heat shield',  note: '14.06 km/s into Earth’s air', dist: 0.55 },
-      { groups: ['capsule'],      label: 'Capsule',      note: '4 crew' },
-      { groups: ['docking_ring'], label: 'Docking ring', note: 'to Hesperus', dist: 0.5 },
-      { groups: ['windows'],      label: 'Windows',      note: '' , dist: 0.45 }
-    ] },
-  { key: 'entry_vehicle', name: 'Entry vehicle', role: 'The way in',
-    human: 'A 12.8-meter heat shield with a folded 129-meter ship and two people inside.',
-    parts: [
-      { groups: ['heatshield'],  label: 'Heat shield', note: '12.8 m · 11.3 km/s entry', dist: 0.55 },
-      { groups: ['backshell'],   label: 'Backshell',   note: 'chute and helium inside', dist: 0.5 },
-      { groups: ['packed_hull'], label: 'Packed hull', note: '2.5 m³ · the whole ship' },
-      { groups: ['crew_module'], label: 'Crew module', note: '2 crew ride it down' }
-    ] },
-  { key: 'starship', name: 'Starship', role: 'The launch',
-    human: 'The launch vehicle, booster and all. Six flights put the stack in orbit.',
-    parts: [
-      { groups: ['booster'],         label: 'Booster',         note: 'comes back to the pad' },
-      { groups: ['booster_engines'], label: 'Booster engines', note: '33 Raptors', dist: 0.25 },
-      { groups: ['grid_fins'],       label: 'Grid fins',       note: '', dist: 0.3 },
-      { groups: ['hot_stage_ring'],  label: 'Hot-stage ring',  note: '', dist: 0.3 },
-      { groups: ['ship'],            label: 'Ship',            note: 'the piece that reaches orbit' },
-      { groups: ['nose'],            label: 'Nose',            note: 'payload bay' },
-      { groups: ['forward_flaps'],   label: 'Forward flaps',   note: '', dist: 0.3 },
-      { groups: ['aft_flaps'],       label: 'Aft flaps',       note: '', dist: 0.3 },
-      { groups: ['raptors'],         label: 'Raptors',         note: 'six on the ship', dist: 0.25 }
-    ] },
-  { key: 'assembled_stack', name: 'The stack', role: 'Leaving Earth',
-    human: 'Everything that crosses to Venus, bolted together in orbit.',
-    parts: [
-      { groups: ['spine'],                                                              label: 'Spine',       note: 'the first piece up' },
-      { groups: ['hesperus_habitat', 'hesperus_storm_shelter', 'hesperus_docking_node', 'hesperus_truss', 'hesperus_engine'], label: 'Hesperus', note: 'home for fifteen months' },
-      { groups: ['hesperus_solar_wings'],                                               label: 'Solar wings', note: '', dist: 0.4 },
-      { groups: ['hesperus_propellant'],                                                label: 'Propellant',  note: 'for the burn home' },
-      { groups: ['aeroshell', 'shell_backplate'],                                       label: 'Phosphorus, folded', note: 'in its entry shell' },
-      { groups: ['vesper_stage_1', 'vesper_stage_2', 'vesper_capsule', 'vesper_engines', 'vesper_mount'], label: 'Vesper', note: 'sent ahead in 2038 · shown for scale' }
-    ] }
-];
-
 /* ---- Thirty days in the clouds, lap by lap ---------------
    `days` is the span of the stay each card covers. The ship goes in at
    10° N on the dawn side; each lap is 87.6 h of day at 51 km and 53.9 h
@@ -476,25 +397,10 @@ PHOS.COSTS = {
 /* ---- Venus against Mars, priced --------------------------
    Venus: the phase table above. First crew = Steps 0-4. Per seat = four
    people on the first flight. Mars: published crewed-mission figures. */
-PHOS.COST_VS = {
-  venus: [
-    { k: 'First crew, there and back', v: 32.4, unit: 'bn', d: 'Steps 0 through 4, 2026 to 2043' },
-    { k: 'Whole program',              v: 44.4, unit: 'bn', d: 'Five steps, twenty years, four more hulls' },
-    { k: 'Per seat, first flight',     v: 8.1,  unit: 'bn', d: 'Four people' }
-  ],
-  mars: [
-    { k: 'First crew, there and back', v: 230,  unit: 'bn', d: 'Cheapest published estimate, NASA reference architecture' },
-    { k: 'Whole program',              v: 1000, unit: 'bn', d: 'Up to a trillion over twenty-five years' },
-    { k: 'Per seat, first flight',     v: 38,   unit: 'bn', d: 'Six people' }
-  ],
-  bars: [
-    { label: 'Phosphorus — first crew in the clouds (Steps 0 to 4)', usd: 32.4, venus: true },
-    { label: 'Phosphorus — the whole program to 2055',              usd: 44.4, venus: true },
-    { label: 'Mars — first crewed mission, NASA-derived estimate',  usd: 230 },
-    { label: 'Mars — half a trillion (L. Garver, former NASA deputy)', usd: 500 },
-    { label: 'Mars — up to $1 trillion over 25 years (P. Lee, Mars Institute)', usd: 1000 }
-  ]
-};
+PHOS.COST_VS = [
+  { who: 'Venus', v: 32.4, k: 'Project Phosphorus', d: 'First crew in the clouds and home · Steps 0 to 4, 2026 to 2043 · four people' },
+  { who: 'Mars',  v: 230,  k: 'Cheapest published estimate', d: 'First crewed mission on NASA\u2019s reference architecture · other estimates run to $1 tn' }
+];
 
 /* ---- The honest column ----------------------------------- */
 PHOS.RISKS = [
@@ -622,6 +528,13 @@ PHOS.SAMPLING = [
 
 PHOS.BUILD = [
   {
+    step: 'Skin', where: 'outside in',
+    head: 'Four layers, a tenth of a millimeter',
+    body: 'The skin never has to hold pressure in, because the pressure inside matches the pressure outside. It only has to keep its shape, keep acid out, and keep helium in — so a puncture is not a blowout, it is a slow trade of gas through a hole, and you have hours instead of seconds.',
+    extra: 'laminate',
+    num: '~200 g/m²', numlab: 'of skin · 11,100 m²'
+  },
+  {
     step: 'Cut', where: 'on Earth',
     head: 'Sixty-nine panels, nine kilometers of seam',
     body: 'The hull is 107 m around at its widest and the acid-proof skin comes off the roll about five feet wide, so it gets cut into 69 tapering panels. The seams are heat-welded, not glued — there is nothing for the acid to eat.',
@@ -644,6 +557,13 @@ PHOS.BUILD = [
     head: 'The air the crew breathes gets made before they leave home',
     body: 'The lower hull holds 34 tons of breathable air — more than the ship could ever carry up — so the empty hull from Step 2 makes it on site, with the same oxygen and nitrogen loops the crew will live on, at 11.5 kg a day for eight years.',
     num: '11.5 kg/day', numlab: 'for eight years'
+  },
+  {
+    step: 'Float', where: 'at Venus · 51 km by day, 55 at night',
+    head: 'Two gases, two jobs',
+    body: 'Sealed helium cells do most of the lifting, because helium is three times better at it. But helium is the one thing Venus cannot give you, so the rest of the hull is simply the house — open to the outside air pressure and full of the stuff you breathe. That volume lifts, and it is where you live. Go low for lift and you cook; go high for comfort and you run out of payload. Fifty to fifty-five kilometers is where both are livable at once.',
+    extra: 'floats',
+    num: '54.8 t', numlab: 'useful payload by day'
   }
 ];
 

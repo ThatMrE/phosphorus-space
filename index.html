@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=37ff092d">
+<link rel="stylesheet" href="assets/styles.css?v=068d1a99">
 </head>
 <body>
 
@@ -95,21 +95,17 @@
   <div class="shell">
     <div class="sec-head reveal">
       <p class="eyebrow">What it costs to send people</p>
-      <h2>A tenth of the cheapest Mars number, and most of that is the ride home.</h2>
+      <h2>A tenth of the cheapest Mars number.</h2>
       <div class="sec-head__meta">
-        <span>Order of magnitude</span><span>2026 dollars</span><span>Four people, there and back</span>
+        <span>First crew, there and back</span><span>2026 dollars</span><span>Order of magnitude</span>
       </div>
     </div>
     <div class="costvs reveal" id="costVs"></div>
-    <div class="compare reveal" id="costVsBars" style="margin-top: clamp(2rem, 5vw, 3rem)"></div>
     <p class="note reveal" style="margin-top:1.4rem; max-width:64ch">
-      Phosphorus is priced bottom-up in the README: five steps, 2026 dollars, launch at
-      Starship-class prices. The Mars numbers are the published ones — a first-mission
-      estimate built on NASA&rsquo;s Design Reference Architecture, a former NASA deputy
-      administrator&rsquo;s half trillion, and the Mars Institute&rsquo;s trillion over
-      twenty-five years. Nobody has priced a Mars program the way this one is priced, so
-      compare shapes, not decimals. Estimates like these run low. Even tripled, Phosphorus
-      sits under the cheapest Mars figure.
+      Venus: Steps 0 through 4 of this program, priced bottom-up in the README. Mars: the
+      cheapest published estimate for a first crewed mission, built on NASA&rsquo;s reference
+      architecture; the others run to a trillion. Estimates like these run low. Even tripled,
+      Phosphorus sits under the Mars figure.
     </p>
   </div>
 </section>
@@ -131,6 +127,7 @@
             Six Starship flights carry the pieces up separately, and they lock together
             in orbit.
           </p>
+          <div class="fspecs" data-fleet="Starship"></div>
         </div>
       </div>
 
@@ -138,8 +135,11 @@
         <div class="stage__card stage__card--aqua">
           <h3>Hesperus is home for fifteen months.</h3>
           <p>
-            Four people live here on the way out and the way back.
+            Four people live here on the way out and the way back. Lucifer, the capsule
+            that brings them through Earth&rsquo;s air at the end, rides on its docking node.
           </p>
+          <div class="fspecs" data-fleet="Hesperus"></div>
+          <div class="fspecs" data-fleet="Lucifer"></div>
         </div>
       </div>
 
@@ -148,8 +148,10 @@
           <h3>The cloud ship rides up folded.</h3>
           <p>
             A 129-meter hull — longer than a 747 — packs into about two and a half cubic
-            meters.
+            meters, inside a 12.8-meter heat shield with two people beside it.
           </p>
+          <div class="fspecs" data-fleet="Phosphorus"></div>
+          <div class="fspecs" data-fleet="Entry vehicle"></div>
         </div>
       </div>
 
@@ -160,6 +162,7 @@
             Nobody leaves Earth until it is safely parked in the orbit of Venus for the
             ride home.
           </p>
+          <div class="fspecs" data-fleet="Vesper"></div>
         </div>
       </div>
     </div>
@@ -342,94 +345,33 @@
   </div>
 </section>
 
-<!-- ============================ THE SHIP AND THE FLEET ============================ -->
-<section class="band band--tight" data-rail="The fleet">
+<!-- ============================ THE SHIP ============================ -->
+<section class="band band--tight" data-rail="The ship">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">The ship and the fleet</p>
-      <h2>Four vehicles. Only one ever touches the clouds.</h2>
-      <div class="sec-head__meta">
-        <span>Built from the plan&rsquo;s own dimensions</span><span>Exploded as you scroll</span><span>Drag to turn</span>
-      </div>
-    </div>
-  </div>
-</section>
-<section class="stage fleet" id="fleet">
-  <div class="stage__track">
-    <div class="stage__viz">
-      <canvas id="fleetCanvas" aria-label="Each vehicle in the fleet, turning slowly and coming apart into its labelled components as you scroll: Phosphorus, Hesperus, Vesper, Lucifer, the entry vehicle, Starship and the assembled stack"></canvas>
-      <p class="act__badge"><span>The fleet</span> part by part</p>
-    </div>
-    <div class="stage__steps" id="fleetSteps"></div>
-  </div>
-</section>
-
-<section class="band">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">The ship, in numbers</p>
+      <p class="eyebrow">The ship</p>
       <h2>A hundred and twenty-nine meters of hull, and not one pressure bulkhead.</h2>
       <div class="sec-head__meta">
-        <span>129 m × 34 m</span><span>77,500 m³</span><span>crew of 2</span><span>floats at 50–54 km</span>
+        <span>129 m × 34 m</span><span>77,500 m³</span><span>crew of 2</span><span>51 km by day, 55 at night</span>
       </div>
     </div>
-
-    <div class="two">
-      <div class="prose reveal">
-        <h3 style="font-size:var(--step-1); margin-bottom:0.4rem">Two gases, two jobs</h3>
-        <p>
-          Sealed helium cells do most of the lifting, because helium is three times
-          better at it. But helium is the one thing Venus cannot give you, so the rest
-          of the hull is simply the house — open to the outside air pressure and full of
-          the stuff you breathe.
-        </p>
-        <p>
-          That volume earns its keep twice. It lifts, and it is where you live. And
-          because the pressure inside matches the pressure outside, the skin never has
-          to hold anything back. It only has to keep its shape, keep acid out, and keep
-          helium in. <strong>A puncture is not a blowout</strong> — it is a slow trade
-          of gas through a hole, and you have hours instead of seconds.
-        </p>
-        
-      </div>
-
-      <div class="reveal">
-        <p class="eyebrow" style="margin-bottom:1rem">The skin, outside in</p>
-        <div class="laminate" id="laminate"></div>
-      </div>
-    </div>
-
-    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
-      <p class="eyebrow" style="margin-bottom:1rem">How it floats</p>
-      <p class="note" style="margin-bottom:1.4rem; max-width:60ch">
-        Venus air is mostly CO&#8322; at 43.5&nbsp;g/mol; what you breathe is 29. The lighter
-        gas rises. Two altitudes, decided: 51&nbsp;km by day and 55&nbsp;km at night.
-      </p>
-      <div class="floats" id="floats"></div>
-      <p class="note" style="margin-top:1.6rem; max-width:64ch">
-        Go low for lift and you cook. Go high for comfort and you run out of payload.
-        Fifty to fifty-five kilometers is where both curves are livable at once, which is
-        why every serious study of this lands on the same few kilometers.
-      </p>
-    </div>
-
   </div>
 </section>
 
 <!-- ============================ HOW IT GETS MADE ============================ -->
-<section class="stage build" id="build" data-rail="How it gets made">
+<section class="stage build" id="build">
   <div class="stage__track">
     <div class="stage__viz">
       <canvas id="buildCanvas" aria-label="The Phosphorus hull cut into 69 panels and welded into a hull, folded into its entry shell, inflated at Venus, and filled with breathable air"></canvas>
-      <p class="act__badge"><span>Phosphorus</span> how it gets made</p>
+      <p class="act__badge"><span>Phosphorus</span> skin to sky</p>
       <div class="journey__hud build__hud" role="status" aria-live="polite" aria-atomic="true">
         <div class="readout__row">
           <span class="readout__k">Step</span>
-          <span class="readout__v readout__v--sm" id="bStep">Cut</span>
+          <span class="readout__v readout__v--sm" id="bStep">Skin</span>
         </div>
         <div class="readout__row">
-          <span class="readout__k" id="bKey">Panels welded</span>
-          <span class="readout__v"><span id="bVal">0</span><small id="bUnit"> / 69</small></span>
+          <span class="readout__k" id="bKey">Layers</span>
+          <span class="readout__v"><span id="bVal">4</span><small id="bUnit"> · 0.1 mm</small></span>
         </div>
       </div>
     </div>
@@ -498,6 +440,7 @@
         <p class="lap__fixed">51&nbsp;km by day &middot; 10&nbsp;m/s upwind &middot; 55&nbsp;km at night</p>
       </div>
       <div id="lapSvg"></div>
+      <p class="lap__swipe">Swipe the chart sideways &rarr;</p>
       <dl class="lap__out">
         <div class="lap__cell"><dt>Daylight</dt><dd><span id="lDay">88</span><span>hours</span></dd></div>
         <div class="lap__cell"><dt>Night</dt><dd><span id="lNight">54</span><span>hours</span></dd></div>
@@ -755,12 +698,12 @@
 
 </div><!-- /page -->
 
-<script src="assets/data.js?v=7fc68262"></script>
+<script src="assets/data.js?v=89a5a679"></script>
 <script src="assets/trajectory.js?v=39dc470b"></script>
 <script src="assets/models.js?v=611cf507"></script>
 <script src="assets/acts.js?v=feb8cc3e"></script>
 <script src="assets/vendor/three.min.js?v=7a7802bf"></script>
-<script src="assets/acts3d.js?v=cec57e1c"></script>
-<script src="assets/mission.js?v=6b33e069"></script>
+<script src="assets/acts3d.js?v=155d5972"></script>
+<script src="assets/mission.js?v=10f4cf02"></script>
 </body>
 </html>

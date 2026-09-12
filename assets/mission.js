@@ -546,8 +546,7 @@
   /* ---------- how it floats: the two decided altitudes ------ */
 
   function floatTable() {
-    var wrap = $('#floats');
-    if (!wrap) return;
+    var wrap = el('div', 'floats');
     var V_HE = 46000, V_AIR = 31500, STRUCT = 20.6;
     [[51, 'By day', 'props on, nose into the wind'], [55, 'At night', 'props off, coasting']].forEach(function (row) {
       var s = sample(row[0]);
@@ -557,7 +556,7 @@
       h.appendChild(el('b', null, row[1]));
       h.appendChild(el('span', 'num', row[0] + ' km · ' + row[2]));
       col.appendChild(h);
-      [['Outside', fmt(s.tC, 0), '°C'], ['Pressure', s.atm.toFixed(2), 'atm'], ['Helium cells', he.toFixed(1), 't'], ['Air volume', air.toFixed(1), 't'], ['Useful payload after structure', net.toFixed(1), 't']].forEach(function (c, i) {
+      [['Outside', fmt(s.tC, 0), '°C'], ['Pressure', s.atm.toFixed(2), 'atm'], ['Helium cells', he.toFixed(1), 't'], ['Air volume', air.toFixed(1), 't'], ['Useful payload', net.toFixed(1), 't']].forEach(function (c, i) {
         var cell = el('div', 'floats__cell' + (i === 4 ? ' floats__cell--hero' : ''));
         cell.appendChild(el('dt', null, c[0]));
         var dd = el('dd'); dd.appendChild(el('span', null, c[1])); dd.appendChild(el('span', null, c[2])); cell.appendChild(dd);
@@ -565,13 +564,13 @@
       });
       wrap.appendChild(col);
     });
+    return wrap;
   }
 
   /* ---------- simple list renderers ----------------------- */
 
-  function buildLaminate() {
-    var wrap = $('#laminate');
-    if (!wrap) return;
+  function laminateList() {
+    var wrap = el('div', 'laminate');
     var cols = ['#F2E8D0', '#C9BFA8', '#E8B33A', '#5FD0C4'];
     D.LAMINATE.forEach(function (l, i) {
       var row = el('div', 'lam');
@@ -582,6 +581,31 @@
       row.appendChild(h);
       row.appendChild(el('p', 'lam__w', l.why));
       wrap.appendChild(row);
+    });
+    return wrap;
+  }
+
+  /* the spec sheets and model downloads that ride in the Act 01 cards */
+  function fleetSpecs() {
+    var KEYS = { Hesperus: 'hesperus_transit_habitat', Phosphorus: 'phosphorus_airship', Vesper: 'vesper_ascent_vehicle', Lucifer: 'lucifer_return_capsule', Starship: 'starship', 'Entry vehicle': 'entry_vehicle' };
+    var HUMAN = {
+      Starship: 'The launch vehicle, booster and all. Six flights put the stack in orbit.',
+      'Entry vehicle': 'A 12.8-meter heat shield with the folded ship and two people inside.'
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-fleet]'), function (box) {
+      var name = box.getAttribute('data-fleet');
+      var sheet = (D.FLEET || []).filter(function (f) { return f.name === name; })[0];
+      var head = el('p', 'fspec fspec--head');
+      head.appendChild(el('span', null, name + (sheet ? ' · ' + sheet.role : '')));
+      head.appendChild(el('b', null, sheet ? sheet.mass + ' · crew ' + sheet.crew : ''));
+      box.appendChild(head);
+      if (sheet) sheet.specs.forEach(function (row) {
+        var r = el('p', 'fspec'); r.appendChild(el('span', null, row[0])); r.appendChild(el('b', null, row[1])); box.appendChild(r);
+      });
+      else if (HUMAN[name]) box.appendChild(el('p', 'fspec__line', HUMAN[name]));
+      var dl = el('a', 'fdl', 'Download the model (.obj)');
+      dl.href = 'models/' + KEYS[name] + '.obj'; dl.setAttribute('download', KEYS[name] + '.obj');
+      box.appendChild(dl);
     });
   }
 
@@ -631,49 +655,14 @@
   function buildCostVs() {
     var wrap = $('#costVs');
     if (!wrap || !D.COST_VS) return;
-    [['venus', 'Venus', 'Project Phosphorus'], ['mars', 'Mars', 'published estimates']].forEach(function (side) {
-      var col = el('div', 'costvs__col costvs__col--' + side[0]);
-      var h = el('p', 'costvs__who');
-      h.appendChild(el('b', null, side[1]));
-      h.appendChild(document.createTextNode(' · ' + side[2]));
-      col.appendChild(h);
-      D.COST_VS[side[0]].forEach(function (r) {
-        var row = el('div', 'costvs__row');
-        row.appendChild(el('p', 'costvs__k', r.k));
-        var v = el('p', 'costvs__v num');
-        v.appendChild(document.createTextNode('$' + (r.v >= 1000 ? (r.v / 1000).toFixed(0) + ' tn' : fmt(r.v, r.v < 100 ? 1 : 0) + ' ' + r.unit)));
-        row.appendChild(v);
-        row.appendChild(el('p', 'costvs__d', r.d));
-        col.appendChild(row);
-      });
+    D.COST_VS.forEach(function (r) {
+      var col = el('div', 'costvs__col costvs__col--' + r.who.toLowerCase());
+      col.appendChild(el('p', 'costvs__who', r.who));
+      col.appendChild(el('p', 'costvs__v num', '$' + fmt(r.v, r.v < 100 ? 1 : 0) + ' bn'));
+      col.appendChild(el('p', 'costvs__k', r.k));
+      col.appendChild(el('p', 'costvs__d', r.d));
       wrap.appendChild(col);
     });
-    var bars = $('#costVsBars');
-    if (bars) {
-      var mx = 1000;
-      D.COST_VS.bars.forEach(function (r) {
-        var row = el('div', 'compare__row' + (r.venus ? ' compare__row--venus' : ''));
-        row.appendChild(el('p', 'compare__label', r.label));
-        var tr = el('div', 'compare__track');
-        var f = el('div', 'compare__fill');
-        f.style.width = '0%';
-        f.setAttribute('data-w', (r.usd / mx * 100).toFixed(2) + '%');
-        tr.appendChild(f);
-        row.appendChild(tr);
-        row.appendChild(el('p', 'compare__val', '$' + fmt(r.usd, r.usd < 100 ? 1 : 0) + ' bn'));
-        bars.appendChild(row);
-      });
-      var fired = false;
-      onTick(function (vh) {
-        if (fired) return;
-        if (bars.getBoundingClientRect().top < vh * 0.9) {
-          fired = true;
-          Array.prototype.forEach.call(bars.querySelectorAll('.compare__fill'), function (n, i) {
-            setTimeout(function () { n.style.width = n.getAttribute('data-w'); }, REDUCED ? 0 : i * 70);
-          });
-        }
-      });
-    }
   }
 
   function buildSources() {
@@ -760,7 +749,12 @@
   }
 
   function buildConstruction(viz) {
-    stageSteps('build', D.BUILD, function (b) { return stepCard(b); }, viz);
+    stageSteps('build', D.BUILD, function (b) {
+      var o = { step: b.step, where: b.where, head: b.head, body: b.body, num: b.num, numlab: b.numlab };
+      if (b.extra === 'laminate') o.extra = laminateList();
+      if (b.extra === 'floats') o.extra = floatTable();
+      return stepCard(o);
+    }, viz);
   }
 
   /* ---------- the program: a timeline that runs as you scroll --- */
@@ -940,32 +934,6 @@
 
   /* ---------- the fleet, exploded ------------------------- */
 
-  function buildFleet(viz) {
-    var specs = D.FLEET || [];
-    stageSteps('fleet', D.FLEET3D, function (V) {
-      var sheet = specs.filter(function (f) { return f.name === V.name; })[0];
-      var extra = el('div', 'parts');
-      V.parts.forEach(function (P) {
-        var li = el('p', 'part');
-        li.appendChild(el('b', null, P.label));
-        if (P.note) li.appendChild(el('span', null, P.note));
-        extra.appendChild(li);
-      });
-      if (sheet) {
-        var sp = el('div', 'fspecs');
-        sheet.specs.forEach(function (row) {
-          var r = el('p', 'fspec'); r.appendChild(el('span', null, row[0])); r.appendChild(el('b', null, row[1])); sp.appendChild(r);
-        });
-        extra.appendChild(sp);
-      }
-      var dl = el('a', 'fdl', 'Download the model (.obj)');
-      dl.href = 'models/' + V.key + '.obj'; dl.setAttribute('download', V.key + '.obj');
-      extra.appendChild(dl);
-      return stepCard({ step: V.name, where: V.role, head: V.human, body: sheet ? sheet.line : '', extra: extra,
-        num: sheet ? sheet.mass : '', numlab: sheet ? 'crew of ' + sheet.crew : '' });
-    }, viz);
-  }
-
   /* ---------- thirty days, lap by lap --------------------- */
 
   function buildStay(viz) {
@@ -1138,7 +1106,7 @@
     var sky = $('#heroSky');
     if (sky) starfield(sky);
     buildHero();
-    buildLaminate();
+    fleetSpecs();
     sunChart();
     buildRisks();
     buildCostVs();
@@ -1146,12 +1114,10 @@
     /* three dimensions where WebGL is available; the 2D renderers stay as the fallback */
     var three = null;
     try { three = window.PHOS && PHOS.ACTS3D ? PHOS.ACTS3D.init(onTick, trackProgress) : null; } catch (e) { three = null; }
-    floatTable();
     descentStage(three && three.descent);
     compareStage(three && three.compare);
     buildConstruction(three && three.build);
     buildWalk(three && three.walk);
-    buildFleet(three && three.fleet);
     buildStay(three && three.stay);
     programStage();
     buildBill();
