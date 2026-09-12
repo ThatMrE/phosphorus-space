@@ -239,8 +239,8 @@
         canvas.width = w * dpr; canvas.height = h * dpr; ctx2.setTransform(dpr, 0, 0, dpr, 0, 0);
         ctx2.clearRect(0, 0, w, h);
         var narrow = w < 760, r = narrow ? Math.min(w, h) * 0.16 : Math.min(w, h) * 0.2;
-        [[narrow ? w * 0.3 : w * 0.5, narrow ? h * 0.28 : h * 0.5, '#E3C878', '#8A6A2A', 'Venus'],
-         [narrow ? w * 0.7 : w * 0.78, narrow ? h * 0.28 : h * 0.5, '#C9673A', '#5A2A18', 'Mars']].forEach(function (pl) {
+        [[narrow ? w * 0.3 : w * 0.66, h * 0.5, '#E3C878', '#8A6A2A', 'Venus'],
+         [narrow ? w * 0.7 : w * 0.88, h * 0.5, '#C9673A', '#5A2A18', 'Mars']].forEach(function (pl) {
           var g = ctx2.createRadialGradient(pl[0] - r * 0.4, pl[1] - r * 0.4, r * 0.1, pl[0], pl[1], r);
           g.addColorStop(0, pl[2]); g.addColorStop(1, pl[3]);
           ctx2.fillStyle = g; ctx2.beginPath(); ctx2.arc(pl[0], pl[1], r, 0, Math.PI * 2); ctx2.fill();

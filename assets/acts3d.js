@@ -983,12 +983,12 @@
       var w = v.w(), h = v.h(), narrow = w < 760;
       var halfH = 300 * Math.tan(Math.PI * 22 / 180), halfW = halfH * (w / h);
       if (narrow) {
-        /* the pair sits in the upper third; the cards come up from the bottom */
-        var s2 = Math.min(1, halfW / (R * 2.7));
-        venus.group.position.set(-R * 1.25, 0, 0); venus.group.scale.setScalar(s2);
-        mars.group.position.set(R * 1.25, 0, 0); mars.group.scale.setScalar(s2);
-        v.camera.position.set(0, -R * 2.1, 300);
-        v.camera.lookAt(0, -R * 2.1, 0);
+        /* phones: the pair fills its own band at the top of the screen */
+        var s2 = Math.min(halfW / (R * 2.6), halfH / (R * 1.9));
+        venus.group.position.set(-R * 1.25 * s2, R * 0.1, 0); venus.group.scale.setScalar(s2);
+        mars.group.position.set(R * 1.25 * s2, R * 0.1, 0); mars.group.scale.setScalar(s2);
+        v.camera.position.set(0, 0, 300);
+        v.camera.lookAt(0, 0, 0);
       } else {
         /* the cards own the left 55% of the screen; Venus starts just right of them */
         var shift = 0.15 * halfW + R * 1.2 + R * 1.05;
@@ -1010,8 +1010,8 @@
       var p = project(a.of, a.at);
       var x = p[0], y = p[1];
       /* the callout floats above and to the outside of its planet */
-      var lx = x + (w.isV ? -22 : 22), ly = y - 46;
-      var edge = v.w() < 760 ? 96 : 120;
+      var lx = x + (w.isV ? -22 : 22) * (v.w() < 760 ? 1.8 : 1), ly = y - (v.w() < 760 ? 30 : 46);
+      var edge = v.w() < 760 ? 78 : 132;
       lx = Math.max(edge, Math.min(v.w() - edge, lx));
       call.el.textContent = label;
       call.el.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ly.toFixed(1) + 'px) translate(-50%, -100%)';

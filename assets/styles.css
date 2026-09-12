@@ -1150,8 +1150,12 @@ input[type="range"]::-moz-range-thumb {
 .cmp__lines circle { opacity: 0; transition: opacity .35s ease; }
 .cmp__lines circle.is-on { opacity: 1; }
 @media (max-width: 760px) {
-  .compare .stage__step { min-height: 78svh; justify-content: flex-end; padding-bottom: 5vh; }
-  .cmp__call { max-width: 11rem; font-size: 0.62rem; }
+  /* phones: the planets hold a band at the top and the cards scroll beneath it */
+  .compare .stage__viz { height: 42svh; min-height: 0; z-index: 4; }
+  .compare .stage__steps { margin-top: 0; }
+  .compare .stage__step { min-height: 58svh; justify-content: center; }
+  .compare .act__badge { display: none; }
+  .cmp__call { max-width: 9.2rem; font-size: 0.62rem; padding: 0.3rem 0.4rem; }
   .cmp__n { font-size: var(--step-1); }
 }
 
