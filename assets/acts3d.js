@@ -1708,8 +1708,8 @@
       hud.pres.innerHTML = (a.atm >= 10 ? a.atm.toFixed(0) : a.atm >= 1 ? a.atm.toFixed(1) : a.atm.toFixed(2)) + '<small> atm</small>';
     }
 
-    /* where the ship floats through each card */
-    var SHIP_KM = [52, 54, 52, 50, 50, 50, 50];
+    /* the ship holds its home altitude; the band it works is shown by walking the view round it */
+    var SHIP_KM = 52, BAND_KM = [54, 52, 50];
     var N = 7, progress = 0, t = 0, camInit = false;
     var camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
     var focusKm = 52, tmp = new THREE.Vector3();
@@ -1720,8 +1720,7 @@
     function place(p) {
       var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
       var narrow = v.w() < 760, nk = narrow ? Math.min(2.4, 1.15 * v.h() / Math.max(1, v.w())) : 1;
-      /* the ship drifts between its band altitudes over the first part of a card */
-      var shipKm = lerp(i ? SHIP_KM[i - 1] : SHIP_KM[0], SHIP_KM[i], ease(seg(local, 0, 0.45)));
+      var shipKm = SHIP_KM;
       shipG.position.set(0, shipKm * U, 0);
       var bottom = shipKm * U - 2.8, topY = shipKm * U + 1.8;
       up.visible = down.visible = probe.visible = lander.visible = tether.visible = false;
@@ -1731,11 +1730,14 @@
         up.visible = tether.visible = true; up.position.set(1.5, km * U, 0);
         tether.geometry.setFromPoints([new THREE.Vector3(0, topY, 0), up.position]);
         follow(up, [4.5, 1.2, 7], lookUp * 0.6); focusKm = km;
-      } else if (i === 1 || i === 3) {
-        follow(shipG, [20 * nk, 3.5 * nk, 29 * nk], lookUp * 3); focusKm = shipKm;
-      } else if (i === 2) {
-        tmp.set(0, shipKm * U - 2.2, 0);
-        wantPos.set(14 * nk, shipKm * U - 0.2, 20 * nk); wantLook.copy(tmp); wantLook.y += lookUp * 2 + 0.6; focusKm = shipKm;
+      } else if (i >= 1 && i <= 3) {
+        /* the ship stays put and the view goes round it: over the top for the top of the band,
+           level and close at home altitude, from underneath for the bottom */
+        var k = (i - 1 + local) / 3;
+        var az = lerp(0.45, 1.7, k), el = lerp(0.5, -0.45, k), dist = (32 - 8 * Math.sin(Math.PI * k)) * nk;
+        wantPos.set(dist * Math.cos(el) * Math.sin(az), shipKm * U + dist * Math.sin(el), dist * Math.cos(el) * Math.cos(az));
+        wantLook.set(0, shipKm * U - 0.6 + lookUp * 3, 0);
+        focusKm = BAND_KM[i - 1];
       } else if (i === 4) {
         var km4 = lerp(50, 45, ease(local));
         down.visible = tether.visible = true; down.position.set(1.2, km4 * U, 0);
@@ -1896,6 +1898,212 @@
   }
 
   /* ============================================================
+     CHASING THE SUN — one day and one night, close up
+     ============================================================ */
+
+  function chase3d(canvas, hud) {
+    var v = makeView(canvas, { fov: 46, near: 0.5, far: 4000, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    var SKY = {
+      day: new THREE.Color(0xE6D5A6), low: new THREE.Color(0xD9A46E), set: new THREE.Color(0x8A4E48),
+      dusk: new THREE.Color(0x3A2F3C), night: new THREE.Color(0x15122A)
+    };
+    scene.background = SKY.day.clone();
+    scene.fog = new THREE.Fog(SKY.day.clone(), 80, 900);
+    var hemi = new THREE.HemisphereLight(0xFFF6DC, 0xC9A968, 1.05); scene.add(hemi);
+    var sun = new THREE.DirectionalLight(0xFFF3D6, 0.6); sun.position.set(0.3, 1, 0.4); scene.add(sun);
+    if (!glowTex) glowTex = glowTexture(THREE);
+    var sunDisc = glow(THREE, 0xFFF0C8, 420); sunDisc.material.opacity = 0; sunDisc.material.fog = false; scene.add(sunDisc);
+
+    /* the ship at full size: 129 m of hull, props at either end, the gondola below */
+    var A = 64.5, B = 17.0, GY = -B - 5.5;
+    var shipG = new THREE.Group(); scene.add(shipG);
+    var ship = model(THREE, 'phosphorus_airship', function (n) {
+      return ['helium_cells', 'breathable_air_volume', 'ballonets', 'person'].indexOf(n) < 0;
+    });
+    shipG.add(ship);
+    var dark = new THREE.MeshStandardMaterial({ color: 0x2A2430, roughness: 0.5 });
+    var props = [-1, 1].map(function (sx) {
+      var blade = new THREE.Mesh(new THREE.BoxGeometry(0.25, 10.5, 0.9), dark);
+      blade.position.set(sx * (A + 3.2), 0, 0); shipG.add(blade);
+      var disc = new THREE.Mesh(new THREE.CircleGeometry(5.3, 32), new THREE.MeshBasicMaterial({ color: 0x2A2430, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+      disc.rotation.y = Math.PI / 2; disc.position.set(sx * (A + 3.2), 0, 0); shipG.add(disc);
+      return { blade: blade, disc: disc };
+    });
+    /* cabin lights along the gondola, seen at night */
+    var lamps = [];
+    [-11, -5.5, 0, 5.5, 11].forEach(function (lx) {
+      [-1, 1].forEach(function (sz) {
+        var lp = glow(THREE, 0xFFD9A0, 7); lp.position.set(lx, GY + 0.4, sz * 3.6); lp.material.opacity = 0; shipG.add(lp); lamps.push(lp);
+      });
+    });
+    var cellGlow = glow(THREE, 0x5FD0C4, 16); cellGlow.position.set(-7, GY - 3.2, 0); cellGlow.material.opacity = 0; shipG.add(cellGlow);
+    /* wind streaks over the hull: the ten meters a second the ship makes against the air */
+    var pseed = 7717; function prnd() { pseed = (pseed * 1103515245 + 12345) & 0x7fffffff; return pseed / 0x7fffffff; }
+    var streakPts = [], streakN = 60;
+    for (var k = 0; k < streakN; k++) {
+      var th = prnd() * Math.PI * 2, rr = B + 1.5 + prnd() * 6, sx0 = prnd() * 180 - 90;
+      var sy0 = rr * Math.cos(th), sz0 = rr * Math.sin(th);
+      streakPts.push(sx0, sy0, sz0, sx0 - 4, sy0, sz0);
+    }
+    var streakGeo = new THREE.BufferGeometry(); streakGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(streakPts), 3));
+    var streaks = new THREE.LineSegments(streakGeo, new THREE.LineBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0 })); shipG.add(streaks);
+
+    /* the cloud deck: puffs that stream past by day and slide down as the ship climbs at night */
+    var cream = new THREE.Color(0xF6ECD2), dim = new THREE.Color(0x2E2A44), amber = new THREE.Color(0xE0A070);
+    var puffs = [], PN = window.innerWidth < 760 ? 70 : 110, WRAP = 480;
+    for (var i = 0; i < PN; i++) {
+      var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xF6ECD2, transparent: true, opacity: 0.22 + prnd() * 0.3, depthWrite: false }));
+      var sz = 50 + prnd() * 120;
+      sp.scale.set(sz, sz * 0.55, 1);
+      sp.userData.x = prnd() * 1000 - 500; sp.userData.y = prnd() * WRAP - WRAP / 2; sp.userData.z = prnd() * 1000 - 500;
+      if (Math.abs(sp.userData.y) < 30 && Math.abs(sp.userData.z) < 60 && Math.abs(sp.userData.x) < 90) sp.userData.z += 120;
+      sp.userData.v = 0.6 + prnd() * 0.8;
+      sp.position.set(sp.userData.x, sp.userData.y, sp.userData.z);
+      scene.add(sp); puffs.push(sp);
+    }
+
+    /* the lap: from scripts/sunchase.py */
+    var C = (PHOS.SUNCHASE && PHOS.SUNCHASE[0]) || { dayH: 87.6, nightH: 53.9, propKw: 73, storageKwh: 431, wind: 67 };
+    var DAY_H = C.dayH, NIGHT_H = C.nightH, LAP = DAY_H + NIGHT_H, FULL_H = DAY_H * 0.6;
+    function elevAt(h) { return h < DAY_H ? Math.sin(Math.PI * h / DAY_H) : -Math.sin(Math.PI * (h - DAY_H) / NIGHT_H); }
+    function battAt(h) { return h < FULL_H ? C.storageKwh * h / FULL_H : h < DAY_H ? C.storageKwh : C.storageKwh * (1 - (h - DAY_H) / NIGHT_H); }
+    function climbAt(h) { if (h < DAY_H) return 0; return ease(seg(h, DAY_H, DAY_H + 5)) * (1 - ease(seg(h, LAP - 4.5, LAP))); }
+    function skyAt(e, out) {
+      if (e >= 0.35) return out.copy(SKY.day);
+      if (e >= 0.08) return out.copy(SKY.low).lerp(SKY.day, (e - 0.08) / 0.27);
+      if (e >= -0.05) return out.copy(SKY.set).lerp(SKY.low, (e + 0.05) / 0.13);
+      if (e >= -0.3) return out.copy(SKY.dusk).lerp(SKY.set, (e + 0.3) / 0.25);
+      return out.copy(SKY.night).lerp(SKY.dusk, clamp((e + 0.6) / 0.3, 0, 1));
+    }
+
+    var ROWS = PHOS.CHASE || [];
+    var N = ROWS.length;
+    /* one camera shot per card, in the ship's frame: position and where to look */
+    var SHOTS = [
+      { p: [150, -14, 118], l: [0, 0, 0] },
+      { p: [-118, 8, 62], l: [-62, 0, 0] },
+      { p: [12, 26, 178], l: [0, 2, 0] },
+      { p: [52, 98, 84], l: [0, 12, 0] },
+      { p: [72, -76, 132], l: [0, 6, 0] },
+      { p: [-62, 4, 118], l: [-4, -10, 0] },
+      { p: [172, 22, 132], l: [0, 0, 0] },
+      { p: [230, 62, 260], l: [0, 0, 0] },
+      { p: [-210, 84, 250], l: [0, 0, 0] },
+      { p: [60, 34, 330], l: [0, 0, 0] },
+      { p: [40, 18, 300], l: [0, 0, 0] },
+      { p: [-270, 40, 200], l: [0, 0, 0] },
+      { p: [250, 110, 190], l: [0, 0, 0] }
+    ];
+    var progress = 0, t = 0, camInit = false, stageEl = canvas.closest('.stage');
+    var camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), wantPos = new THREE.Vector3(), wantLook = new THREE.Vector3();
+    var want = { elev: 1, climb: 0, spin: 1, wind: 1 }, cur = { elev: 1, climb: 0, spin: 1, wind: 1 };
+    var skyWant = new THREE.Color(), tmpC = new THREE.Color(), tmpV = new THREE.Vector3();
+    var hudRows = hud ? Array.prototype.slice.call(hud.querySelectorAll('.readout__row')) : [];
+
+    function setHud(rows) {
+      hudRows.forEach(function (r, j) {
+        var k = r.querySelector('.readout__k'), val = r.querySelector('.readout__v');
+        if (!rows[j]) { r.hidden = true; return; }
+        r.hidden = false;
+        if (k.textContent !== rows[j][0]) k.textContent = rows[j][0];
+        if (val.innerHTML !== rows[j][1]) { val.innerHTML = rows[j][1]; val.classList.toggle('readout__v--sm', rows[j][1].indexOf('<small') < 0); }
+      });
+    }
+
+    function place(p) {
+      var i = Math.min(N - 1, Math.floor(p * N)), local = p * N - i;
+      var row = ROWS[i] || {}, hrs = row.hours;
+      var h = hrs ? lerp(hrs[0], hrs[1], local) : 30;
+      var day = h < DAY_H;
+      want.elev = elevAt(h);
+      want.climb = climbAt(h);
+      want.spin = day ? 1 : 0;
+      want.wind = day ? 1 : 0;
+      /* camera: the shot for this card, drifting a little across the card */
+      var S = SHOTS[i] || SHOTS[SHOTS.length - 1];
+      var narrow = v.w() < 760, d0 = Math.sqrt(S.p[0] * S.p[0] + S.p[1] * S.p[1] + S.p[2] * S.p[2]);
+      /* phones: back off more on the close shots, less on the wide ones, and keep the ship low under the card */
+      var nk = narrow ? lerp(Math.min(2.4, 1.25 * v.h() / Math.max(1, v.w())), 1.3, seg(d0, 130, 330)) : 1;
+      var ang = (local - 0.5) * 0.16, cs = Math.cos(ang), sn = Math.sin(ang);
+      wantPos.set((S.p[0] * cs + S.p[2] * sn) * nk, S.p[1] * nk, (-S.p[0] * sn + S.p[2] * cs) * nk);
+      wantLook.set(S.l[0], S.l[1], S.l[2]);
+      var dist = wantPos.distanceTo(wantLook);
+      if (narrow) wantLook.y += dist * 0.16;
+      else {
+        /* wide screens: the cards sit on the left, so the ship sits right of center */
+        var dir = tmpV.subVectors(wantLook, wantPos).normalize();
+        var right = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+        wantPos.addScaledVector(right, -dist * 0.2); wantLook.addScaledVector(right, -dist * 0.2);
+      }
+      if (stageEl) stageEl.classList.toggle('is-night', want.elev < -0.08);
+      /* the HUD */
+      if (hrs) {
+        var alt = 51 + 4 * want.climb;
+        setHud([
+          ['Since sunrise', Math.round(h) + '<small> h</small>'],
+          ['Altitude', alt.toFixed(alt % 1 ? 1 : 0) + '<small> km</small>'],
+          ['Props', day ? '10 m/s · ' + C.propKw + ' kW' : 'off · coasting'],
+          ['Stored', Math.round(battAt(h)) + '<small> kWh</small>']
+        ]);
+      } else {
+        setHud([
+          ['Latitude', '10° N'],
+          ['Wind', C.wind + '<small> m/s</small>'],
+          ['Array', '61–68<small> kW</small>'],
+          ['Cabin + props', '47<small> kW</small>']
+        ]);
+      }
+    }
+
+    function frame(dt, rdt) {
+      t += dt;
+      var a = camInit ? 1 - Math.exp(-(rdt || dt) * 2.6) : 1;
+      var b = camInit ? 1 - Math.exp(-(rdt || dt) * 3.5) : 1;
+      camInit = true;
+      cur.elev = lerp(cur.elev, want.elev, b); cur.climb = lerp(cur.climb, want.climb, b);
+      cur.spin = lerp(cur.spin, want.spin, b); cur.wind = lerp(cur.wind, want.wind, b);
+      var e = cur.elev, lit = clamp(e * 2.2 + 0.25, 0, 1), night = clamp(-e * 2.2, 0, 1);
+      /* sky, fog, and the sun through the cloud */
+      skyAt(e, skyWant);
+      scene.background.copy(skyWant); scene.fog.color.copy(skyWant);
+      hemi.intensity = 0.28 + 0.8 * lit; sun.intensity = 0.65 * lit;
+      var th = Math.acos(clamp(-e, -1, 1)); /* 0 at sunrise, pi at sunset, on the far side of the hull */
+      sunDisc.position.set(1200 * Math.cos(Math.PI - th), 900 * e + 40, -700);
+      sunDisc.material.opacity = e > 0 ? 0.35 + 0.45 * Math.min(1, e * 3) : 0;
+      tmpC.copy(cream).lerp(amber, clamp(1 - e * 3, 0, 1) * 0.6).lerp(dim, night);
+      /* the ship rides the air, tilts nose-up while it climbs, and the cloud slides past */
+      shipG.position.y = Math.sin(t * 0.55) * 0.9;
+      shipG.rotation.z = Math.sin(t * 0.4) * 0.006 + (want.climb > 0.02 && cur.climb < 0.97 ? 0.05 * (want.climb - cur.climb) : 0);
+      var yoff = cur.climb * 130, flow = 3 + 26 * cur.wind;
+      puffs.forEach(function (sp) {
+        sp.userData.x -= sp.userData.v * flow * dt; if (sp.userData.x < -500) sp.userData.x += 1000;
+        var yy = sp.userData.y - yoff; yy = ((yy + WRAP / 2) % WRAP + WRAP) % WRAP - WRAP / 2;
+        sp.position.set(sp.userData.x, yy, sp.userData.z);
+        sp.material.color.copy(tmpC);
+      });
+      var arr = streaks.geometry.attributes.position.array;
+      for (var q = 0; q < arr.length; q += 6) { arr[q] -= dt * 30; arr[q + 3] -= dt * 30; if (arr[q] < -95) { arr[q] += 190; arr[q + 3] += 190; } }
+      streaks.geometry.attributes.position.needsUpdate = true;
+      streaks.material.opacity = 0.3 * cur.wind * lit;
+      props.forEach(function (pr) { pr.blade.rotation.x += dt * 16 * cur.spin; pr.disc.material.opacity = 0.35 * cur.spin; });
+      lamps.forEach(function (lp) { lp.material.opacity = 0.9 * night; });
+      cellGlow.material.opacity = 0.5 * night;
+      /* camera eases toward the shot */
+      camPos.lerp(wantPos, a); camLook.lerp(wantLook, a);
+      v.camera.position.copy(camPos).add(shipG.position);
+      v.camera.lookAt(tmpV.copy(camLook).add(shipG.position));
+      v.render(scene);
+    }
+    place(0);
+    ticker(v, frame);
+    return {
+      update: function (p) { if (Math.abs(p - progress) < 0.0005) return; progress = p; place(p); }
+    };
+  }
+
+  /* ============================================================
      boot
      ============================================================ */
 
@@ -1918,7 +2126,7 @@
       try { gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl'); } catch (e) { gl = null; }
       if (!gl) return null;
 
-      var out = { acts: false, descent: null, cutaway: false, compare: null, build: null, walk: null, learn: null, samples: null, stay: null };
+      var out = { acts: false, descent: null, cutaway: false, compare: null, build: null, walk: null, learn: null, samples: null, stay: null, chase: null };
       var a = document.getElementById('assemblyCanvas');
       var b = document.getElementById('journeyCanvas');
       var d = document.getElementById('descentCanvas');
@@ -1974,6 +2182,12 @@
         var cy2 = swapCanvas(yc);
         out.stay = stay3d(cy2, { day: document.getElementById('yDay'), pos: document.getElementById('yPos'), sun: document.getElementById('ySun'), lit: document.getElementById('yLit') });
         if (out.stay) yc.hidden = true; else cy2.parentNode.removeChild(cy2);
+      }
+      var hc = document.getElementById('chaseCanvas');
+      if (hc) {
+        var ch2 = swapCanvas(hc);
+        out.chase = chase3d(ch2, document.getElementById('chaseHud'));
+        if (out.chase) hc.hidden = true; else ch2.parentNode.removeChild(ch2);
       }
       var cmp = document.getElementById('compareCanvas');
       if (cmp) {
