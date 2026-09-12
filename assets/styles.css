@@ -909,6 +909,17 @@ input[type="range"]::-moz-range-thumb {
 
 /* the fleet, exploded */
 .fspecs { margin-top: 0.2rem; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.fspecs__toggle {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem; width: 100%;
+  background: none; border: 0; padding: 0.55rem 0; text-align: left; cursor: pointer; color: var(--aqua); font: inherit;
+  font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.fspecs__toggle i { font-style: normal; font-size: var(--step-0); color: var(--cream-dim); }
+.fspecs__toggle:focus-visible { outline: 1px solid var(--aqua); outline-offset: 3px; }
+.stage__card--ember .fspecs__toggle { color: var(--ember); }
+.stage__card:not(.stage__card--aqua):not(.stage__card--ember) .fspecs__toggle { color: var(--sulfur); }
+.fspecs__body { display: none; padding-bottom: 0.4rem; }
+.fspecs.is-open .fspecs__body { display: block; }
 .fspec--head span { color: var(--cream); }
 .fspec--head b { color: var(--sulfur); }
 .stage__card--aqua .fspec--head b { color: var(--aqua); }
@@ -946,7 +957,9 @@ input[type="range"]::-moz-range-thumb {
 .pitem__n span { font-family: var(--f-mono); font-size: var(--step--2); color: var(--cream-dim); }
 .stage__card .pitem__d { font-size: var(--step--1); color: var(--cream-dim); line-height: 1.5; }
 @media (max-width: 760px) {
-  #build .stage__step, #walk .stage__step, #samples .stage__step, #stay .stage__step { align-items: flex-start; padding-top: 5vh; }
+  #build .stage__step, #walk .stage__step, #samples .stage__step, #stay .stage__step, #act1 .stage__step { align-items: flex-start; padding-top: 4vh; }
+  #act1 .stage__step { min-height: 80svh; }
+  #act1 .stage__card { max-width: 100%; }
   .program .stage__step { align-items: flex-start; padding-top: 4vh; }
   .program .journey__hud { display: none; }
   .learn .stage__viz { height: 42svh; min-height: 0; z-index: 4; }

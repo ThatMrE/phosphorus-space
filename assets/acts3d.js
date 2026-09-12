@@ -267,7 +267,8 @@
     try {
       renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: !!o.alpha, powerPreference: 'high-performance' });
     } catch (e) { return null; }
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    /* phones get a 1:1 buffer; the fill rate matters more than the crispness there */
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1 : 1.5));
     renderer.outputEncoding = THREE.sRGBEncoding;
     if (o.alpha) renderer.setClearColor(0x000000, 0); else renderer.setClearColor(0x07060E, 1);
     var camera = new THREE.PerspectiveCamera(o.fov || 40, 1, o.near || 0.5, o.far || 60000);
@@ -320,7 +321,7 @@
     var v = makeView(canvas, { fov: 38, near: 1, far: 80000, watch: canvas.closest('.stage') });
     if (!v) return false;
     var THREE = v.THREE, scene = new THREE.Scene();
-    scene.add(starfield(THREE, 900, 30000, 91177));
+    scene.add(starfield(THREE, window.innerWidth < 760 ? 350 : 900, 30000, 91177));
     lights(THREE, scene, [0.8, 0.7, 1.0], 1.3);
 
     var earth = planet(THREE, {
@@ -487,7 +488,7 @@
 
     /* ---- shot A: leaving Earth ---- */
     var A = new THREE.Scene();
-    A.add(starfield(THREE, 900, 30000, 4471));
+    A.add(starfield(THREE, window.innerWidth < 760 ? 350 : 900, 30000, 4471));
     lights(THREE, A, [0.9, 0.5, 0.9], 1.3);
     var earthA = planet(THREE, { radius: 2600, map: earthTexture(THREE), clouds: cloudTexture(THREE), rim: 0x5FD0C4, rimOpacity: 0.32, rimScale: 1.04 });
     earthA.position.set(-2300, -2500, -1500);
@@ -541,7 +542,7 @@
 
     /* ---- shot C: arrival, split, and the aerobraking pass ---- */
     var C = new THREE.Scene();
-    C.add(starfield(THREE, 900, 30000, 6011));
+    C.add(starfield(THREE, window.innerWidth < 760 ? 350 : 900, 30000, 6011));
     lights(THREE, C, [-0.6, 0.9, 0.8], 0.95);
     var VR = 2600;
     var venusC = planet(THREE, {
