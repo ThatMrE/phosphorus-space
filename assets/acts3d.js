@@ -162,6 +162,18 @@
     });
   }
 
+  function marsTexture(THREE) {
+    return texture(THREE, 512, 256, function (lon, lat) {
+      var cx = 4 + 4 * Math.cos(lon), cy = 4 * Math.sin(lon) + lat * 3;
+      var n = fbm(cx * 1.6, cy * 1.6, 5);
+      var cap = Math.abs(lat) > 1.32 - 0.08 * vnoise(cx * 5, cy * 5);
+      if (cap) return [236, 230, 224];
+      var dark = clamp((n - 0.55) * 4, 0, 1);            /* the dark basalt plains */
+      var k = 0.86 + 0.28 * (n - 0.5);
+      return [lerp(200, 96, dark) * k, lerp(112, 58, dark) * k, lerp(64, 40, dark) * k];
+    });
+  }
+
   function glowTexture(THREE) {
     var c = document.createElement('canvas');
     c.width = c.height = 128;
@@ -443,7 +455,7 @@
       var capKey = label || (p < 0.16 ? 'launch' : 'done');
       if (caption && capKey !== lastLabel) {
         lastLabel = capKey;
-        caption.textContent = label || (p < 0.16 ? 'Starship — six flights to orbit' : 'Six pieces. One ship in orbit.');
+        caption.textContent = label || (p < 0.16 ? 'Starship — six flights to orbit' : 'Six pieces fully assembled. Hesperus is ready to fly.');
         caption.classList.toggle('is-final', !label && p >= 0.16);
       }
       v.render(scene);
@@ -566,7 +578,7 @@
       [0.33, 'Four months out', 'Sunlight gets stronger the whole way in.'],
       [0.66, 'Venus ahead',    'The atmosphere does the braking, not the engines.'],
       [0.74, 'Splitting up',   'Two stay with Hesperus. Two go in direct.'],
-      [0.80, 'Aerobraking',    'Skimming the upper air at 11 km/s. No propellant spent.'],
+      [0.80, 'Aerobraking',    '11.3 km/s in, 7.2 km/s out. No propellant spent.'],
       [0.93, 'Captured',       'Hesperus is in orbit. The airship is going in.']
     ];
 
@@ -655,6 +667,7 @@
       else live = shotC(seg(p, 0.66, 1));
       if (hud.day) {
         hud.day.firstChild.nodeValue = String(Math.round(p * 124));
+        if (hud.speed && PHOS.TRIP_SPEED) { var sp = PHOS.TRIP_SPEED(p); hud.speed.textContent = sp.v.toFixed(1); hud.frame.textContent = sp.frame; }
         var idx = 0;
         for (var i = 0; i < PHASES.length; i++) if (p >= PHASES[i][0]) idx = i;
         if (idx !== lastPhase) {
@@ -886,6 +899,179 @@
   }
 
   /* ============================================================
+     VENUS AGAINST MARS — two planets turning, one callout each
+     ============================================================ */
+
+  function compare3d(canvas) {
+    var v = makeView(canvas, { fov: 44, near: 1, far: 5000, watch: canvas.closest('.stage') });
+    if (!v) return null;
+    var THREE = v.THREE, scene = new THREE.Scene();
+    scene.add(starfield(THREE, 700, 3000, 3301));
+    scene.add(new THREE.HemisphereLight(0xF2E8D0, 0x0A0912, 0.3));
+    var sun = new THREE.DirectionalLight(0xFFF3D6, 1.3);
+    sun.position.set(-0.8, 0.5, 0.9);
+    scene.add(sun);
+    var host = canvas.parentNode;
+
+    var R = 30;
+    function world(kind) {
+      var g = new THREE.Group();
+      var isV = kind === 'venus';
+      var body = planet(THREE, isV
+        ? { radius: R, map: venusTexture(THREE), rim: 0xE8B33A, rimOpacity: 0.4, rimScale: 1.05 }
+        : { radius: R, map: marsTexture(THREE), rim: 0xFF7A45, rimOpacity: 0.16, rimScale: 1.025 });
+      g.add(body);
+      var mesh = body.children[0];
+      mesh.material.transparent = true;
+      var fx = {};
+      /* the 50 km deck / the whole thin atmosphere */
+      fx.cloud = new THREE.Mesh(new THREE.SphereGeometry(R * 1.045, 64, 48), new THREE.MeshBasicMaterial({ color: 0xF2E8D0, transparent: true, opacity: 0, depthWrite: false }));
+      fx.thin = new THREE.Mesh(new THREE.SphereGeometry(R * 1.02, 64, 48), new THREE.MeshBasicMaterial({ color: 0x5FD0C4, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+      /* an orbit ring */
+      fx.orbit = new THREE.Mesh(new THREE.TorusGeometry(R * 1.55, 0.35, 8, 96), new THREE.MeshBasicMaterial({ color: isV ? 0xE8B33A : 0xFF7A45, transparent: true, opacity: 0 }));
+      fx.orbit.rotation.x = 1.25;
+      /* the surface, under the clouds */
+      fx.lava = new THREE.Mesh(new THREE.SphereGeometry(R * 0.975, 64, 48), new THREE.MeshStandardMaterial({ color: 0x3A1208, emissive: 0xFF7A45, emissiveIntensity: 0, roughness: 0.9 }));
+      fx.lava.visible = false;
+      /* the polar cap, and a spot on the ground; both turn with the planet */
+      fx.pole = new THREE.Mesh(new THREE.SphereGeometry(R * 1.01, 48, 12, 0, Math.PI * 2, 0, 0.42), new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+      fx.ground = glow(THREE, isV ? 0xFF7A45 : 0x5FD0C4, 0.01);
+      fx.ground.position.set(0, R * 0.15, R * 0.99);
+      fx.sun = glow(THREE, 0xFFF3D6, 0.01);
+      fx.sun.position.set(-R * 0.62, R * 0.36, R * 0.72);
+      mesh.add(fx.pole); mesh.add(fx.ground);
+      g.add(fx.cloud); g.add(fx.thin); g.add(fx.orbit); g.add(fx.lava); g.add(fx.sun);
+      scene.add(g);
+      /* where each callout points, in the planet's frame; the ones on the body turn with it */
+      var anchors = {
+        orbit: { of: g, at: new THREE.Vector3(R * 1.55 * Math.cos(0.4), R * 1.55 * Math.sin(0.4) * Math.cos(1.25), -R * 1.55 * Math.sin(0.4) * Math.sin(1.25)) },
+        body:  { of: g, at: new THREE.Vector3(0, R * 1.02, 0) },
+        cloud: { of: g, at: new THREE.Vector3(-R * 0.5, R * 0.62, R * 0.72) },
+        thin:  { of: g, at: new THREE.Vector3(-R * 0.55, R * 0.6, R * 0.68) },
+        lava:  { of: g, at: new THREE.Vector3(0, R * 0.1, R * 0.97) },
+        ground: { of: mesh, at: new THREE.Vector3(0, R * 0.15, R * 0.99) },
+        pole:  { of: mesh, at: new THREE.Vector3(0, R * 1.02, 0) },
+        sun:   { of: g, at: new THREE.Vector3(-R * 0.62, R * 0.36, R * 0.72) }
+      };
+      return { group: g, body: mesh, fx: fx, anchors: anchors, isV: isV, kind: null, mix: 0, prev: null, prevMix: 0 };
+    }
+    var venus = world('venus'), mars = world('mars');
+
+    /* HTML callouts and names, laid over the canvas */
+    var overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    overlay.setAttribute('class', 'cmp__lines');
+    host.appendChild(overlay);
+    function callout(cls) {
+      var el = document.createElement('div');
+      el.className = 'cmp__call ' + cls;
+      host.appendChild(el);
+      var line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('stroke', cls.indexOf('--v') > 0 ? '#E8B33A' : '#FF7A45');
+      overlay.appendChild(line);
+      var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('r', '3.5'); dot.setAttribute('fill', cls.indexOf('--v') > 0 ? '#E8B33A' : '#FF7A45');
+      overlay.appendChild(dot);
+      return { el: el, line: line, dot: dot };
+    }
+    var callV = callout('cmp__call--v'), callM = callout('cmp__call--m');
+    var nameV = document.createElement('p'), nameM = document.createElement('p');
+    nameV.className = 'cmp__name'; nameV.textContent = 'Venus';
+    nameM.className = 'cmp__name'; nameM.textContent = 'Mars';
+    host.appendChild(nameV); host.appendChild(nameM);
+
+    var tmp = new THREE.Vector3();
+    function layout() {
+      var w = v.w(), h = v.h(), narrow = w < 760;
+      var halfH = 300 * Math.tan(Math.PI * 22 / 180), halfW = halfH * (w / h);
+      if (narrow) {
+        /* phones: the pair fills its own band at the top of the screen */
+        var s2 = Math.min(halfW / (R * 2.6), halfH / (R * 1.9));
+        venus.group.position.set(-R * 1.25 * s2, R * 0.1, 0); venus.group.scale.setScalar(s2);
+        mars.group.position.set(R * 1.25 * s2, R * 0.1, 0); mars.group.scale.setScalar(s2);
+        v.camera.position.set(0, 0, 300);
+        v.camera.lookAt(0, 0, 0);
+      } else {
+        /* the cards own the left 55% of the screen; Venus starts just right of them */
+        var shift = 0.15 * halfW + R * 1.2 + R * 1.05;
+        venus.group.position.set(-R * 1.2 + shift, 0, 0); venus.group.scale.setScalar(1);
+        mars.group.position.set(R * 1.2 + shift, 0, 0); mars.group.scale.setScalar(1);
+        v.camera.position.set(0, 4, 300);
+        v.camera.lookAt(0, 0, 0);
+      }
+    }
+
+    function project(of, at) {
+      of.updateMatrixWorld();
+      tmp.copy(at).applyMatrix4(of.matrixWorld).project(v.camera);
+      return [(tmp.x + 1) / 2 * v.w(), (1 - tmp.y) / 2 * v.h(), tmp.z < 1];
+    }
+    function place(call, w, kind, label) {
+      var a = w.anchors[kind];
+      if (!a) { call.el.classList.remove('is-on'); call.line.classList.remove('is-on'); call.dot.classList.remove('is-on'); return; }
+      var p = project(a.of, a.at);
+      var x = p[0], y = p[1];
+      /* the callout floats above and to the outside of its planet */
+      var lx = x + (w.isV ? -22 : 22) * (v.w() < 760 ? 1.8 : 1), ly = y - (v.w() < 760 ? 30 : 46);
+      var edge = v.w() < 760 ? 78 : 132;
+      lx = Math.max(edge, Math.min(v.w() - edge, lx));
+      call.el.textContent = label;
+      call.el.style.transform = 'translate(' + lx.toFixed(1) + 'px,' + ly.toFixed(1) + 'px) translate(-50%, -100%)';
+      call.line.setAttribute('x1', x); call.line.setAttribute('y1', y);
+      call.line.setAttribute('x2', lx); call.line.setAttribute('y2', ly);
+      call.dot.setAttribute('cx', x); call.dot.setAttribute('cy', y);
+      var on = !!label;
+      call.el.classList.toggle('is-on', on); call.line.classList.toggle('is-on', on); call.dot.classList.toggle('is-on', on);
+    }
+
+    function apply(w, kind, k) {
+      var fx = w.fx;
+      /* every effect eases toward 1 for the current kind and toward 0 otherwise */
+      fx.cloud.material.opacity = 0.28 * (kind === 'cloud' ? k : 0);
+      fx.thin.material.opacity = 0.22 * (kind === 'thin' ? k : 0);
+      fx.orbit.material.opacity = 0.85 * (kind === 'orbit' ? k : 0);
+      fx.pole.material.opacity = 0.55 * (kind === 'pole' ? k : 0);
+      var gk = kind === 'ground' ? k : 0;
+      fx.ground.scale.set(0.01 + R * 0.7 * gk, 0.01 + R * 0.7 * gk, 1);
+      var sk = kind === 'sun' ? k : 0;
+      fx.sun.scale.set(0.01 + R * 1.6 * sk, 0.01 + R * 1.6 * sk, 1);
+      var lk = kind === 'lava' ? k : 0;
+      fx.lava.visible = lk > 0.01;
+      fx.lava.material.emissiveIntensity = 0.9 * lk;
+      w.body.material.opacity = 1 - 0.75 * lk;
+      var bk = kind === 'body' ? k : 0;
+      var pulse = 1 + 0.05 * bk * (0.5 + 0.5 * Math.sin(performance.now() / 380));
+      w.body.scale.set(pulse, pulse, pulse);
+    }
+
+    var current = null, t0 = 0, spinV = 0, spinM = 0, last = 0;
+    function loop(now) {
+      requestAnimationFrame(loop);
+      if (!v.visible()) return;
+      var dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+      if (!REDUCED) { spinV -= dt * 0.08; spinM += dt * 0.22; }   /* Venus turns backward, slowly */
+      venus.body.rotation.y = spinV; mars.body.rotation.y = spinM;
+      var k = REDUCED ? 1 : Math.min(1, (now - t0) / 700);
+      k = 1 - Math.pow(1 - k, 3);
+      var kind = current ? current.call : null;
+      apply(venus, kind ? kind.v[0] : null, k);
+      apply(mars, kind ? kind.m[0] : null, k);
+      sun.intensity = 1.3 + 0.9 * ((kind && (kind.v[0] === 'sun')) ? k : 0);
+      v.render(scene);
+      place(callV, venus, kind ? kind.v[0] : null, kind ? kind.v[1] : '');
+      place(callM, mars, kind ? kind.m[0] : null, kind ? kind.m[1] : '');
+      var nv = project(venus.group, new THREE.Vector3(0, -R * 1.12, 0)), nm = project(mars.group, new THREE.Vector3(0, -R * 1.12, 0));
+      nameV.style.transform = 'translate(' + nv[0].toFixed(1) + 'px,' + nv[1].toFixed(1) + 'px) translate(-50%, 0)';
+      nameM.style.transform = 'translate(' + nm[0].toFixed(1) + 'px,' + nm[1].toFixed(1) + 'px) translate(-50%, 0)';
+    }
+    v.onResize = layout;
+    layout();
+    requestAnimationFrame(loop);
+    return {
+      setStep: function (i, row) { current = row; t0 = performance.now(); }
+    };
+  }
+
+  /* ============================================================
      boot
      ============================================================ */
 
@@ -908,7 +1094,7 @@
       try { gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl'); } catch (e) { gl = null; }
       if (!gl) return null;
 
-      var out = { acts: false, descent: null, cutaway: false };
+      var out = { acts: false, descent: null, cutaway: false, compare: null };
       var a = document.getElementById('assemblyCanvas');
       var b = document.getElementById('journeyCanvas');
       var d = document.getElementById('descentCanvas');
@@ -923,7 +1109,8 @@
       if (b) {
         var cb = swapCanvas(b);
         var okB = actJourney(cb, onTick, trackProgress, {
-          day: document.getElementById('jDay'), phase: document.getElementById('jPhase'), note: document.getElementById('jNote')
+          day: document.getElementById('jDay'), phase: document.getElementById('jPhase'), note: document.getElementById('jNote'),
+          speed: document.getElementById('jSpeed'), frame: document.getElementById('jFrame')
         });
         if (okB) b.hidden = true; else cb.parentNode.removeChild(cb);
         out.acts = out.acts && okB;
@@ -937,6 +1124,12 @@
         if (!out.descent) cd.parentNode.removeChild(cd);
       }
       if (s) out.cutaway = cutaway3d(s);
+      var cmp = document.getElementById('compareCanvas');
+      if (cmp) {
+        var cc = swapCanvas(cmp);
+        out.compare = compare3d(cc);
+        if (out.compare) cmp.hidden = true; else cc.parentNode.removeChild(cc);
+      }
       return out;
     }
   };

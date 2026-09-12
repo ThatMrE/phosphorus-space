@@ -50,20 +50,21 @@
   <div class="shell">
     <div class="sec-head reveal">
       <p class="eyebrow">Why Venus</p>
-      <h2>We wrote off a whole planet because we only looked at the floor.</h2>
+      <h2>Head in the clouds.</h2>
     </div>
 
     <div class="prose col reveal">
       <p>
-        In 1967 our probes came back with the number that ended the conversation:
-        the surface of Venus is 860&nbsp;°F under ninety-two atmospheres. So we turned
-        around and walked toward Mars, and we have been walking that way ever since.
+        Venus used to be the garden planet, a literal paradise.
       </p>
       <p>
-        That was the right reaction to a surface and the wrong reaction to a planet.
-        Venus has something Mars does not — <strong>altitude</strong>. Climb fifty
-        kilometers and you are above almost all of that crushing air. What is left is
-        the most Earth-like place in the solar system that is not Earth.
+        In 1967, our probes discovered the surface of Venus is 460&nbsp;°C and
+        92&nbsp;atm of pressure. So we gave up and started telling stories about Mars.
+      </p>
+      <p>
+        That was wrong. So focused on the ground, we didn&rsquo;t realize that we could
+        build a world in the clouds. Fifty kilometers up, you&rsquo;ve got the most
+        Earth-like place in the solar system outside of our home.
       </p>
       <blockquote class="pull">
         A spacecraft filled with normal air would have an effect similar to helium on
@@ -73,9 +74,19 @@
       
     </div>
 
-    <div class="ledger reveal" id="ledger" style="margin-top: clamp(2.5rem, 6vw, 4rem)"></div>
 
     
+  </div>
+</section>
+
+<!-- ============================ VENUS VS MARS ============================ -->
+<section class="stage compare" id="compare" data-rail="Venus vs Mars">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="compareCanvas" aria-label="Venus and Mars turning side by side, with the part of each planet the current number refers to called out"></canvas>
+      <p class="act__badge"><span>Venus</span> against Mars</p>
+    </div>
+    <div class="stage__steps" id="compareSteps"></div>
   </div>
 </section>
 
@@ -94,8 +105,7 @@
           <h3>Nothing gets built on the ground.</h3>
           <p>
             Six Starship flights carry the pieces up separately, and they lock together
-            in orbit. Nothing here is bigger than a 9-meter payload bay, and nothing
-            heavier than one launch.
+            in orbit.
           </p>
         </div>
       </div>
@@ -104,14 +114,9 @@
         <div class="stage__card stage__card--aqua">
           <h3>Hesperus is home for fifteen months.</h3>
           <p>
-            Four people live here on the way out and the way back. It never touches an
-            atmosphere except to slow down.
+            Four people live here on the way out and the way back.
           </p>
         </div>
-        <aside class="benefit">
-          <b>Venus is always the closest planet.</b>
-          38 million km at its nearest. Mars never gets closer than 55.
-        </aside>
       </div>
 
       <div class="stage__step">
@@ -119,22 +124,17 @@
           <h3>The cloud ship rides up folded.</h3>
           <p>
             A 129-meter hull — longer than a 747 — packs into about two and a half cubic
-            meters. The shell around it is sized by the crew cabin, not the ship.
+            meters.
           </p>
         </div>
-        <aside class="benefit">
-          <b>The habitat is the balloon.</b>
-          Breathable air floats on Venus the way helium floats here. Same volume, two jobs.
-        </aside>
       </div>
 
       <div class="stage__step">
         <div class="stage__card stage__card--ember">
-          <h3>The ride home is already waiting.</h3>
+          <h3>Vesper gets sent to Venus in 2038.</h3>
           <p>
-            Vesper gets sent to Venus in 2038 and checked out there — four years before
-            anybody boards anything. Nobody leaves Earth until the way back is parked
-            and working.
+            Nobody leaves Earth until it is safely parked in the orbit of Venus for the
+            ride home.
           </p>
         </div>
       </div>
@@ -155,6 +155,10 @@
           <span class="readout__v"><span id="jDay">0</span><small> / 124</small></span>
         </div>
         <div class="readout__row">
+          <span class="readout__k">Speed</span>
+          <span class="readout__v"><span id="jSpeed">7.7</span><small> km/s <span id="jFrame">vs Earth</span></small></span>
+        </div>
+        <div class="readout__row">
           <span class="readout__k">Where</span>
           <span class="readout__v readout__v--sm" id="jPhase">Leaving Earth</span>
         </div>
@@ -165,21 +169,19 @@
     <div class="stage__steps">
       <div class="stage__step">
         <div class="stage__card stage__card--aqua">
-          <h3>July 27, 2042. One burn.</h3>
+          <h3>July 27, 2042.</h3>
           <p>
-            3.5&nbsp;km/s out of low Earth orbit and the trip is committed. The window
-            stays open for five months; this is just the cheapest day inside it.
+            3.5&nbsp;km/s burn out of low Earth orbit. The window for launch stays open
+            for five months.
           </p>
         </div>
       </div>
 
       <div class="stage__step">
         <div class="stage__card">
-          <h3>Four months, not eight.</h3>
+          <h3>Four month trip.</h3>
           <p>
-            You get there before your body has really finished forgetting Earth. And
-            the sun gets brighter the whole way in, so power and heat both get easier
-            instead of harder.
+            Systems improving in efficiency the closer to the sun.
           </p>
         </div>
         <aside class="benefit">
@@ -190,26 +192,20 @@
 
       <div class="stage__step">
         <div class="stage__card">
-          <h3>Then the stack splits.</h3>
+          <h3>Four hours out.</h3>
           <p>
-            Four hours out, the airship lets go. Two crew stay with Hesperus, the ship
-            that takes everyone home. Two ride the airship in direct.
+            The stack splits. Two of the crew stay with Hesperus, two ride Phosphorus
+            down.
           </p>
         </div>
-        <aside class="benefit">
-          <b>Nobody is ever alone on a vehicle.</b>
-          The ride home stays crewed and maintained the entire month.
-        </aside>
       </div>
 
       <div class="stage__step">
         <div class="stage__card stage__card--ember">
-          <h3>Venus does the braking.</h3>
+          <h3>Air braking at 11.3&nbsp;km/s.</h3>
           <p>
-            Hesperus hits the top of the air at 11.3&nbsp;km/s and skims through it at
-            about 110&nbsp;km, wrapped in plasma for a few minutes. That one pass sheds
-            the speed an engine would have needed tons of propellant for, and it comes
-            out the other side in orbit.
+            Hesperus skims through the clouds at about 110&nbsp;km, wrapped in plasma.
+            That sheds speed, and it comes out the other side in orbit.
           </p>
         </div>
       </div>
@@ -313,7 +309,7 @@
 
       <div class="stage__step">
         <div class="stage__card stage__card--ember">
-          <h3>And the floor is the floor.</h3>
+          <h3>And the floor is made of lava.</h3>
           <p>
             860&nbsp;°F. Ninety-two atmospheres. The longest anything has ever lasted down
             here is 127 minutes. <strong>Venus gives you an atmosphere and refuses you a

@@ -130,18 +130,54 @@ PHOS.MARS_TRIPS = [
   { kind: 'Short stay',       depart: '2043-11-17', arrive: '2044-09-22', out: 310, stay: 335, back: 350, total: 995 }
 ];
 
+/* The Venus/Mars comparison. `vn`/`mn` are the numbers that count up on
+   scroll, dropped into `vt`/`mt`; rows without numbers fade in as text.
+   `call` names the part of each planet the callout points at:
+   orbit · body · cloud (the 50 km deck) · lava (the surface, under the
+   clouds) · thin (Mars' whole atmosphere) · ground · pole · sun. */
 PHOS.LEDGER = [
-  { metric: 'Round trip',            venus: '459 d',         mars: '990 d',        win: 'venus', note: 'Same solver, same years. Venus gets you home a year and a half sooner.' },
-  { metric: 'Gravity',               venus: '0.904 g',       mars: '0.379 g',      win: 'venus', note: 'Your bones stop noticing below about 0.4 g. Venus is barely partial at all.' },
-  { metric: 'Air overhead',          venus: '1,200 g/cm²',   mars: '21 g/cm²',     win: 'venus', note: 'More shielding at 50 km than you get at sea level on Earth.' },
-  { metric: 'Pressure',              venus: '1.05 atm',      mars: '0.006 atm',    win: 'venus', note: 'A Venus habitat is not a pressure vessel. A Mars habitat always is.' },
-  { metric: 'Temperature',           venus: '80 – 167 °F',   mars: '−81 °F',       win: 'venus', note: 'Hot, but hot in the range an air conditioner handles. Pick your altitude, pick your climate.' },
-  { metric: 'Sunlight',              venus: '2,601 W/m²',    mars: '586 W/m²',     win: 'venus', note: 'Almost twice what Earth gets. Mars gets less than half.' },
-  { metric: 'Closest approach',      venus: '38 M km',       mars: '55 M km',      win: 'venus', note: 'Venus is, and has always been, the nearest planet.' },
-  { metric: 'Launch windows',        venus: 'every 584 d',   mars: 'every 780 d',  win: 'venus', note: 'More chances to go. More chances to come home early.' },
-  { metric: 'Solid ground',          venus: 'none',          mars: 'yes',          win: 'mars',  note: 'The real cost. Venus is a sky you visit, not ground you stand on.' },
-  { metric: 'Re-entry speed home',   venus: '14.1 km/s',     mars: '~11.5 km/s',   win: 'mars',  note: 'The hardest number here. Nobody has ever come home this fast.' },
-  { metric: 'Water',                 venus: 'in the acid',   mars: 'buried ice',   win: 'mars',  note: 'On Venus you cook water out of sulfuric acid. On Mars you dig.' }
+  { metric: 'Round trip',          venus: '459 d',         mars: '990 d',        win: 'venus',
+    vt: '{0} d', vn: [459], mt: '{0} d', mn: [990],
+    note: 'Same solver, same years. Venus gets you home a year and a half sooner.',
+    call: { v: ['orbit', 'a closer orbit, a shorter trip'], m: ['orbit', 'farther out, and a longer wait to come home'] } },
+  { metric: 'Gravity',             venus: '0.904 g',       mars: '0.379 g',      win: 'venus',
+    vt: '{0} g', vn: [0.904], vd: 3, mt: '{0} g', mn: [0.379], md: 3,
+    note: 'Your bones stop noticing below about 0.4 g. Venus is barely partial at all.',
+    call: { v: ['body', '0.815 Earth masses, 0.95 Earth radii'], m: ['body', '0.107 Earth masses, 0.53 Earth radii'] } },
+  { metric: 'Air overhead',        venus: '1,200 g/cm²',   mars: '21 g/cm²',     win: 'venus',
+    vt: '{0} g/cm²', vn: [1200], mt: '{0} g/cm²', mn: [21],
+    note: 'More shielding at 50 km than you get at sea level on Earth.',
+    call: { v: ['cloud', 'the cloud deck, 50 km up, under a full atmosphere of air'], m: ['thin', 'the whole atmosphere, edge on'] } },
+  { metric: 'Pressure',            venus: '1.05 atm',      mars: '0.006 atm',    win: 'venus',
+    vt: '{0} atm', vn: [1.05], vd: 2, mt: '{0} atm', mn: [0.006], md: 3,
+    note: 'A Venus habitat is not a pressure vessel. A Mars habitat always is.',
+    call: { v: ['cloud', 'one atmosphere in the cloud deck'], m: ['thin', 'six thousandths of an atmosphere'] } },
+  { metric: 'Temperature',         venus: '80 – 167 °F',   mars: '−81 °F',       win: 'venus',
+    vt: '{0} – {1} °F', vn: [80, 167], mt: '−{0} °F', mn: [81],
+    note: 'Hot, but hot in the range an air conditioner handles. Pick your altitude, pick your climate.',
+    call: { v: ['cloud', 'the cloud deck: 80 °F at the top, 167 at the bottom'], m: ['ground', 'the surface, −81 °F on an average day'] } },
+  { metric: 'Sunlight',            venus: '2,601 W/m²',    mars: '586 W/m²',     win: 'venus',
+    vt: '{0} W/m²', vn: [2601], mt: '{0} W/m²', mn: [586],
+    note: 'Almost twice what Earth gets. Mars gets less than half.',
+    call: { v: ['sun', 'the day side, twice as bright as noon on Earth'], m: ['sun', 'the day side, less than half of ours'] } },
+  { metric: 'Closest approach',    venus: '38 M km',       mars: '55 M km',      win: 'venus',
+    vt: '{0} M km', vn: [38], mt: '{0} M km', mn: [55],
+    note: 'Venus is, and has always been, the nearest planet.',
+    call: { v: ['orbit', '38 million km from Earth at closest'], m: ['orbit', '55 million km at closest'] } },
+  { metric: 'Launch windows',      venus: 'every 584 d',   mars: 'every 780 d',  win: 'venus',
+    vt: 'every {0} d', vn: [584], mt: 'every {0} d', mn: [780],
+    note: 'More chances to go. More chances to come home early.',
+    call: { v: ['orbit', 'Earth laps it every 584 days'], m: ['orbit', 'every 780 days'] } },
+  { metric: 'Solid ground',        venus: 'none',          mars: 'yes',          win: 'mars',
+    note: 'The real cost. Venus is a sky you visit, not ground you stand on.',
+    call: { v: ['lava', 'the surface: 860 °F, 92 atmospheres, never'], m: ['ground', 'the surface: cold, dry, and you can stand on it'] } },
+  { metric: 'Re-entry speed home', venus: '14.1 km/s',     mars: '~11.5 km/s',   win: 'mars',
+    vt: '{0} km/s', vn: [14.1], vd: 1, mt: '~{0} km/s', mn: [11.5], md: 1,
+    note: 'The hardest number here. Nobody has ever come home this fast.',
+    call: { v: ['orbit', 'the fast way home hits Earth at 14.1 km/s'], m: ['orbit', 'home at about 11.5 km/s'] } },
+  { metric: 'Water',               venus: 'in the acid',   mars: 'buried ice',   win: 'mars',
+    note: 'On Venus you cook water out of sulfuric acid. On Mars you dig.',
+    call: { v: ['cloud', 'sulfuric acid droplets — cook the water out'], m: ['pole', 'buried ice, and the polar caps'] } }
 ];
 
 /* ---- Program --------------------------------------------- */
