@@ -667,6 +667,7 @@
       else live = shotC(seg(p, 0.66, 1));
       if (hud.day) {
         hud.day.firstChild.nodeValue = String(Math.round(p * 124));
+        if (hud.speed && PHOS.TRIP_SPEED) { var sp = PHOS.TRIP_SPEED(p); hud.speed.textContent = sp.v.toFixed(1); hud.frame.textContent = sp.frame; }
         var idx = 0;
         for (var i = 0; i < PHASES.length; i++) if (p >= PHASES[i][0]) idx = i;
         if (idx !== lastPhase) {
@@ -1108,7 +1109,8 @@
       if (b) {
         var cb = swapCanvas(b);
         var okB = actJourney(cb, onTick, trackProgress, {
-          day: document.getElementById('jDay'), phase: document.getElementById('jPhase'), note: document.getElementById('jNote')
+          day: document.getElementById('jDay'), phase: document.getElementById('jPhase'), note: document.getElementById('jNote'),
+          speed: document.getElementById('jSpeed'), frame: document.getElementById('jFrame')
         });
         if (okB) b.hidden = true; else cb.parentNode.removeChild(cb);
         out.acts = out.acts && okB;
