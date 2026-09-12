@@ -768,46 +768,9 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ============================================================
-   THE LAP
+   HOW IT FLOATS
    ============================================================ */
 
-.lap { border: 1px solid var(--line); background: var(--void-2); padding: clamp(1.2rem, 3.5vw, 2rem); }
-.lap__head {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem;
-}
-
-#lapSvg { width: 100%; overflow-x: auto; position: relative; }
-#lapSvg svg { min-width: 760px; }
-@media (max-width: 800px) { .lap__swipe { display: block; } }
-.lap__swipe { display: none; margin: 0.4rem 0 0; font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream-faint); }
-
-.lap__out {
-  display: grid; gap: 1px; background: var(--line-soft);
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  margin-top: 1.4rem;
-}
-.lap__cell { background: var(--void); padding: 0.8rem 0.9rem 0.9rem; display: flex; flex-direction: column; gap: 0.25rem; min-height: 4.6rem; }
-.lap__cell dt { font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.13em; text-transform: uppercase; color: var(--cream-dim); }
-.lap__cell dd {
-  margin: auto 0 0; font-family: var(--f-mono); font-variant-numeric: tabular-nums;
-  font-size: var(--step-1); color: var(--cream);
-}
-.lap__cell dd span { font-size: 0.55em; color: var(--cream-dim); margin-left: 0.3em; }
-
-/* why not park under the sun: power to hold still vs. power from the array, by latitude */
-.sunkeep { margin-top: clamp(2rem, 5vw, 3rem); border: 1px solid var(--line); background: var(--void-2); padding: clamp(1.2rem, 3.5vw, 2rem); }
-.sunkeep__head { display: flex; flex-wrap: wrap; gap: 0.6rem 3rem; align-items: baseline; margin-bottom: 1.2rem; }
-.sunkeep__lede { margin: 0; max-width: 56ch; color: var(--cream-dim); font-size: var(--step--1); }
-.sunkeep__lede code { font-family: var(--f-mono); font-size: 0.9em; color: var(--cream-2); }
-.decide { display: grid; gap: 1.2rem 2.5rem; grid-template-columns: 1fr; align-items: start; }
-@media (min-width: 760px) { .decide { grid-template-columns: minmax(0, 13rem) minmax(0, 1fr); } }
-.decide__big { margin: 0; font-family: var(--f-display); font-size: clamp(2.6rem, 1.6rem + 3.6vw, 4.6rem); font-weight: 700; letter-spacing: -0.05em; line-height: 0.95; color: var(--sulfur); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.decide__rows { display: flex; flex-direction: column; gap: 1px; background: var(--line-soft); }
-.decide__row { background: var(--void); padding: 0.8rem 1rem 0.9rem; display: flex; flex-direction: column; gap: 0.25rem; }
-.decide__row b { font-family: var(--f-sans); font-weight: 600; color: var(--cream); font-size: var(--step-0); }
-.decide__row span { font-size: var(--step--1); color: var(--cream-dim); line-height: 1.55; max-width: 66ch; }
-.lap__fixed { margin: 0; font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.08em; text-transform: uppercase; color: var(--cream-dim); }
 .floats { display: grid; gap: 1px; background: var(--line-soft); grid-template-columns: 1fr; }
 @media (min-width: 700px) { .floats { grid-template-columns: 1fr 1fr; } }
 .floats__col { background: var(--void); display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line-soft); }
@@ -822,7 +785,6 @@ input[type="range"]::-moz-range-thumb {
 .floats__cell--hero dd { color: var(--sulfur); font-size: var(--step-2); }
 @media (max-width: 760px) {
   .sk { grid-template-columns: 2.8rem 1fr 6.4rem; gap: 0.6rem; }
-  .lap__btn { padding: 0.45rem 0.6rem; }
 }
 
 /* ============================================================
@@ -909,6 +871,17 @@ input[type="range"]::-moz-range-thumb {
 
 /* the fleet, exploded */
 .fspecs { margin-top: 0.2rem; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.fspecs__toggle {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem; width: 100%;
+  background: none; border: 0; padding: 0.55rem 0; text-align: left; cursor: pointer; color: var(--aqua); font: inherit;
+  font-family: var(--f-mono); font-size: var(--step--2); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.fspecs__toggle i { font-style: normal; font-size: var(--step-0); color: var(--cream-dim); }
+.fspecs__toggle:focus-visible { outline: 1px solid var(--aqua); outline-offset: 3px; }
+.stage__card--ember .fspecs__toggle { color: var(--ember); }
+.stage__card:not(.stage__card--aqua):not(.stage__card--ember) .fspecs__toggle { color: var(--sulfur); }
+.fspecs__body { display: none; padding-bottom: 0.4rem; }
+.fspecs.is-open .fspecs__body { display: block; }
 .fspec--head span { color: var(--cream); }
 .fspec--head b { color: var(--sulfur); }
 .stage__card--aqua .fspec--head b { color: var(--aqua); }
@@ -933,6 +906,16 @@ input[type="range"]::-moz-range-thumb {
 .stay .stage__card { max-width: 30rem; }
 .stay__hud { min-width: 13rem; }
 
+/* chasing the sun: the ship close up, one day and one night */
+.chase .stage__viz { background: var(--void); }
+#chaseCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.chase .stage__step { min-height: 80svh; }
+.chase .stage__card { max-width: 30rem; }
+.chase .act__badge, .chase .act__badge span { color: var(--void); }
+.chase .act__badge { opacity: 0.7; transition: color .6s ease; }
+.chase.is-night .act__badge, .chase.is-night .act__badge span { color: var(--cream); }
+.chase__hud { min-width: 13rem; }
+
 /* the program: a timeline that runs as you scroll */
 .program .stage__viz { background: var(--void); }
 #programCanvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
@@ -946,7 +929,9 @@ input[type="range"]::-moz-range-thumb {
 .pitem__n span { font-family: var(--f-mono); font-size: var(--step--2); color: var(--cream-dim); }
 .stage__card .pitem__d { font-size: var(--step--1); color: var(--cream-dim); line-height: 1.5; }
 @media (max-width: 760px) {
-  #build .stage__step, #walk .stage__step, #samples .stage__step, #stay .stage__step { align-items: flex-start; padding-top: 5vh; }
+  #build .stage__step, #walk .stage__step, #samples .stage__step, #stay .stage__step, #chase .stage__step, #act1 .stage__step { align-items: flex-start; padding-top: 4vh; }
+  #act1 .stage__step { min-height: 80svh; }
+  #act1 .stage__card { max-width: 100%; }
   .program .stage__step { align-items: flex-start; padding-top: 4vh; }
   .program .journey__hud { display: none; }
   .learn .stage__viz { height: 42svh; min-height: 0; z-index: 4; }

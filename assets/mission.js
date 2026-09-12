@@ -21,11 +21,6 @@
     if (text != null) n.textContent = text;
     return n;
   }
-  function svg(tag, attrs) {
-    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
-    for (var k in attrs) if (attrs[k] != null) n.setAttribute(k, attrs[k]);
-    return n;
-  }
   function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
   function lerp(a, b, t) { return a + (b - a) * t; }
   function seg(t, a, b) { return clamp((t - a) / (b - a || 1), 0, 1); }
@@ -595,17 +590,28 @@
     Array.prototype.forEach.call(document.querySelectorAll('[data-fleet]'), function (box) {
       var name = box.getAttribute('data-fleet');
       var sheet = (D.FLEET || []).filter(function (f) { return f.name === name; })[0];
-      var head = el('p', 'fspec fspec--head');
-      head.appendChild(el('span', null, name + (sheet ? ' · ' + sheet.role : '')));
-      head.appendChild(el('b', null, sheet ? sheet.mass + ' · crew ' + sheet.crew : ''));
-      box.appendChild(head);
-      if (sheet) sheet.specs.forEach(function (row) {
-        var r = el('p', 'fspec'); r.appendChild(el('span', null, row[0])); r.appendChild(el('b', null, row[1])); box.appendChild(r);
-      });
-      else if (HUMAN[name]) box.appendChild(el('p', 'fspec__line', HUMAN[name]));
+      var btn = el('button', 'fspecs__toggle');
+      btn.type = 'button'; btn.setAttribute('aria-expanded', 'false');
+      btn.appendChild(el('span', null, name + (sheet ? ' · ' + sheet.mass + ' · crew ' + sheet.crew : '')));
+      btn.appendChild(el('i', null, '+'));
+      box.appendChild(btn);
+      var body = el('div', 'fspecs__body');
+      if (sheet) {
+        body.appendChild(el('p', 'fspec__line', sheet.role + '. ' + sheet.line));
+        sheet.specs.forEach(function (row) {
+          var r = el('p', 'fspec'); r.appendChild(el('span', null, row[0])); r.appendChild(el('b', null, row[1])); body.appendChild(r);
+        });
+      } else if (HUMAN[name]) body.appendChild(el('p', 'fspec__line', HUMAN[name]));
       var dl = el('a', 'fdl', 'Download the model (.obj)');
       dl.href = 'models/' + KEYS[name] + '.obj'; dl.setAttribute('download', KEYS[name] + '.obj');
-      box.appendChild(dl);
+      body.appendChild(dl);
+      box.appendChild(body);
+      btn.addEventListener('click', function () {
+        var on = !box.classList.contains('is-open');
+        box.classList.toggle('is-open', on);
+        btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+        btn.lastChild.textContent = on ? '−' : '+';
+      });
     });
   }
 
@@ -919,117 +925,10 @@
     stageSteps('walk', D.WALK, function (w) { return stepCard(w); }, viz);
   }
 
-  /* ---------- chasing the sun: one day and one night ------ */
+  /* ---------- chasing the sun, close up ------------------- */
 
-  function sunChart() {
-    var host = $('#lapSvg');
-    if (!host || !D.SUNCHASE) return;
-    var out = {
-      day: $('#lDay'), night: $('#lNight'), sun: $('#lSun'),
-      prop: $('#lProp'), store: $('#lStore'), wind: $('#lWind')
-    };
-    var chase = (D.ALOFT && D.ALOFT.chase) || { dayKm: 51, airspeedMs: 10, nightKm: 55 };
-    var km = chase.dayKm, air = chase.airspeedMs;
-
-    var W = 920, H = 318, PAD = { l: 58, r: 58, t: 26, b: 26 };
-    var IW = W - PAD.l - PAD.r;
-    var s = svg('svg', {
-      viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
-      preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'One day and one night aboard the airship: the altitude flown, the battery state, and the length of daylight and darkness'
-    });
-    host.appendChild(s);
-
-    function txt(x, y, t, o) {
-      o = o || {};
-      var n = svg('text', {
-        x: x, y: y, 'text-anchor': o.a || 'middle',
-        'font-family': o.f || '"IBM Plex Mono", monospace',
-        'font-size': o.s || 17, fill: o.c || '#8B8373',
-        'font-weight': o.w || 400, 'letter-spacing': o.ls || 0
-      });
-      n.textContent = t;
-      s.appendChild(n);
-      return n;
-    }
-
-    function draw(row) {
-      while (s.firstChild) s.removeChild(s.firstChild);
-      var hours = row.dayH + row.nightH;
-      var dayW = IW * row.dayH / hours;
-      var sunset = PAD.l + dayW;
-      var end = PAD.l + IW;
-
-      /* rows, top to bottom: altitude flown, battery state, day/night bar, hour axis */
-      var altHi = PAD.t + 6, altLo = PAD.t + 34;
-      var topY = PAD.t + 76, botY = PAD.t + 124;
-      var labelY = PAD.t + 150;
-      var barY = PAD.t + 158, barH = 44;
-      var axisY = barY + barH + 16;
-
-      /* altitude: low and upwind by day, climb at sunset, coast high through the night */
-      var altD = 'M' + PAD.l + ' ' + altLo + ' L' + sunset + ' ' + altLo + ' L' + (sunset + 14) + ' ' + altHi +
-                 ' L' + (end - 14) + ' ' + altHi + ' L' + end + ' ' + altLo;
-      s.appendChild(svg('path', { d: altD, fill: 'none', stroke: '#8B8373', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
-      txt(PAD.l - 10, altLo + 5, row.km + ' km', { a: 'end', s: 14, c: '#5A5648' });
-      txt(end + 10, altHi + 5, chase.nightKm + ' km', { a: 'start', s: 14, c: '#5A5648' });
-      txt(PAD.l + dayW / 2, altLo - 10, row.u ? 'props on · ' + row.u + ' m/s upwind · ' + row.propKw + ' kW' : 'props off · drifting', { s: 14, c: '#8B8373' });
-      txt(sunset + (IW - dayW) / 2, altHi - 10, 'coasting', { s: 14, c: '#8B8373' });
-
-      /* day / night bar, widths in proportion to hours */
-      var dayG = svg('linearGradient', { id: 'dayg', x1: 0, y1: 0, x2: 1, y2: 0 });
-      dayG.appendChild(svg('stop', { offset: '0%', 'stop-color': '#5A4A2E' }));
-      dayG.appendChild(svg('stop', { offset: '50%', 'stop-color': '#E8B33A' }));
-      dayG.appendChild(svg('stop', { offset: '100%', 'stop-color': '#5A4A2E' }));
-      var defs = svg('defs'); defs.appendChild(dayG); s.appendChild(defs);
-      s.appendChild(svg('rect', { x: PAD.l, y: barY, width: dayW, height: barH, fill: 'url(#dayg)' }));
-      s.appendChild(svg('rect', { x: sunset, y: barY, width: IW - dayW, height: barH, fill: '#141223', stroke: '#2A2740', 'stroke-width': 1 }));
-      txt(PAD.l + dayW / 2, barY + 27, 'DAYLIGHT  ' + Math.round(row.dayH) + ' h', { c: '#1A1408', s: 18, w: 500, ls: 1.4 });
-      txt(sunset + (IW - dayW) / 2, barY + 27, 'NIGHT  ' + Math.round(row.nightH) + ' h', { c: '#F2E8D0', s: 18, w: 500, ls: 1.4 });
-
-      /* hour axis */
-      s.appendChild(svg('line', { x1: PAD.l, y1: axisY, x2: end, y2: axisY, stroke: '#2A2740', 'stroke-width': 1 }));
-      for (var t = 0; t <= hours + 0.01; t += 24) {
-        var x = PAD.l + (t / hours) * IW;
-        s.appendChild(svg('line', { x1: x, y1: axisY, x2: x, y2: axisY + 6, stroke: '#2A2740', 'stroke-width': 1 }));
-        txt(x, axisY + 24, String(Math.round(t)), { s: 14, c: '#5A5648' });
-      }
-      txt(PAD.l + IW / 2, axisY + 44, 'hours since local sunrise', { s: 14, c: '#5A5648' });
-
-      /* battery: charging through the day, full at sunset, drawn down through the night */
-      s.appendChild(svg('line', { x1: PAD.l, y1: topY, x2: end, y2: topY, stroke: '#1F1D33', 'stroke-width': 1 }));
-      s.appendChild(svg('line', { x1: PAD.l, y1: botY, x2: end, y2: botY, stroke: '#1F1D33', 'stroke-width': 1 }));
-      txt(PAD.l - 10, topY + 5, 'full', { a: 'end', s: 14, c: '#5A5648' });
-      txt(PAD.l - 10, botY + 5, 'empty', { a: 'end', s: 14, c: '#5A5648' });
-      var fullAt = PAD.l + dayW * 0.6; /* topped up well before sunset; the surplus runs the props */
-      var d = 'M' + PAD.l + ' ' + botY + ' L' + fullAt + ' ' + topY + ' L' + sunset + ' ' + topY + ' L' + end + ' ' + botY;
-      s.appendChild(svg('path', { d: d, fill: 'none', stroke: '#5FD0C4', 'stroke-width': 3, 'stroke-linejoin': 'round' }));
-      s.appendChild(svg('circle', { cx: sunset, cy: topY, r: 4.5, fill: '#5FD0C4' }));
-      txt(sunset, topY - 12, Math.round(row.storageKwh) + ' kWh stored', { c: '#5FD0C4', s: 16, a: sunset > end - 120 ? 'end' : 'middle' });
-
-      /* sunrise / sunset markers */
-      [PAD.l, sunset, end].forEach(function (x) {
-        s.appendChild(svg('line', { x1: x, y1: labelY + 4, x2: x, y2: barY + barH + 6, stroke: '#5A5648', 'stroke-width': 1, 'stroke-dasharray': '3 3' }));
-      });
-      txt(PAD.l, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'start' });
-      txt(sunset, labelY, 'sunset', { s: 14, c: '#5A5648' });
-      txt(end, labelY, 'sunrise', { s: 14, c: '#5A5648', a: 'end' });
-    }
-
-    function select() {
-      var row = null;
-      D.SUNCHASE.forEach(function (r) { if (r.km === km && r.u === air) row = r; });
-      if (!row) return;
-      draw(row);
-      out.day.textContent = Math.round(row.dayH);
-      out.night.textContent = Math.round(row.nightH);
-      out.sun.textContent = row.sunPct;
-      out.prop.textContent = row.propKw;
-      out.store.textContent = fmt(row.storageKwh, 0);
-      out.wind.textContent = row.wind;
-    }
-
-    select();
+  function buildChase(viz) {
+    stageSteps('chase', D.CHASE, function (c) { return stepCard(c); }, viz);
   }
 
   /* ---------- why not park under the sun: by latitude ----- */
@@ -1080,7 +979,6 @@
     if (sky) starfield(sky);
     buildHero();
     fleetSpecs();
-    sunChart();
     buildRisks();
     buildCostVs();
     buildSources();
@@ -1092,6 +990,7 @@
     buildConstruction(three && three.build);
     buildWalk(three && three.walk);
     buildStay(three && three.stay);
+    buildChase(three && three.chase);
     programStage();
     buildScience(three && three.learn);
     buildSampling(three && three.samples);

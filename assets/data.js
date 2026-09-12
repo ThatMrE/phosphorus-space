@@ -584,6 +584,53 @@ PHOS.SUNCHASE = [
   { km: 51, u: 10, wind: 67, dayH:  87.6, nightH: 53.9, lapDays: 5.90, sunPct: 62, propKw:  73, storageKwh: 431, lift: 61.8 },
 ];
 
+/* ---- Chasing the sun, close up ---------------------------
+   One day and one night at 10° N, then why ten. `hours` is the span of
+   the lap each card covers, measured from local sunrise; the latitude
+   cards hold at mid-morning. Numbers from scripts/sunchase.py and
+   scripts/latitude.py. */
+PHOS.CHASE = [
+  { hours: [0, 4],      step: 'Sunrise',      where: '51 km · 10° N',        head: 'Nose into the wind.',
+    body: 'Light comes back through the cloud and the array wakes up. The ship settles at 51 km, where the air is thick enough to carry it and the wind is a little slower, and turns its bow into it.',
+    num: '51 km', numlab: 'day float' },
+  { hours: [4, 14],     step: 'Props on',     where: '10 m/s upwind',        head: 'Ten meters a second is all it takes.',
+    body: 'The array makes more than the cabin needs, so the surplus goes to the props. Drag goes as the cube of speed: 10 m/s costs about 70 kW, and 15 would cost 250. Ten is what the spare power buys.',
+    num: '73 kW', numlab: 'to the props by day' },
+  { hours: [14, 40],    step: 'Mid-morning',  where: 'wind 67 m/s',          head: 'Losing the race slowly.',
+    body: 'The air still carries the ship west at 57 m/s over the ground. But the sun moves over Venus so slowly that ten meters a second against the wind stretches the daylight to 88 hours.',
+    num: '88 h', numlab: 'of daylight' },
+  { hours: [40, 80],    step: 'Afternoon',    where: 'storage full',         head: 'Full by the middle of the day.',
+    body: 'The batteries and fuel-cell tanks are topped up well before sunset; after that every spare watt goes to speed. Storage is sized for the night that follows, not the day.',
+    num: '431 kWh', numlab: 'stored by sunset' },
+  { hours: [80, 93],    step: 'Sunset',       where: 'props off · climb',    head: 'Props off. Climb.',
+    body: 'At the terminator the props stop and the ship rises to 55 km, where the air is fastest and coolest. The array goes dark and the fuel cells pick up the 8 kW the cabin needs.',
+    num: '55 km', numlab: 'night float' },
+  { hours: [93, 134],   step: 'Night',        where: '54 hours',             head: 'Coast across the dark.',
+    body: 'At 55 km the wind runs 95 m/s and the ship goes with it. The night is always the same 54 hours whatever the day was, and that is what sizes the fuel cells.',
+    num: '54 h', numlab: 'of darkness' },
+  { hours: [134, 141.5], step: 'Sunrise',     where: 'once around',          head: 'Once around, in under six days.',
+    body: 'Down to 51 km, props on, again. One lap of the planet takes 5.9 days and 62% of it is spent in the sun. The pattern repeats five times over the thirty-day stay.',
+    num: '62%', numlab: 'of the stay in the sun' },
+  { hours: null,        step: 'The latitude', where: 'decided, not tuned',   head: 'Ten degrees north.',
+    body: 'The ship goes in at 10° N and stays within five degrees of it. Every alternative was run through the sun-chase and latitude models. The next five cards are what they say.',
+    num: '10° N', numlab: 'insertion latitude' },
+  { hours: null,        step: 'Daylight',     where: '0° to 75°',            head: 'Same daylight everywhere it matters.',
+    body: 'From the equator to 75° the biggest share of the stay the ship can spend in the sun is 59%, set by wind against airspeed, not by latitude.',
+    num: '59%', numlab: 'the most any latitude gives' },
+  { hours: null,        step: 'Power',        where: 'under 20°',            head: 'Most margin under twenty degrees.',
+    body: 'Here the array makes 61 to 68 kW against 47 for cabin and propellers. At 40° it no longer closes at 10 m/s; past 78° it cannot run the cabin at all.',
+    num: '61–68 kW', numlab: 'from the array' },
+  { hours: null,        step: 'Wind',         where: 'the super-rotation',   head: 'Steady wind, and no parking anywhere.',
+    body: 'The super-rotation is flat to 50°. Above 75° the polar vortex wanders and the sun never clears the cloud. Holding the noon line would take 24 MW at the equator, and still 62 kW against 18 kW of sun at 85°.',
+    num: '24 MW', numlab: 'to hold still at the equator' },
+  { hours: null,        step: 'Drifting',     where: 'never an Earth day',   head: 'Drifting never makes an Earth day.',
+    body: 'Left to the wind, a lap is 5.6 days at the equator and 3.7 days at any latitude above 50°. A 24-hour lap exists only within two degrees of the pole, in permanent twilight.',
+    num: '5.6 d', numlab: 'drift lap at the equator' },
+  { hours: null,        step: 'Ten, not zero', where: '±5°',                 head: 'North of the equator, on purpose.',
+    body: 'Ten degrees keeps the option of steering five degrees either way for the isotope runs, and it is where the VEGA balloons flew in 1985.',
+    num: '±5°', numlab: 'of latitude steered' }
+];
+
 /* ============================================================
    WALKING ON SUNSHINE — a trip outside to look over the hull
    ============================================================ */

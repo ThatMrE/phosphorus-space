@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=165a6c14">
+<link rel="stylesheet" href="assets/styles.css?v=e09ed5d9">
 </head>
 <body>
 
@@ -432,50 +432,31 @@
     <div class="stage__steps" id="staySteps"></div>
   </div>
 </section>
-<section class="band">
-  <div class="shell">
-    <div class="lap reveal">
-      <div class="lap__head">
-        <p class="eyebrow eyebrow--aqua">One day and one night, chasing the sun at 10&deg;&nbsp;N</p>
-        <p class="lap__fixed">51&nbsp;km by day &middot; 10&nbsp;m/s upwind &middot; 55&nbsp;km at night</p>
-      </div>
-      <div id="lapSvg"></div>
-      <p class="lap__swipe">Swipe the chart sideways &rarr;</p>
-      <dl class="lap__out">
-        <div class="lap__cell"><dt>Daylight</dt><dd><span id="lDay">88</span><span>hours</span></dd></div>
-        <div class="lap__cell"><dt>Night</dt><dd><span id="lNight">54</span><span>hours</span></dd></div>
-        <div class="lap__cell"><dt>In the sun</dt><dd><span id="lSun">62</span><span>%</span></dd></div>
-        <div class="lap__cell"><dt>Props by day</dt><dd><span id="lProp">73</span><span>kW</span></dd></div>
-        <div class="lap__cell"><dt>Battery</dt><dd><span id="lStore">431</span><span>kWh</span></dd></div>
-        <div class="lap__cell"><dt>Wind</dt><dd><span id="lWind">67</span><span>m/s</span></dd></div>
-      </dl>
-      <p class="note" style="margin-top:1rem">
-        Drag goes as the cube of speed, so 10&nbsp;m/s costs about 70&nbsp;kW and 15 would cost 250.
-        The night is always the same 54 hours, coasted at 55&nbsp;km, and that is what sizes the fuel cells.
-      </p>
-    </div>
-
-    <div class="sunkeep reveal">
-      <div class="sunkeep__head">
-        <p class="eyebrow">The latitude</p>
-        <p class="sunkeep__lede">
-          Decided, not tuned. The ship goes in at ten degrees north and stays within five
-          degrees of it. Every alternative was run through <code>scripts/sunchase.py</code>
-          and <code>scripts/latitude.py</code>; this is what they say.
-        </p>
-      </div>
-      <div class="decide">
-        <p class="decide__big">10&deg;&nbsp;N</p>
-        <div class="decide__rows">
-          <div class="decide__row"><b>Same daylight everywhere it matters.</b><span>From the equator to 75&deg; the biggest share of the stay the ship can spend in the sun is 59%, set by wind against airspeed, not by latitude.</span></div>
-          <div class="decide__row"><b>Most margin under 20&deg;.</b><span>Here the array makes 61 to 68&nbsp;kW against 47 of cabin and propellers. At 40&deg; it no longer closes at 10&nbsp;m/s; past 78&deg; it cannot run the cabin at all.</span></div>
-          <div class="decide__row"><b>Steady wind.</b><span>The super-rotation is flat to 50&deg;. Above 75&deg; the polar vortex wanders, and the sun never clears the cloud.</span></div>
-          <div class="decide__row"><b>Parking is out anywhere.</b><span>Holding the noon line takes 24&nbsp;MW at the equator and still 62&nbsp;kW against 18&nbsp;kW of sun at 85&deg;.</span></div>
-          <div class="decide__row"><b>Drifting never makes an Earth day.</b><span>A drift lap is 5.6 days at the equator and 3.7 days at any latitude above 50&deg;. A 24-hour lap exists only within two degrees of the pole, in permanent twilight.</span></div>
-          <div class="decide__row"><b>Ten, not zero.</b><span>North of the equator keeps the option of steering five degrees either way for the isotope runs, and it is where the VEGA balloons flew in 1985.</span></div>
+<section class="stage chase" id="chase">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="chaseCanvas" aria-label="Phosphorus close up in the Venusian cloud: props on and nose into the wind through an 88-hour day, the climb to 55 km at sunset, the 54-hour night, and why the ship flies at ten degrees north"></canvas>
+      <p class="act__badge"><span>Chasing the sun</span> one day and one night</p>
+      <div class="journey__hud chase__hud" id="chaseHud" role="status" aria-live="polite" aria-atomic="true">
+        <div class="readout__row">
+          <span class="readout__k">Since sunrise</span>
+          <span class="readout__v">0<small> h</small></span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Altitude</span>
+          <span class="readout__v">51<small> km</small></span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Props</span>
+          <span class="readout__v readout__v--sm">10 m/s &middot; 73 kW</span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Stored</span>
+          <span class="readout__v">0<small> kWh</small></span>
         </div>
       </div>
     </div>
+    <div class="stage__steps" id="chaseSteps"></div>
   </div>
 </section>
 
@@ -669,12 +650,12 @@
 
 </div><!-- /page -->
 
-<script src="assets/data.js?v=89a5a679"></script>
+<script src="assets/data.js?v=c55e2f6b"></script>
 <script src="assets/trajectory.js?v=39dc470b"></script>
 <script src="assets/models.js?v=611cf507"></script>
 <script src="assets/acts.js?v=feb8cc3e"></script>
 <script src="assets/vendor/three.min.js?v=7a7802bf"></script>
-<script src="assets/acts3d.js?v=1d60af66"></script>
-<script src="assets/mission.js?v=6c9d0d9f"></script>
+<script src="assets/acts3d.js?v=acf57f32"></script>
+<script src="assets/mission.js?v=592de538"></script>
 </body>
 </html>

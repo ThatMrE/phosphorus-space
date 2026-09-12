@@ -138,11 +138,11 @@ index.html              the page
 assets/styles.css       design tokens and components
 assets/data.js          every displayed number, in one place
 assets/trajectory.js    generated — heliocentric geometry for the orbit plot
-assets/mission.js       scroll engine, canvas and SVG renderers
+assets/mission.js       scroll engine and canvas renderers
 assets/acts3d.js        the three acts in WebGL: Starship launches and orbital assembly,
                         departure, cruise and the aerobraking pass, entry and inflation,
-                        plus the ship skin to sky, the cloudwalk, the thirty-day
-                        stay, the science icons and the sample drop
+                        plus the ship skin to sky, the thirty-day stay, the sun chase
+                        close up, the cloudwalk, the science icons and the sample drop
 assets/acts.js          the same three acts drawn in 2D canvas — the fallback when WebGL is off
 assets/models.js        generated — OBJ text for the 3D viewer
 assets/vendor/          three.js r128 (MIT — license alongside)
@@ -157,9 +157,9 @@ assembling in orbit · **Act 02 — the trip**, one camera from leaving Earth th
 the computed transfer to the aerobraking pass at Venus · **Act 03 — going down**, the descent
 through the atmosphere to the floor (each vehicle's spec sheet and model download ride
 in the Act 01 cards) · the ship, skin to sky (laminate, cut, fold, inflate, fill, float) ·
-life up there and the thirty-day stay lap by lap · walking on sunshine · the
-crew · what we'd learn · the program and launch windows · the bill · what could go
-wrong · so.
+life up there and the thirty-day stay lap by lap · chasing the sun, one day and one
+night at 10° N · walking on sunshine · what we'd learn · where the samples come from ·
+the program and launch windows · the risks · so.
 
 ### The 3D models
 
