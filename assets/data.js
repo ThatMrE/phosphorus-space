@@ -270,18 +270,6 @@ PHOS.FLEET = [
   }
 ];
 
-/* ---- Entry, descent and inflation ------------------------ */
-PHOS.EDI = [
-  { t: 'E − 4 h',   alt: null, name: 'Split',           detail: 'The airship separates. Hesperus goes on to brake into orbit with two crew; the airship goes in direct with the other two.' },
-  { t: 'E + 0',     alt: 125,  name: 'Hit the air',     detail: '11.29 km/s, nose down ten degrees. The heat shield is now the only thing between the crew and plasma at 3,000 °F.' },
-  { t: 'E + 90 s',  alt: 82,   name: 'Peak heat',       detail: 'Around 18 kJ/cm² at the nose. Peak g-load follows seconds later.' },
-  { t: 'E + 3 min', alt: 74,   name: 'Chute',           detail: 'Supersonic parachute out. Five seconds later the heat shield drops away.' },
-  { t: 'E + 4 min', alt: 72,   name: 'Start inflating', detail: 'The hull is pulled from the shell and the helium starts flowing. From here it stops falling like a probe and starts becoming a ship.' },
-  { t: 'E + 11 min',alt: 52,   name: 'Full',            detail: 'Chute released. The hull is flying. Outside: 0.82 atmospheres, 140 °F.' },
-  { t: 'E + 21 min',alt: 52,   name: 'Settle',          detail: 'Inflation gear jettisoned, controls live, ballonets trimmed. Props on, nose into the wind, and the first day-side run begins.' },
-  { t: 'E + 30 d',  alt: 50,   name: 'Go up',           detail: 'Vesper lights at 50 km. Eight kilometers per second later the two of them are in orbit, closing on the ride home.' }
-];
-
 /* ---- Envelope laminate, outside in ----------------------- */
 PHOS.LAMINATE = [
   { layer: 'PTFE / FEP film',           thick: '25 µm', why: 'The acid barrier. VEGA flew woven PTFE in these clouds for two days in 1985 and it held.' },
@@ -358,12 +346,12 @@ PHOS.RISKS = [
   {
     rank: 4, name: 'Cooling off in a hot sky', severity: 'high',
     what: 'At 50 km it is 167 °F outside. Radiators need somewhere colder to dump heat into, and there is nowhere.',
-    fix: 'Altitude is the thermostat, and it runs on the sun\'s clock. By day the ship sits low in the warm, slow air to stay in the light, and cooling is the biggest thing the array pays for. At sunset it climbs to 55 km, where it is 80 °F and the heat finally has somewhere to go.'
+    fix: 'Altitude is the thermostat. Low and slow by day to stay in the light, with cooling the biggest thing the array pays for; up to 55 km and 80 °F at night, where the heat finally has somewhere to go.'
   },
   {
     rank: 5, name: 'Nights that last two days', severity: 'medium',
-    what: 'Nothing that floats can hold still under the sun here: the wind runs 75 m/s and holding against it would take 24 megawatts. Left to drift, the ship would sit in the dark for up to 83 hours at a stretch.',
-    fix: 'Chase the sun instead. Fly upwind at 10 m/s by day on solar surplus, then climb into the fastest air at night. Every night is 54 hours, the day is 88, and fuel cells sized for 430 kWh carry 8 kW through the dark.'
+    what: 'Nothing that floats can hold still under the sun here. Even chasing it, the ship spends 54 of every 142 hours in the dark.',
+    fix: 'Fuel cells sized for 430 kWh carry 8 kW through the night, charged by sunlight almost twice as strong as ours.'
   },
   {
     rank: 6, name: 'There is no ground', severity: 'structural',
@@ -458,13 +446,6 @@ PHOS.SAMPLING = [
   { km: 0,  name: 'Surface probe',                dur: '~2 hours · expended', gets: 'A look at the ground and what it is made of.',     kit: 'camera · X-ray fluorescence' }
 ];
 
-PHOS.CREW_ADVANTAGE = [
-  { t: 'They can decide in minutes', d: 'An orbiter spots a possible eruption. A robot mission replans over weeks. A person retasks a probe before the plume is gone.' },
-  { t: 'They can handle the sample', d: 'Concentrate it, split it, stain it, run it again. Almost nothing that makes a lab a lab has ever been put on a probe.' },
-  { t: 'They can fix the instrument', d: 'A clogged inlet ends a robot mission. Here it is a morning\'s work — and it will clog, because it is sampling acid.' },
-  { t: 'They bring the weight', d: 'This ship carries tens of tons of lab. Every Venus probe ever flown, put together, weighs less.' }
-];
-
 /* ============================================================
    CONSTRUCTION — how the hull gets made, packed and filled
    ============================================================ */
@@ -485,13 +466,13 @@ PHOS.BUILD = [
   {
     step: 'Inflate', where: 'at Venus, 72 → 52 km',
     head: 'Seven minutes from probe to ship',
-    body: 'Helium starts flowing at 72 km under a parachute and the hull is full by 52. The helium — 6.8 tons of it — is the one thing that has to come from Earth. Venus has none worth getting.',
+    body: 'Helium starts flowing at 72 km under a parachute and the hull is full by 52. Venera did the entry, VEGA inflated balloons at 54 km in 1985, HIAD has flown the decelerator — never all at once, and never this big. The 6.8 tons of helium is the one thing that has to come from Earth.',
     num: '6.8 t', numlab: 'of helium, shipped'
   },
   {
     step: 'Fill', where: 'at Venus, eight years',
     head: 'The air the crew breathes gets made before they leave home',
-    body: 'The lower hull holds 34 tons of breathable air. You cannot ship that — it weighs more than the payload. So the empty hull from Step 2 makes it: oxygen from the CO₂ outside, nitrogen pulled from the 3.5% of the air that already is. Over the 2,912 days before the crew leaves Earth, that is 11.5 kg a day. They arrive to a hull that is already full, already breathable, already powered.',
+    body: 'The lower hull holds 34 tons of breathable air — more than the ship could ever carry up — so the empty hull from Step 2 makes it on site, with the same oxygen and nitrogen loops the crew will live on, at 11.5 kg a day for eight years.',
     num: '11.5 kg/day', numlab: 'for eight years'
   }
 ];

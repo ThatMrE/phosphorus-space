@@ -1,0 +1,136 @@
+# Project Phosphorus materials
+newmtl hull
+Kd 0.900 0.860 0.760
+Ka 0.270 0.258 0.228
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# PTFE-faced envelope
+
+newmtl helium
+Kd 0.910 0.700 0.230
+Ka 0.273 0.210 0.069
+Ks 0.10 0.10 0.10
+Ns 18
+d 0.55
+# sealed helium lift cells
+
+newmtl air
+Kd 0.370 0.820 0.770
+Ka 0.111 0.246 0.231
+Ks 0.10 0.10 0.10
+Ns 18
+d 0.35
+# ambient-pressure breathable-air volume
+
+newmtl ballonet
+Kd 0.950 0.910 0.820
+Ka 0.285 0.273 0.246
+Ks 0.10 0.10 0.10
+Ns 18
+d 0.40
+# trim ballonets
+
+newmtl solar
+Kd 0.160 0.200 0.360
+Ka 0.048 0.060 0.108
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# thin-film photovoltaics
+
+newmtl gondola
+Kd 0.200 0.180 0.300
+Ka 0.060 0.054 0.090
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# crew module
+
+newmtl crew
+Kd 0.370 0.820 0.770
+Ka 0.111 0.246 0.231
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# pressurized crew volume
+
+newmtl tank
+Kd 0.780 0.750 0.660
+Ka 0.234 0.225 0.198
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# propellant tank
+
+newmtl truss
+Kd 0.430 0.410 0.500
+Ka 0.129 0.123 0.150
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# structure
+
+newmtl engine
+Kd 0.300 0.280 0.320
+Ka 0.090 0.084 0.096
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# engine bell
+
+newmtl shell
+Kd 1.000 0.480 0.270
+Ka 0.300 0.144 0.081
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# entry aeroshell
+
+newmtl vesper
+Kd 0.910 0.700 0.230
+Ka 0.273 0.210 0.069
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# ascent vehicle
+
+newmtl human
+Kd 0.950 0.910 0.820
+Ka 0.285 0.273 0.246
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# 1.8 m person, for scale
+
+newmtl line
+Kd 0.600 0.580 0.660
+Ka 0.180 0.174 0.198
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# suspension
+
+newmtl steel
+Kd 0.740 0.740 0.770
+Ka 0.222 0.222 0.231
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# stainless steel
+
+newmtl tile
+Kd 0.130 0.120 0.150
+Ka 0.039 0.036 0.045
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# ablative heat shield
+
+newmtl chute
+Kd 0.950 0.910 0.820
+Ka 0.285 0.273 0.246
+Ks 0.10 0.10 0.10
+Ns 18
+d 1.00
+# supersonic parachute

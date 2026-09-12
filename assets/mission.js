@@ -187,58 +187,6 @@
     });
   }
 
-  function buildBars() {
-    var wrap = $('#durationBars');
-    if (!wrap) return;
-    var M = D.MISSION;
-    var trips = [
-      { name: 'Venus — Phosphorus 1', out: M.outboundDays, stay: M.aloftDays, back: M.returnDays, total: M.totalDays, note: 'depart 2042-07-27' },
-      { name: 'Venus — 2045 backup', out: D.BACKUP_WINDOW.outboundDays, stay: D.BACKUP_WINDOW.aloftDays, back: D.BACKUP_WINDOW.returnDays, total: D.BACKUP_WINDOW.totalDays, note: 'depart 2045-10-24' },
-      { name: 'Mars — short stay', out: D.MARS_TRIPS[0].out, stay: D.MARS_TRIPS[0].stay, back: D.MARS_TRIPS[0].back, total: D.MARS_TRIPS[0].total, note: 'depart 2041-10-19' },
-      { name: 'Mars — long stay', out: D.MARS_TRIPS[1].out, stay: D.MARS_TRIPS[1].stay, back: D.MARS_TRIPS[1].back, total: D.MARS_TRIPS[1].total, note: 'depart 2041-10-20' }
-    ];
-    var max = 1020;
-    trips.forEach(function (t) {
-      var b = el('div', 'bar');
-      var lab = el('div', 'bar__label');
-      var left = el('span'); left.appendChild(el('b', null, t.name));
-      var right = el('span', 'num', fmt(t.total) + ' d  ·  ' + t.note);
-      lab.appendChild(left); lab.appendChild(right);
-      b.appendChild(lab);
-      var track = el('div', 'bar__track');
-      ['out', 'stay', 'back'].forEach(function (k) {
-        var seg = el('div', 'bar__seg bar__seg--' + k);
-        seg.style.width = '0%';
-        seg.setAttribute('data-w', (t[k] / max * 100).toFixed(2) + '%');
-        track.appendChild(seg);
-      });
-      b.appendChild(track);
-      wrap.appendChild(b);
-    });
-
-    var key = el('div', 'bar__key');
-    [['out', 'Outbound'], ['stay', 'On station'], ['back', 'Return']].forEach(function (p) {
-      var s = el('span');
-      var i = el('i');
-      i.style.background = p[0] === 'out' ? 'var(--aqua)' : p[0] === 'stay' ? 'var(--sulfur)' : 'var(--sulfur-deep)';
-      s.appendChild(i); s.appendChild(document.createTextNode(p[1]));
-      key.appendChild(s);
-    });
-    wrap.appendChild(key);
-
-    var fired = false;
-    onTick(function (vh) {
-      if (fired) return;
-      var r = wrap.getBoundingClientRect();
-      if (r.top < vh * 0.85) {
-        fired = true;
-        Array.prototype.forEach.call(wrap.querySelectorAll('.bar__seg'), function (s, i) {
-          setTimeout(function () { s.style.width = s.getAttribute('data-w'); }, REDUCED ? 0 : i * 45);
-        });
-      }
-    });
-  }
-
   /* ---------- atmospheric interpolation ------------------- */
 
   var P = D.PROFILE || [];
@@ -536,8 +484,6 @@
         items.appendChild(row);
       });
       body.appendChild(items);
-      body.appendChild(el('p', 'phase__cost')).innerHTML =
-        'Phase cost, order of magnitude: <b>$' + ph.cost.toFixed(1) + ' bn</b>';
       p.appendChild(body);
       wrap.appendChild(p);
     });
@@ -575,103 +521,6 @@
       var use = el('td', 'use', w.use || '—');
       tr.appendChild(use);
       body.appendChild(tr);
-    });
-  }
-
-  /* ---------- entry sequence ------------------------------ */
-
-  function ediStage() {
-    var host = $('#ediSvg');
-    var list = $('#ediList');
-    if (!host || !list) return;
-
-    var beats = D.EDI.slice(1, 7);   /* entry interface -> trim to float */
-    var W = 900, H = 560, PAD = { l: 104, r: 56, t: 58, b: 66 };
-    var s = svg('svg', {
-      viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
-      preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'Altitude against sequence for the Venus entry, descent and inflation: 125 km entry interface down to a 52 km float'
-    });
-
-    var maxAlt = 132, minAlt = 44;
-    function y(km) { return PAD.t + (maxAlt - km) / (maxAlt - minAlt) * (H - PAD.t - PAD.b); }
-    function x(i) { return PAD.l + i / (beats.length - 1) * (W - PAD.l - PAD.r); }
-
-    [125, 110, 90, 70, 60, 52, 44].forEach(function (km) {
-      s.appendChild(svg('line', { x1: PAD.l, y1: y(km), x2: W - PAD.r, y2: y(km), stroke: '#1F1D33', 'stroke-width': 1.5 }));
-      var t = svg('text', { x: PAD.l - 16, y: y(km) + 8, 'text-anchor': 'end', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 21, fill: '#5A5648' });
-      t.textContent = km;
-      s.appendChild(t);
-    });
-    var ax = svg('text', { x: PAD.l - 16, y: PAD.t - 22, 'text-anchor': 'end', 'font-family': '"IBM Plex Mono", monospace', 'font-size': 19, fill: '#8B8373' });
-    ax.textContent = 'km';
-    s.appendChild(ax);
-
-    /* float band */
-    s.appendChild(svg('rect', { x: PAD.l, y: y(54), width: W - PAD.l - PAD.r, height: y(50) - y(54), fill: 'rgba(95,208,196,0.12)' }));
-    var bl = svg('text', { x: PAD.l + 12, y: y(54) - 12, 'font-family': '"IBM Plex Mono", monospace', 'font-size': 21, fill: '#5FD0C4', 'letter-spacing': 1.4 });
-    bl.textContent = 'FLOAT BAND 50–54';
-    s.appendChild(bl);
-
-    var d = '';
-    beats.forEach(function (b, i) { d += (i ? 'L' : 'M') + x(i) + ' ' + y(b.alt); });
-    s.appendChild(svg('path', { d: d, fill: 'none', stroke: '#2A2740', 'stroke-width': 2.5 }));
-    var live = svg('path', { d: d, fill: 'none', stroke: '#FF7A45', 'stroke-width': 4, 'stroke-linecap': 'round' });
-    s.appendChild(live);
-
-    var dots = beats.map(function (b, i) {
-      var g = svg('g');
-      var above = i < 4 || i === beats.length - 1;
-      g.appendChild(svg('circle', { cx: x(i), cy: y(b.alt), r: 8, fill: '#0A0912', stroke: '#4A4460', 'stroke-width': 2.5 }));
-      var t = svg('text', {
-        x: x(i) + (i === 0 ? 16 : i === beats.length - 1 ? -8 : 0),
-        y: y(b.alt) + (above ? -22 : 36),
-        'text-anchor': i === 0 ? 'start' : i === beats.length - 1 ? 'end' : 'middle',
-        'font-family': '"IBM Plex Mono", monospace', 'font-size': 20, fill: '#8B8373'
-      });
-      t.textContent = b.t;
-      g.appendChild(t);
-      s.appendChild(g);
-      return g;
-    });
-    host.appendChild(s);
-
-    var liveLen = live.getTotalLength ? live.getTotalLength() : 1000;
-    live.setAttribute('stroke-dasharray', liveLen);
-    live.setAttribute('stroke-dashoffset', liveLen);
-
-    D.EDI.forEach(function (b, i) {
-      var row = el('div', 'edi');
-      row.setAttribute('data-i', i);
-      var h = el('div', 'edi__h');
-      h.appendChild(el('span', 'edi__t num', b.t));
-      h.appendChild(el('span', 'edi__alt num', b.alt != null ? b.alt + ' km' : '—'));
-      row.appendChild(h);
-      var bd = el('div', 'edi__b');
-      bd.appendChild(el('h4', 'edi__n', b.name));
-      bd.appendChild(el('p', 'edi__d', b.detail));
-      row.appendChild(bd);
-      list.appendChild(row);
-    });
-    var rows = Array.prototype.slice.call(list.children);
-
-    onTick(function (vh) {
-      var r = list.getBoundingClientRect();
-      var span = r.height - vh * 0.45;
-      var p = span > 0 ? clamp((vh * 0.72 - r.top) / span, 0, 1) : (r.top < vh * 0.5 ? 1 : 0);
-      var f = clamp(p * 1.08, 0, 1);
-      live.setAttribute('stroke-dashoffset', liveLen * (1 - f));
-      var active = Math.round(f * (beats.length - 1));
-      dots.forEach(function (g, i) {
-        var c = g.firstChild;
-        c.setAttribute('fill', i <= active ? '#FF7A45' : '#0A0912');
-        c.setAttribute('stroke', i <= active ? '#FF7A45' : '#4A4460');
-        g.lastChild.setAttribute('fill', i === active ? '#F2E8D0' : '#8B8373');
-      });
-      for (var i = 0; i < rows.length; i++) {
-        var r = rows[i].getBoundingClientRect();
-        rows[i].classList.toggle('is-on', r.top < vh * 0.62 && r.bottom > vh * 0.2);
-      }
     });
   }
 
@@ -831,27 +680,6 @@
   }
 
   /* ---------- simple list renderers ----------------------- */
-
-  function buildFleet() {
-    var wrap = $('#fleet');
-    if (!wrap) return;
-    D.FLEET.forEach(function (v) {
-      var c = el('article', 'vessel');
-      c.appendChild(el('p', 'vessel__code num', v.code));
-      c.appendChild(el('h3', 'vessel__name', v.name));
-      c.appendChild(el('p', 'vessel__role', v.role + ' · ' + v.mass + ' · crew ' + v.crew));
-      c.appendChild(el('p', 'vessel__line', v.line));
-      var dl = el('dl', 'vessel__specs');
-      v.specs.forEach(function (sp) {
-        var row = el('div', 'vessel__spec');
-        row.appendChild(el('dt', null, sp[0]));
-        row.appendChild(el('dd', null, sp[1]));
-        dl.appendChild(row);
-      });
-      c.appendChild(dl);
-      wrap.appendChild(c);
-    });
-  }
 
   function buildLaminate() {
     var wrap = $('#laminate');
@@ -1021,17 +849,6 @@
       body.appendChild(el('p', 'st__kit num', st.kit));
       row.appendChild(body);
       wrap.appendChild(row);
-    });
-  }
-
-  function buildAdvantage() {
-    var wrap = $('#advantage');
-    if (!wrap) return;
-    D.CREW_ADVANTAGE.forEach(function (a) {
-      var c = el('article', 'adv');
-      c.appendChild(el('h4', 'adv__t', a.t));
-      c.appendChild(el('p', 'adv__d', a.d));
-      wrap.appendChild(c);
     });
   }
 
@@ -1313,15 +1130,12 @@
     if (sky) starfield(sky);
     buildHero();
     buildLedger();
-    buildBars();
     buildPhases();
     buildWindows();
-    buildFleet();
     buildLaminate();
     buildAloft();
     buildScience();
     buildSampling();
-    buildAdvantage();
     buildConstruction();
     buildExperience();
     buildCrewDetail();
@@ -1336,7 +1150,6 @@
     if (!three || !three.cutaway) cutaway();
     liftCalc();
     descentStage(three && three.descent);
-    ediStage();
     if (!(three && three.acts) && PHOS_ACTS()) PHOS_ACTS()(onTick, trackProgress);
     rail();
     reveals();

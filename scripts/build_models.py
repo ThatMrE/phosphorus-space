@@ -363,6 +363,23 @@ def entry_vehicle():
     return m
 
 
+def lucifer():
+    """The Earth-return capsule: a 5 m blunt cone for four, on a spherical heat shield."""
+    m = Mesh('lucifer_return_capsule')
+    m.group('heatshield', 'tile')
+    m.ellipsoid((0, 0.55, 0), (2.5, 0.55, 2.5), nu=40, nv=8)
+    m.group('capsule', 'crew')
+    m.cylinder((0, 0.55, 0), (0, 3.6, 0), 2.5, 1.0, n=40)
+    m.group('docking_ring', 'truss')
+    m.cylinder((0, 3.6, 0), (0, 4.1, 0), 0.8, n=24)
+    m.group('windows', 'gondola')
+    for k in range(4):
+        th = k * math.pi / 2 + math.pi / 4
+        m.box((1.55 * math.cos(th), 2.2, 1.55 * math.sin(th)), (0.5, 0.35, 0.5))
+    human(m, at=(4, 0, 0))
+    return m
+
+
 def stack():
     """The assembled stack as it leaves Earth orbit: Hesperus on top of a spine,
     the folded airship in its aeroshell, Vesper at the bottom."""
@@ -395,7 +412,7 @@ def write(mesh):
 
 
 if __name__ == '__main__':
-    meshes = [airship(), hesperus(), vesper(), stack(), starship(), entry_vehicle()]
+    meshes = [airship(), hesperus(), vesper(), lucifer(), stack(), starship(), entry_vehicle()]
     manifest = [write(mm) for mm in meshes]
     for row in manifest:
         print('%-28s %6d verts %7d tris  %s m' % (row['name'], row['verts'], row['tris'], row['size_m']))

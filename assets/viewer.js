@@ -18,6 +18,8 @@
       human: 'About the room of a modest house, for four people and fifteen months.' },
     { key: 'vesper_ascent_vehicle',    label: 'The ride back up', name: 'Vesper',
       human: 'Twenty meters tall. It has to leave from a balloon.' },
+    { key: 'lucifer_return_capsule',   label: 'The way home',     name: 'Lucifer',
+      human: 'Five meters across, four people, and the fastest reentry anyone has ever flown.' },
     { key: 'assembled_stack',          label: 'Leaving Earth',    name: 'The stack',
       human: 'Everything that crosses to Venus, bolted together in orbit.' },
     { key: 'starship',                 label: 'The launch',       name: 'Starship',
@@ -26,64 +28,16 @@
       human: 'A 12.8-meter heat shield with a folded 129-meter ship and two people inside.' }
   ];
 
-  function parseOBJ(text) {
-    var verts = [], groups = [], cur = null;
-    var lines = text.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      var L = lines[i];
-      if (L.charCodeAt(0) === 118 && L.charCodeAt(1) === 32) {        /* 'v ' */
-        var p = L.split(/\s+/);
-        verts.push(+p[1], +p[2], +p[3]);
-      } else if (L.charCodeAt(0) === 102 && L.charCodeAt(1) === 32) { /* 'f ' */
-        var q = L.split(/\s+/);
-        var idx = [];
-        for (var k = 1; k < q.length; k++) if (q[k]) idx.push(parseInt(q[k], 10) - 1);
-        for (var t = 1; t + 1 < idx.length; t++) cur.faces.push(idx[0], idx[t], idx[t + 1]);
-      } else if (L.indexOf('g ') === 0) {
-        cur = { name: L.slice(2).trim(), material: 'hull', faces: [] };
-        groups.push(cur);
-      } else if (L.indexOf('usemtl ') === 0 && cur) {
-        cur.material = L.slice(7).trim();
-      }
-    }
-    return { verts: verts, groups: groups };
-  }
-
-  function buildObject(THREE, parsed) {
-    var root = new THREE.Group();
-    var pos = new Float32Array(parsed.verts);
-    var mats = PHOS.MODEL_MATERIALS || {};
-    parsed.groups.forEach(function (g) {
-      if (!g.faces.length) return;
-      var geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      geo.setIndex(g.faces);
-      geo.computeVertexNormals();
-      var m = mats[g.material] || { rgb: [0.8, 0.8, 0.8], alpha: 1 };
-      var mat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(m.rgb[0], m.rgb[1], m.rgb[2]),
-        roughness: 0.62, metalness: 0.08,
-        transparent: m.alpha < 1, opacity: m.alpha,
-        side: THREE.DoubleSide,
-        depthWrite: m.alpha >= 1
-      });
-      var mesh = new THREE.Mesh(geo, mat);
-      mesh.name = g.name;
-      mesh.userData.material = g.material;
-      root.add(mesh);
-    });
-    return root;
-  }
-
   function init() {
     var host = document.getElementById('fleet3d');
-    if (!host || !PHOS.MODELS) return;
+    if (!host || !PHOS.MODELS || !PHOS.G3) return;
     var THREE = window.THREE;
     var canvas = host.querySelector('canvas');
     var pick = host.querySelector('.f3d__pick');
     var name = host.querySelector('.f3d__name');
     var human = host.querySelector('.f3d__human');
     var dims = host.querySelector('.f3d__dims');
+    var specs = host.querySelector('.f3d__specs');
     var cutBtn = host.querySelector('.f3d__cut');
     var fallback = host.querySelector('.f3d__fallback');
 
@@ -125,10 +79,13 @@
       var size = box.getSize(new THREE.Vector3());
       var center = box.getCenter(new THREE.Vector3());
       obj.position.set(-center.x, -box.min.y, -center.z);
-      /* tall vehicles need more room than wide ones in a 16:10 frame */
-      radius = Math.max(size.x, size.y * 1.45, size.z) * 1.35;
+      /* tall vehicles need more room than wide ones in a 16:10 frame, and small
+         ones need to sit clear of the spec sheet at the lower left */
+      var span = Math.max(size.x, size.y * 1.45, size.z);
+      radius = span * (span < 15 ? 2.4 : 1.35);
       ground.scale.set(radius * 0.55, radius * 0.55, 1);
-      camera.lookTarget = new THREE.Vector3(0, size.y * 0.5, 0);
+      var wide = canvas.clientWidth > 760;
+      camera.lookTarget = new THREE.Vector3(wide ? -radius * 0.16 : 0, size.y * 0.5, 0);
       return size;
     }
 
@@ -136,14 +93,35 @@
       active = i;
       var v = VEHICLES[i];
       if (current) scene.remove(current);
-      var G3 = PHOS.G3;
-      current = G3 ? G3.buildObject(THREE, G3.parseOBJ(PHOS.MODELS[v.key])) : buildObject(THREE, parseOBJ(PHOS.MODELS[v.key]));
+      current = PHOS.G3.buildObject(THREE, PHOS.G3.parseOBJ(PHOS.MODELS[v.key]));
       scene.add(current);
       var size = fit(current);
       applyCut();
       name.textContent = v.name;
       human.textContent = v.human;
       dims.textContent = size.x.toFixed(0) + ' × ' + size.y.toFixed(0) + ' × ' + size.z.toFixed(0) + ' m';
+      /* the plan's spec sheet for this vehicle, when it has one */
+      if (specs) {
+        specs.innerHTML = '';
+        var sheet = (PHOS.FLEET || []).filter(function (f) { return f.name === v.name; })[0];
+        specs.hidden = !sheet;
+        if (sheet) {
+          var head = document.createElement('div');
+          head.className = 'f3d__spec f3d__spec--head';
+          head.innerHTML = '<dt></dt><dd></dd>';
+          head.firstChild.textContent = sheet.role;
+          head.lastChild.textContent = sheet.mass + ' · crew ' + sheet.crew;
+          specs.appendChild(head);
+          sheet.specs.forEach(function (sp) {
+            var row = document.createElement('div');
+            row.className = 'f3d__spec';
+            row.innerHTML = '<dt></dt><dd></dd>';
+            row.firstChild.textContent = sp[0];
+            row.lastChild.textContent = sp[1];
+            specs.appendChild(row);
+          });
+        }
+      }
       Array.prototype.forEach.call(pick.children, function (b, j) {
         b.classList.toggle('is-on', j === i);
         b.setAttribute('aria-pressed', j === i ? 'true' : 'false');

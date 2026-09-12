@@ -70,24 +70,12 @@
         Venus. A properly designed spacecraft could float on top of the clouds.
         <cite>Elliot Roth — “We’re Going the Wrong Way”</cite>
       </blockquote>
-      <p>
-        That is the whole trick. <strong>The air you breathe is a lifting gas there.</strong>
-        Your habitat is not a pressure vessel fighting the vacuum. It is a balloon full
-        of the stuff in your lungs.
-      </p>
+      
     </div>
 
     <div class="ledger reveal" id="ledger" style="margin-top: clamp(2.5rem, 6vw, 4rem)"></div>
 
-    <div style="margin-top: clamp(2.5rem, 6vw, 4rem)" class="reveal">
-      <p class="eyebrow eyebrow--dim">Round trip — same math, both planets</p>
-      <div class="bars" id="durationBars"></div>
-      <p class="note" style="margin-top:1.4rem; max-width:58ch">
-        Both numbers come out of the same trajectory solver, run over the same years.
-        Venus gets you home in fifteen months. Mars takes almost three years — and that
-        is the <em>short</em> option, the one where you barely land.
-      </p>
-    </div>
+    
   </div>
 </section>
 
@@ -337,31 +325,6 @@
   </div>
 </section>
 
-<!-- ============================ ARRIVAL / EDI ============================ -->
-<section class="band" id="arrival" data-rail="Becoming a ship">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">Entry and inflation</p>
-      <h2>Twenty minutes to turn a falling probe into a ship.</h2>
-    </div>
-
-    <div class="edilayout">
-      <div class="edi-graphic reveal">
-        <div id="ediSvg"></div>
-        <p class="note" style="margin-top:0.8rem">Altitude against sequence. Each step carries its own clock.</p>
-      </div>
-      <div>
-        <p class="prose reveal" style="margin-bottom:1.5rem; color:var(--cream-2)">
-          Every piece of this has flown before — Venera did the entry, VEGA inflated
-          balloons at 54&nbsp;km in 1985 and flew them for two days, HIAD has flown the
-          decelerator. Never all at once, and never this big.
-        </p>
-        <div id="ediList"></div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ============================ THE SHIP ============================ -->
 <section class="band" data-rail="The ship">
   <div class="shell">
@@ -388,21 +351,47 @@
           That volume earns its keep twice. It lifts, and it is where you live. And
           because the pressure inside matches the pressure outside, the skin never has
           to hold anything back. It only has to keep its shape, keep acid out, and keep
-          helium in.
+          helium in. <strong>A puncture is not a blowout</strong> — it is a slow trade
+          of gas through a hole, and you have hours instead of seconds.
         </p>
-        <h3 style="font-size:var(--step-1); margin:1.2rem 0 0.4rem">Altitude is the thermostat</h3>
-        <p>
-          At 50&nbsp;km it is 167&nbsp;°F outside. You cannot dump heat into that, so the
-          ship does not try — it climbs toward 54&nbsp;km through the day where it is
-          100&nbsp;°F, and sinks at night where the lift is best.
-          <strong>Flying it and cooling it are the same job.</strong>
-        </p>
+        
       </div>
 
       <div class="reveal">
         <p class="eyebrow" style="margin-bottom:1rem">The skin, outside in</p>
         <div class="laminate" id="laminate"></div>
       </div>
+    </div>
+
+    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
+      <p class="eyebrow" style="margin-bottom:1rem">How it floats</p>
+      <p class="note" style="margin-bottom:1.4rem; max-width:60ch">
+        Venus air is mostly CO₂ at 43.5&nbsp;g/mol; what you breathe is 29. The lighter
+        gas rises. Drag the altitude to trade lift against heat.
+      </p>
+      <div class="calc reveal">
+      <div class="calc__control">
+        <p class="eyebrow eyebrow--aqua">Fly the hull — 77,500 m³, 20.6 t of structure</p>
+        <p class="calc__alt"><span id="cAlt">52.0</span><small>KM</small></p>
+        <label for="altRange" class="note">Drag to trade lift against heat</label>
+        <input type="range" id="altRange" min="440" max="650" value="520" step="1"
+               aria-label="Float altitude in kilometers" aria-valuetext="52.0 kilometers">
+        <div class="calc__scale"><span>44 km</span><span>50</span><span>55</span><span>60</span><span>65 km</span></div>
+        <p class="calc__verdict" id="cVerdict">Nominal. Shirt-sleeve pressure, workable heat, 47 t of useful lift.</p>
+      </div>
+      <dl class="calc__out">
+        <div class="calc__cell"><dt>Outside</dt><dd><span id="cTemp">60</span><span>°C</span></dd></div>
+        <div class="calc__cell"><dt>Pressure</dt><dd><span id="cPres">0.82</span><span>atm</span></dd></div>
+        <div class="calc__cell"><dt>Helium cells</dt><dd><span id="cHe">54.3</span><span>t</span></dd></div>
+        <div class="calc__cell"><dt>Air volume</dt><dd><span id="cAir">13.6</span><span>t</span></dd></div>
+        <div class="calc__cell calc__cell--hero"><dt>Useful payload after structure</dt><dd><span id="cNet">47.3</span><span>t</span></dd></div>
+      </dl>
+      </div>
+      <p class="note" style="margin-top:1.6rem; max-width:64ch">
+        Go low for lift and you cook. Go high for comfort and you run out of payload.
+        Fifty to fifty-four kilometers is where both curves are livable at once — which is
+        why every serious study of this lands on the same four kilometers.
+      </p>
     </div>
 
     <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
@@ -419,11 +408,11 @@
 </section>
 
 <!-- ============================ THE FLEET IN 3D ============================ -->
-<section class="band" data-rail="In three dimensions">
+<section class="band" data-rail="The fleet">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">In three dimensions</p>
-      <h2>Turn it over in your hands.</h2>
+      <p class="eyebrow">The fleet</p>
+      <h2>Four vehicles. Only one ever touches the clouds.</h2>
       <div class="sec-head__meta">
         <span>Built from the plan&rsquo;s own dimensions</span>
         <span>Drag to turn</span>
@@ -447,67 +436,18 @@
           <p class="f3d__name">Phosphorus</p>
           <p class="f3d__dims num">129 × 46 × 34 m</p>
           <p class="f3d__human">Longer than a 747. That dot by the gondola is a person.</p>
+          <dl class="f3d__specs"></dl>
         </div>
       </div>
       <div class="f3d__foot">
         <p class="note">
-          These are not artist renders. Each model is generated by
-          <code>scripts/build_models.py</code> straight from the numbers on this page —
-          the 129 × 34 m hull, the 180 m³ cabin, a two-stage ascent vehicle sized for
-          40 tons of propellant — and the 1.8 m figure standing beside each one is there so
-          the size lands. They open in Blender or anything that reads OBJ.
+          Not artist renders: <code>scripts/build_models.py</code> builds each one from the
+          numbers on this page, with a 1.8 m person beside it for scale. They open in
+          Blender or anything that reads OBJ.
         </p>
         <a class="f3d__dl" href="models/phosphorus_airship.obj" download="phosphorus_airship.obj">Download this model (.obj)</a>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ============================ HOW IT FLOATS ============================ -->
-<section class="band" data-rail="How it floats">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">How it floats</p>
-      <h2>Air floats on Venus for the same reason helium floats here.</h2>
-    </div>
-
-    <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
-      <p>
-        Venus air is mostly carbon dioxide and weighs about 43.5&nbsp;g/mol. What you
-        breathe weighs 29. The lighter gas rises — same physics, different planet.
-      </p>
-      <p>
-        <strong>So there is no explosive decompression on Venus.</strong> A puncture is
-        not a blowout, it is a slow trade of gas through a hole, and you have hours
-        instead of seconds. No other habitat we have ever designed off Earth has that
-        property.
-      </p>
-    </div>
-
-    <div class="calc reveal">
-      <div class="calc__control">
-        <p class="eyebrow eyebrow--aqua">Fly the hull — 77,500 m³, 20.6 t of structure</p>
-        <p class="calc__alt"><span id="cAlt">52.0</span><small>KM</small></p>
-        <label for="altRange" class="note">Drag to trade lift against heat</label>
-        <input type="range" id="altRange" min="440" max="650" value="520" step="1"
-               aria-label="Float altitude in kilometers" aria-valuetext="52.0 kilometers">
-        <div class="calc__scale"><span>44 km</span><span>50</span><span>55</span><span>60</span><span>65 km</span></div>
-        <p class="calc__verdict" id="cVerdict">Nominal. Shirt-sleeve pressure, workable heat, 47 t of useful lift.</p>
-      </div>
-      <dl class="calc__out">
-        <div class="calc__cell"><dt>Outside</dt><dd><span id="cTemp">60</span><span>°C</span></dd></div>
-        <div class="calc__cell"><dt>Pressure</dt><dd><span id="cPres">0.82</span><span>atm</span></dd></div>
-        <div class="calc__cell"><dt>Helium cells</dt><dd><span id="cHe">54.3</span><span>t</span></dd></div>
-        <div class="calc__cell"><dt>Air volume</dt><dd><span id="cAir">13.6</span><span>t</span></dd></div>
-        <div class="calc__cell calc__cell--hero"><dt>Useful payload after structure</dt><dd><span id="cNet">47.3</span><span>t</span></dd></div>
-      </dl>
-    </div>
-
-    <p class="note reveal" style="margin-top:2rem; max-width:64ch">
-      Go low for lift and you cook. Go high for comfort and you run out of payload.
-      Fifty to fifty-four kilometers is where both curves are livable at once — which is
-      why every serious study of this lands on the same four kilometers.
-    </p>
   </div>
 </section>
 
@@ -607,10 +547,7 @@
       <h2>Four people, two stations.</h2>
     </div>
     <div class="crews reveal" id="crewDetail"></div>
-    <p class="note reveal" style="margin-top:1.6rem; max-width:62ch">
-      The NASA study this builds on sent two people down and left the return ship empty
-      overhead for a month. This spends two more seats to avoid that.
-    </p>
+    
   </div>
 </section>
 
@@ -633,10 +570,7 @@
 
     <div class="questions reveal" id="science"></div>
 
-    <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
-      <p class="eyebrow" style="margin-bottom:1rem">Why people and not just probes</p>
-      <div class="advantages" id="advantage"></div>
-    </div>
+    
 
     <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
       <p class="eyebrow eyebrow--aqua" style="margin-bottom:0.6rem">Where the samples come from</p>
@@ -685,17 +619,6 @@
         four extra chances to go — and four extra chances to bring somebody home early.
       </p>
     </div>
-  </div>
-</section>
-
-<!-- ============================ THE FLEET ============================ -->
-<section class="band" data-rail="The fleet">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">The fleet</p>
-      <h2>Four vehicles. Only one ever touches the clouds.</h2>
-    </div>
-    <div class="fleet reveal" id="fleet"></div>
   </div>
 </section>
 

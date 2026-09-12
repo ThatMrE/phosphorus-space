@@ -152,9 +152,10 @@ scripts/*.py            the orbital mechanics and the model generator
 Why Venus (with the Venus/Mars ledger) · **Act 01 — getting ready**, Starship flights and the stack
 assembling in orbit · **Act 02 — the trip**, one camera from leaving Earth through
 the computed transfer to the aerobraking pass at Venus · **Act 03 — going down**, the descent
-through the atmosphere to the floor · entry and inflation · the ship · **the fleet in
-3D** · how it floats · life up there · the crew · what we'd learn · the program and
-launch windows · the fleet · the bill · what could go wrong · so.
+through the atmosphere to the floor · the ship (cutaway, skin, how it floats, how it
+gets made) · **the fleet in 3D** with each vehicle's spec sheet · life up there · the
+crew · what we'd learn · the program and launch windows · the bill · what could go
+wrong · so.
 
 ### The 3D models
 
