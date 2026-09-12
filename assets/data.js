@@ -97,7 +97,8 @@ PHOS.MISSION = {
   earthVinf: 8.67,      // km/s
   earthEntryKms: 14.06, // km/s at the 125 km entry interface
   crew: 4,
-  crewAloft: 2
+  crewAloft: 2,
+  latitudeDeg: 10        // where the ship goes in and stays, +/- 5 deg; see scripts/latitude.py
 };
 
 PHOS.BACKUP_WINDOW = {
@@ -306,6 +307,122 @@ PHOS.FLEET = [
   }
 ];
 
+/* ---- The fleet, exploded ----------------------------------
+   Which model groups make up each part, and what to call them. Parts
+   fly apart radially from the vehicle's center unless `dir` says
+   otherwise; `dist` is a fraction of the vehicle's longest dimension. */
+PHOS.FLEET3D = [
+  { key: 'phosphorus_airship', name: 'Phosphorus', role: 'The cloud ship', seeThrough: true,
+    human: 'Longer than a 747. That dot by the gondola is a person.',
+    parts: [
+      { groups: ['envelope'],              label: 'Envelope',        note: '129 m × 34 m · 77,500 m³',        dir: [0, 1, 0],       dist: 0.42 },
+      { groups: ['solar_crown'],           label: 'Solar crown',     note: '~1,000 m² thin film',            dir: [0, 1, 0],       dist: 0.55 },
+      { groups: ['helium_cells'],          label: 'Helium cells',    note: '46,000 m³ · 66.8 t of lift',     dir: [0, 0.35, 1],    dist: 0.30 },
+      { groups: ['breathable_air_volume'], label: 'Breathable air',  note: '31,500 m³ · the house',          dir: [0, -0.25, -1],  dist: 0.34 },
+      { groups: ['ballonets'],             label: 'Ballonets',       note: 'trim and thermal',               dir: [0, -0.6, 0.8],  dist: 0.24 },
+      { groups: ['gondola'],               label: 'Gondola',         note: 'lab, plant deck, Vesper cradle', dir: [0, -1, 0],      dist: 0.18 },
+      { groups: ['crew_module'],           label: 'Crew module',     note: '2 crew · 30 days · 1 atm',       dir: [0, -1, 0.7],    dist: 0.26 },
+      { groups: ['suspension'],            label: 'Suspension',      note: 'load lines to the hull',         dir: [0, -0.5, 0],    dist: 0.08 },
+      { groups: ['propulsors'],            label: 'Propulsors',      note: '2 × 9 m electric props',         dir: [0, 0, -1],      dist: 0.2 },
+      { groups: ['vesper_stage_1', 'vesper_stage_2', 'vesper_capsule', 'vesper_engines'], label: 'Vesper', note: 'the ride back up, hung below', dir: [0.3, -1, -0.5], dist: 0.34 }
+    ] },
+  { key: 'hesperus_transit_habitat', name: 'Hesperus', role: 'The ride there and back',
+    human: 'About the room of a modest house, for four people and fifteen months.',
+    parts: [
+      { groups: ['habitat'],       label: 'Habitat',        note: '~180 m³ for four' },
+      { groups: ['storm_shelter'], label: 'Storm shelter',  note: 'water wall + polyethylene' },
+      { groups: ['docking_node'],  label: 'Docking node',   note: 'Lucifer rides here' },
+      { groups: ['solar_wings'],   label: 'Solar wings',    note: '+40% sun at Venus', dist: 0.4 },
+      { groups: ['propellant'],    label: 'Propellant',     note: '3.6 km/s to leave Venus' },
+      { groups: ['truss'],         label: 'Truss',          note: 'the spine' },
+      { groups: ['engine'],        label: 'Engine',         note: 'LOX/methane' }
+    ] },
+  { key: 'vesper_ascent_vehicle', name: 'Vesper', role: 'The ride back up',
+    human: 'Twenty meters tall. It has to leave from a balloon.',
+    parts: [
+      { groups: ['stage_1'], label: 'Stage 1', note: 'LOX/methane, lit below the hull' },
+      { groups: ['stage_2'], label: 'Stage 2', note: 'to 7.15 km/s orbit' },
+      { groups: ['capsule'], label: 'Capsule', note: '2 crew and the samples' },
+      { groups: ['engines'], label: 'Engines', note: '~8 km/s from 50 km up', dist: 0.4 }
+    ] },
+  { key: 'lucifer_return_capsule', name: 'Lucifer', role: 'The heat shield home',
+    human: 'Five meters across, four people, and the fastest reentry anyone has ever flown.',
+    parts: [
+      { groups: ['heatshield'],   label: 'Heat shield',  note: '14.06 km/s into Earth’s air', dist: 0.55 },
+      { groups: ['capsule'],      label: 'Capsule',      note: '4 crew' },
+      { groups: ['docking_ring'], label: 'Docking ring', note: 'to Hesperus', dist: 0.5 },
+      { groups: ['windows'],      label: 'Windows',      note: '' , dist: 0.45 }
+    ] },
+  { key: 'entry_vehicle', name: 'Entry vehicle', role: 'The way in',
+    human: 'A 12.8-meter heat shield with a folded 129-meter ship and two people inside.',
+    parts: [
+      { groups: ['heatshield'],  label: 'Heat shield', note: '12.8 m · 11.3 km/s entry', dist: 0.55 },
+      { groups: ['backshell'],   label: 'Backshell',   note: 'chute and helium inside', dist: 0.5 },
+      { groups: ['packed_hull'], label: 'Packed hull', note: '2.5 m³ · the whole ship' },
+      { groups: ['crew_module'], label: 'Crew module', note: '2 crew ride it down' }
+    ] },
+  { key: 'starship', name: 'Starship', role: 'The launch',
+    human: 'The launch vehicle, booster and all. Six flights put the stack in orbit.',
+    parts: [
+      { groups: ['booster'],         label: 'Booster',         note: 'comes back to the pad' },
+      { groups: ['booster_engines'], label: 'Booster engines', note: '33 Raptors', dist: 0.25 },
+      { groups: ['grid_fins'],       label: 'Grid fins',       note: '', dist: 0.3 },
+      { groups: ['hot_stage_ring'],  label: 'Hot-stage ring',  note: '', dist: 0.3 },
+      { groups: ['ship'],            label: 'Ship',            note: 'the piece that reaches orbit' },
+      { groups: ['nose'],            label: 'Nose',            note: 'payload bay' },
+      { groups: ['forward_flaps'],   label: 'Forward flaps',   note: '', dist: 0.3 },
+      { groups: ['aft_flaps'],       label: 'Aft flaps',       note: '', dist: 0.3 },
+      { groups: ['raptors'],         label: 'Raptors',         note: 'six on the ship', dist: 0.25 }
+    ] },
+  { key: 'assembled_stack', name: 'The stack', role: 'Leaving Earth',
+    human: 'Everything that crosses to Venus, bolted together in orbit.',
+    parts: [
+      { groups: ['spine'],                                                              label: 'Spine',       note: 'the first piece up' },
+      { groups: ['hesperus_habitat', 'hesperus_storm_shelter', 'hesperus_docking_node', 'hesperus_truss', 'hesperus_engine'], label: 'Hesperus', note: 'home for fifteen months' },
+      { groups: ['hesperus_solar_wings'],                                               label: 'Solar wings', note: '', dist: 0.4 },
+      { groups: ['hesperus_propellant'],                                                label: 'Propellant',  note: 'for the burn home' },
+      { groups: ['aeroshell', 'shell_backplate'],                                       label: 'Phosphorus, folded', note: 'in its entry shell' },
+      { groups: ['vesper_stage_1', 'vesper_stage_2', 'vesper_capsule', 'vesper_engines', 'vesper_mount'], label: 'Vesper', note: 'sent ahead in 2038 · shown for scale' }
+    ] }
+];
+
+/* ---- Thirty days in the clouds, lap by lap ---------------
+   `days` is the span of the stay each card covers. The ship goes in at
+   10° N on the dawn side; each lap is 87.6 h of day at 51 km and 53.9 h
+   of night at 55 km (scripts/sunchase.py). */
+PHOS.STAY = [
+  { days: [0, 0],       step: 'Day 0',        where: 'Nov 28, 2042 · dawn side',   head: 'Down to ten degrees north.',
+    body: 'Entry targets 10° N, where the wind is steady and the sun is high, and the morning side of the planet, so the first thing the crew gets is a full day. The hull is inflated by 52 km; the props come on and the nose goes into the wind.',
+    num: '10° N', numlab: 'insertion latitude' },
+  { days: [0, 1],       step: 'Day 0 – 1',    where: 'checkout',                  head: 'Systems, the airlock, and a first walk outside.',
+    body: 'Vesper answers the radio from its float ten kilometers away. Hesperus passes overhead every ninety minutes. Two people learn what the ship sounds like.',
+    num: '51 km', numlab: 'day float' },
+  { days: [1, 3.65],    step: 'Day 1 – 3.7',  where: 'first day',                 head: 'Chase the sun.',
+    body: 'Nose into the wind at 10 m/s on the 73 kW the array has to spare, stretching the daylight to 88 hours. The packages go up to 62 km and down to 45. The wet lab starts on the first cloud.',
+    num: '88 h', numlab: 'of daylight' },
+  { days: [3.65, 3.65], step: 'Day 3.7',      where: 'sunset',                    head: 'Props off. Climb.',
+    body: 'At the terminator the props stop and the ship rises to 55 km, where the air is fastest and coolest. The array goes dark and the fuel cells pick up the 8 kW the cabin needs.',
+    num: '55 km', numlab: 'night float' },
+  { days: [3.65, 5.9],  step: 'Day 3.7 – 5.9', where: 'first night',              head: 'Coast across the dark.',
+    body: 'Fifty-four hours at 95 m/s. The ship is a tracer for the weather question: it goes where the air goes, with a full weather station, and drops probes through the shear on the way.',
+    num: '431 kWh', numlab: 'of storage for the night' },
+  { days: [5.9, 6],     step: 'Day 5.9',      where: 'dawn',                      head: 'Once around.',
+    body: 'Down to 51 km, props on. One lap of the planet in under six days, sixty-two percent of it in the sun. The pattern repeats five times.',
+    num: '1 / 5', numlab: 'laps' },
+  { days: [6, 18],      step: 'Days 6 – 18',  where: 'laps 2 and 3',              head: 'The routine.',
+    body: 'Four outside trips. Tethered packages every day. The surface probe goes down on lap three, and the isotope runs get their blanks and standards. Samples pile up in the culture bay.',
+    num: '62%', numlab: 'of the stay in the sun' },
+  { days: [18, 24],     step: 'Days 18 – 24', where: 'lap 4',                     head: 'The deep drops.',
+    body: 'Two latitudes for the water question: the props steer five degrees north and back. The 30 km probe goes into a plume the orbiter flagged that morning. The hull gets its full inspection walk.',
+    num: '±5°', numlab: 'of latitude steered' },
+  { days: [24, 29.5],   step: 'Days 24 – 29.5', where: 'lap 5',                   head: 'Pack the samples. Wait for daylight.',
+    body: 'Vesper is checked out and the samples ride in the capsule. The launch has to happen in daylight, under Hesperus’s orbit, so the last night aloft is spent lining that up.',
+    num: 'Dec 27', numlab: 'last night in the clouds' },
+  { days: [29.5, 30],   step: 'Day 30',       where: 'Dec 28, 2042',              head: 'Up, and out.',
+    body: 'Vesper drops below the hull, lights, and climbs eight kilometers a second to orbit. Hesperus takes the crew aboard and burns for Earth. The hull stays behind as the lifeboat, still making air for the next crew.',
+    num: '8.0 km/s', numlab: 'to orbit' }
+];
+
 /* ---- Envelope laminate, outside in ----------------------- */
 PHOS.LAMINATE = [
   { layer: 'PTFE / FEP film',           thick: '25 µm', why: 'The acid barrier. VEGA flew woven PTFE in these clouds for two days in 1985 and it held.' },
@@ -328,13 +445,7 @@ PHOS.ALOFT = {
   sunPct: 62,
   cycleDays: 5.9,
   driftNightHours: [54, 83],  // what the night would be if the ship only drifted
-  solarVsEarthSurface: '+40%',
-  loops: [
-    { name: 'Oxygen',     in: 'CO₂ from outside',        out: 'O₂ to breathe, CO to burn', how: 'Solid-oxide electrolysis. MOXIE did this on Mars in 2021.' },
-    { name: 'Water',      in: 'sulfuric acid droplets',  out: 'H₂O',                      how: 'Catch the acid, heat it, keep the water. The clouds are the well.' },
-    { name: 'Nitrogen',   in: '3.5% of the air',         out: 'cabin buffer gas',         how: 'Venus holds more than three times the nitrogen in Earth\'s whole atmosphere.' },
-    { name: 'Lift',       in: 'CO₂',                     out: 'CO + O₂ lift gas',         how: 'The same cells that make oxygen top up the balloon. It never has to come down.' }
-  ]
+  solarVsEarthSurface: '+40%'
 };
 
 /* ---- Cost ------------------------------------------------
@@ -359,6 +470,29 @@ PHOS.COSTS = {
     { label: 'First crewed Mars mission, 2035 estimate', usd: 230 },
     { label: 'Half a trillion (L. Garver, former NASA deputy)', usd: 500 },
     { label: 'Up to $1 trillion over 25 years (P. Lee, Mars Institute)', usd: 1000 }
+  ]
+};
+
+/* ---- Venus against Mars, priced --------------------------
+   Venus: the phase table above. First crew = Steps 0-4. Per seat = four
+   people on the first flight. Mars: published crewed-mission figures. */
+PHOS.COST_VS = {
+  venus: [
+    { k: 'First crew, there and back', v: 32.4, unit: 'bn', d: 'Steps 0 through 4, 2026 to 2043' },
+    { k: 'Whole program',              v: 44.4, unit: 'bn', d: 'Five steps, twenty years, four more hulls' },
+    { k: 'Per seat, first flight',     v: 8.1,  unit: 'bn', d: 'Four people' }
+  ],
+  mars: [
+    { k: 'First crew, there and back', v: 230,  unit: 'bn', d: 'Cheapest published estimate, NASA reference architecture' },
+    { k: 'Whole program',              v: 1000, unit: 'bn', d: 'Up to a trillion over twenty-five years' },
+    { k: 'Per seat, first flight',     v: 38,   unit: 'bn', d: 'Six people' }
+  ],
+  bars: [
+    { label: 'Phosphorus — first crew in the clouds (Steps 0 to 4)', usd: 32.4, venus: true },
+    { label: 'Phosphorus — the whole program to 2055',              usd: 44.4, venus: true },
+    { label: 'Mars — first crewed mission, NASA-derived estimate',  usd: 230 },
+    { label: 'Mars — half a trillion (L. Garver, former NASA deputy)', usd: 500 },
+    { label: 'Mars — up to $1 trillion over 25 years (P. Lee, Mars Institute)', usd: 1000 }
   ]
 };
 
@@ -527,73 +661,49 @@ PHOS.LIFT_NOTE = {
    float altitude and airspeed; the night is always coasted at 55 km.
    Day and night are measured against the Sun. */
 PHOS.SUNCHASE = [
-  { km: 50, u:  0, wind: 60, dayH:  83.5, nightH: 53.9, lapDays: 5.72, sunPct: 61, propKw:   0, storageKwh: 431, lift: 66.8 },
-  { km: 50, u:  5, wind: 60, dayH:  90.6, nightH: 53.9, lapDays: 6.02, sunPct: 63, propKw:  10, storageKwh: 431, lift: 66.8 },
-  { km: 50, u: 10, wind: 60, dayH:  99.0, nightH: 53.9, lapDays: 6.37, sunPct: 65, propKw:  81, storageKwh: 431, lift: 66.8 },
-  { km: 50, u: 15, wind: 60, dayH: 109.1, nightH: 53.9, lapDays: 6.79, sunPct: 67, propKw: 273, storageKwh: 431, lift: 66.8 },
-  { km: 51, u:  0, wind: 67, dayH:  75.2, nightH: 53.9, lapDays: 5.38, sunPct: 58, propKw:   0, storageKwh: 431, lift: 61.8 },
-  { km: 51, u:  5, wind: 67, dayH:  80.9, nightH: 53.9, lapDays: 5.62, sunPct: 60, propKw:   9, storageKwh: 431, lift: 61.8 },
   { km: 51, u: 10, wind: 67, dayH:  87.6, nightH: 53.9, lapDays: 5.90, sunPct: 62, propKw:  73, storageKwh: 431, lift: 61.8 },
-  { km: 51, u: 15, wind: 67, dayH:  95.4, nightH: 53.9, lapDays: 6.22, sunPct: 64, propKw: 247, storageKwh: 431, lift: 61.8 },
-  { km: 52, u:  0, wind: 75, dayH:  67.6, nightH: 53.9, lapDays: 5.06, sunPct: 56, propKw:   0, storageKwh: 431, lift: 54.3 },
-  { km: 52, u:  5, wind: 75, dayH:  72.2, nightH: 53.9, lapDays: 5.25, sunPct: 57, propKw:   8, storageKwh: 431, lift: 54.3 },
-  { km: 52, u: 10, wind: 75, dayH:  77.4, nightH: 53.9, lapDays: 5.47, sunPct: 59, propKw:  66, storageKwh: 431, lift: 54.3 },
-  { km: 52, u: 15, wind: 75, dayH:  83.5, nightH: 53.9, lapDays: 5.73, sunPct: 61, propKw: 221, storageKwh: 431, lift: 54.3 },
-  { km: 53, u:  0, wind: 82, dayH:  62.1, nightH: 53.9, lapDays: 4.83, sunPct: 54, propKw:   0, storageKwh: 431, lift: 49.0 },
-  { km: 53, u:  5, wind: 82, dayH:  65.9, nightH: 53.9, lapDays: 4.99, sunPct: 55, propKw:   7, storageKwh: 431, lift: 49.0 },
-  { km: 53, u: 10, wind: 82, dayH:  70.3, nightH: 53.9, lapDays: 5.18, sunPct: 57, propKw:  60, storageKwh: 431, lift: 49.0 },
-  { km: 53, u: 15, wind: 82, dayH:  75.2, nightH: 53.9, lapDays: 5.38, sunPct: 58, propKw: 201, storageKwh: 431, lift: 49.0 },
-  { km: 54, u:  0, wind: 90, dayH:  56.8, nightH: 53.9, lapDays: 4.61, sunPct: 51, propKw:   0, storageKwh: 431, lift: 44.1 },
-  { km: 54, u:  5, wind: 90, dayH:  60.0, nightH: 53.9, lapDays: 4.75, sunPct: 53, propKw:   7, storageKwh: 431, lift: 44.1 },
-  { km: 54, u: 10, wind: 90, dayH:  63.6, nightH: 53.9, lapDays: 4.90, sunPct: 54, propKw:  53, storageKwh: 431, lift: 44.1 },
-  { km: 54, u: 15, wind: 90, dayH:  67.6, nightH: 53.9, lapDays: 5.06, sunPct: 56, propKw: 180, storageKwh: 431, lift: 44.1 },
 ];
 
-/* Why the ship cannot simply park under the sun: the airspeed needed to
-   hold the sub-solar longitude at 52 km, the propulsive power that costs
-   (drag on a 34 m hull goes as speed cubed) and what a 1,000 m² array
-   makes at that latitude. derived — scripts/sunchase.py */
-PHOS.SUNKEEP = [
-  { lat:  0, wind: 75, airspeed: 71, propKw:    23648, solarKw: 210 },
-  { lat: 30, wind: 75, airspeed: 72, propKw:    24159, solarKw: 182 },
-  { lat: 50, wind: 75, airspeed: 73, propKw:    25027, solarKw: 135 },
-  { lat: 60, wind: 58, airspeed: 56, propKw:    11779, solarKw: 105 },
-  { lat: 70, wind: 40, airspeed: 39, propKw:     3770, solarKw:  72 },
-  { lat: 75, wind: 30, airspeed: 29, propKw:     1634, solarKw:  54 },
-  { lat: 80, wind: 20, airspeed: 20, propKw:      493, solarKw:  36 },
-  { lat: 85, wind: 10, airspeed: 10, propKw:       62, solarKw:  18 },
+/* ============================================================
+   WALKING ON SUNSHINE — a trip outside to look over the hull
+   ============================================================ */
+
+PHOS.WALK = [
+  { step: 'Suit up',  where: 'the airlock',      head: 'Not a spacewalk.',
+    body: 'Outside is one atmosphere and about 140 °F. No pressure difference means no pressure suit — you need an acid-proof coverall, cooling, and your own air. Closer to a hazmat job than an EVA, which is why fixing the hull can be routine.',
+    num: '1 atm', numlab: 'inside and out' },
+  { step: 'Step out', where: 'the gondola roof', head: 'You walk.',
+    body: 'Nothing floats, nothing needs strapping down, and the puffy face and thinning bones of a Mars trip just do not happen. Of everything here, this is what a crew would feel most.',
+    num: '0.904 g', numlab: 'your weight' },
+  { step: 'Look out', where: 'the rail',         head: 'A few hundred yards.',
+    body: 'You are inside the cloud, not above it. Think heavy fog. No horizon, and the ground is never visible — thirty miles of haze below. Venus is the place you go to and never see.',
+    num: '~300 m', numlab: 'visibility' },
+  { step: 'Look up',  where: 'the rail',         head: 'Bright overcast.',
+    body: 'Yellowish-white, shadowless, from every direction at once. Plenty to read by.',
+    num: '+40%', numlab: 'sun vs Earth\u2019s surface' },
+  { step: 'Oxygen',   where: 'the plant deck',   head: 'CO₂ from outside → O₂ to breathe, CO to burn.',
+    body: 'Solid-oxide electrolysis. MOXIE did this on Mars in 2021. The intake is a slot on the roof and the plant is the size of a fridge.',
+    num: 'O₂', numlab: 'from the air' },
+  { step: 'Water',    where: 'the plant deck',   head: 'Sulfuric acid droplets → H₂O.',
+    body: 'Catch the acid, heat it, keep the water. The clouds are the well.',
+    num: 'H₂O', numlab: 'from the cloud' },
+  { step: 'Nitrogen', where: 'the plant deck',   head: '3.5% of the air → cabin buffer gas.',
+    body: 'Venus holds more than three times the nitrogen in Earth\u2019s whole atmosphere.',
+    num: 'N₂', numlab: 'from the air' },
+  { step: 'Lift',     where: 'the plant deck',   head: 'CO₂ → CO + O₂ lift gas.',
+    body: 'The same cells that make oxygen top up the balloon, so it never has to come down. Each of these four has worked somewhere. Nobody has run them all together, at size, in acid — which is exactly what the early flights are for.',
+    num: 'CO + O₂', numlab: 'to the hull' },
+  { step: 'Climb',    where: 'up the hull',      head: 'A breeze by day.',
+    body: 'By day the props are on and there is a steady twenty-knot breeze over the hull. You clip to the seam line and walk the top of the ship: 69 panels and nine kilometers of weld to look over. At sunset the props stop, you climb, and the ship goes quiet — fans, pumps, the oxygen plant, and in rough air the hull working above you.',
+    num: '20 kn', numlab: 'over the hull' },
+  { step: 'Weather',  where: 'on top',           head: 'Real weather.',
+    body: 'In 1985 the VEGA balloons hit downdrafts that shoved them a mile and a half below where they wanted to be, in gusts lasting about an hour. The ship rides it. You buckle in.',
+    num: '2.4 km', numlab: 'VEGA\u2019s worst downdraft' },
+  { step: 'Back in',  where: 'the airlock',      head: 'The airlock is a rinse.',
+    body: 'The danger coming back in is not vacuum, it is acid on your suit. So the lock is a shower: water, then neutralizer, then the inner door.',
+    num: '3', numlab: 'water · neutralizer · door' },
+  { step: 'The clock', where: 'inside',          head: 'Yours to set.',
+    body: 'Out there, daylight runs about 88 hours and the night about 54. You keep a 24-hour clock on the lights and treat the sun outside as weather.',
+    num: '88 h', numlab: 'of daylight, 54 of night' }
 ];
 
-PHOS.EXPERIENCE = [
-  { k: 'Weight',        v: '0.904 g',              d: 'You walk. Nothing floats, nothing needs strapping down, and the puffy face and thinning bones of a Mars trip just do not happen. Of everything here, this is what a crew would feel most.' },
-  { k: 'The view',      v: 'a few hundred yards',  d: 'You are inside the cloud, not above it. Think heavy fog. No horizon, and the ground is never visible — thirty miles of haze below. Venus is the place you go to and never see.' },
-  { k: 'The light',     v: 'bright overcast',      d: 'Yellowish-white, shadowless, from every direction at once. Plenty to read by.' },
-  { k: 'The sound',     v: 'a breeze by day',      d: 'By day the props are on and there is a steady twenty-knot breeze over the hull. At sunset they stop, you climb, and the ship goes quiet: fans, pumps, the oxygen plant — and in rough air, the hull working above you.' },
-  { k: 'The weather',   v: 'real',                 d: 'In 1985 the VEGA balloons hit downdrafts that shoved them a mile and a half below where they wanted to be, in gusts lasting about an hour. The ship rides it. You buckle in.' },
-  { k: 'Going outside', v: 'not a spacewalk',      d: 'Outside is one atmosphere and about 140 °F. No pressure difference means no pressure suit — you need an acid-proof coverall, cooling, and your own air. Closer to a hazmat job than an EVA, which is why fixing the hull can be routine.' },
-  { k: 'The airlock',   v: 'a rinse',              d: 'The danger coming back in is not vacuum, it is acid on your suit. So the lock is a shower: water, then neutralizer, then the inner door.' },
-  { k: 'The clock',     v: 'yours to set',         d: 'Out there, daylight runs about 88 hours and the night about 54. You keep a 24-hour clock on the lights and treat the sun outside as weather.' }
-];
-
-PHOS.CREW_DETAIL = [
-  {
-    role: 'Commander', station: 'Hesperus · in orbit', days: 459,
-    duties: ['Owns the decision to leave', 'Flies the burn for home', 'Never goes down'],
-    why: 'Somebody has to be able to call it, and they cannot be 50 km down in a balloon when they do.'
-  },
-  {
-    role: 'Flight engineer', station: 'Hesperus · in orbit', days: 459,
-    duties: ['Keeps the ride home alive for 30 days', 'Relays for the crew below', 'Second pilot for the rendezvous'],
-    why: 'The NASA study left this seat empty. A crewed way home is worth two seats.'
-  },
-  {
-    role: 'Pilot', station: 'Phosphorus · in the clouds', days: 30,
-    duties: ['Flies the ship: buoyancy, altitude, heat', 'Runs the oxygen and water plants', 'Goes outside when something needs fixing'],
-    why: 'Flying it and cooling it are the same job, and somebody has to do it hour by hour.'
-  },
-  {
-    role: 'Scientist', station: 'Phosphorus · in the clouds', days: 30,
-    duties: ['Chemist and astrobiologist', 'Runs the wet lab and the culture bay', 'Decides where the probes go'],
-    why: 'The reason the trip is worth taking, and the one job that cannot be done from orbit.'
-  }
-];

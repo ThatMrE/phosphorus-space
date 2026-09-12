@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=b481de5c">
+<link rel="stylesheet" href="assets/styles.css?v=6dc85e3f">
 </head>
 <body>
 
@@ -87,6 +87,30 @@
       <p class="act__badge"><span>Venus</span> against Mars</p>
     </div>
     <div class="stage__steps" id="compareSteps"></div>
+  </div>
+</section>
+
+<!-- ============================ WHAT IT COSTS ============================ -->
+<section class="band" id="costVsBand">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">What it costs to send people</p>
+      <h2>A tenth of the cheapest Mars number, and most of that is the ride home.</h2>
+      <div class="sec-head__meta">
+        <span>Order of magnitude</span><span>2026 dollars</span><span>Four people, there and back</span>
+      </div>
+    </div>
+    <div class="costvs reveal" id="costVs"></div>
+    <div class="compare reveal" id="costVsBars" style="margin-top: clamp(2rem, 5vw, 3rem)"></div>
+    <p class="note reveal" style="margin-top:1.4rem; max-width:64ch">
+      Phosphorus is priced bottom-up in the README: five steps, 2026 dollars, launch at
+      Starship-class prices. The Mars numbers are the published ones — a first-mission
+      estimate built on NASA&rsquo;s Design Reference Architecture, a former NASA deputy
+      administrator&rsquo;s half trillion, and the Mars Institute&rsquo;s trillion over
+      twenty-five years. Nobody has priced a Mars program the way this one is priced, so
+      compare shapes, not decimals. Estimates like these run low. Even tripled, Phosphorus
+      sits under the cheapest Mars figure.
+    </p>
   </div>
 </section>
 
@@ -318,18 +342,37 @@
   </div>
 </section>
 
-<!-- ============================ THE SHIP ============================ -->
-<section class="band" data-rail="The ship">
+<!-- ============================ THE SHIP AND THE FLEET ============================ -->
+<section class="band band--tight" data-rail="The fleet">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">The ship</p>
+      <p class="eyebrow">The ship and the fleet</p>
+      <h2>Four vehicles. Only one ever touches the clouds.</h2>
+      <div class="sec-head__meta">
+        <span>Built from the plan&rsquo;s own dimensions</span><span>Exploded as you scroll</span><span>Drag to turn</span>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="stage fleet" id="fleet">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="fleetCanvas" aria-label="Each vehicle in the fleet, turning slowly and coming apart into its labelled components as you scroll: Phosphorus, Hesperus, Vesper, Lucifer, the entry vehicle, Starship and the assembled stack"></canvas>
+      <p class="act__badge"><span>The fleet</span> part by part</p>
+    </div>
+    <div class="stage__steps" id="fleetSteps"></div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow">The ship, in numbers</p>
       <h2>A hundred and twenty-nine meters of hull, and not one pressure bulkhead.</h2>
       <div class="sec-head__meta">
         <span>129 m × 34 m</span><span>77,500 m³</span><span>crew of 2</span><span>floats at 50–54 km</span>
       </div>
     </div>
-
-    <div class="reveal" id="shipSvg" style="margin-bottom: clamp(2.5rem, 6vw, 4rem)"></div>
 
     <div class="two">
       <div class="prose reveal">
@@ -359,31 +402,14 @@
     <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
       <p class="eyebrow" style="margin-bottom:1rem">How it floats</p>
       <p class="note" style="margin-bottom:1.4rem; max-width:60ch">
-        Venus air is mostly CO₂ at 43.5&nbsp;g/mol; what you breathe is 29. The lighter
-        gas rises. Drag the altitude to trade lift against heat.
+        Venus air is mostly CO&#8322; at 43.5&nbsp;g/mol; what you breathe is 29. The lighter
+        gas rises. Two altitudes, decided: 51&nbsp;km by day and 55&nbsp;km at night.
       </p>
-      <div class="calc reveal">
-      <div class="calc__control">
-        <p class="eyebrow eyebrow--aqua">Fly the hull — 77,500 m³, 20.6 t of structure</p>
-        <p class="calc__alt"><span id="cAlt">52.0</span><small>KM</small></p>
-        <label for="altRange" class="note">Drag to trade lift against heat</label>
-        <input type="range" id="altRange" min="440" max="650" value="520" step="1"
-               aria-label="Float altitude in kilometers" aria-valuetext="52.0 kilometers">
-        <div class="calc__scale"><span>44 km</span><span>50</span><span>55</span><span>60</span><span>65 km</span></div>
-        <p class="calc__verdict" id="cVerdict">Nominal. Shirt-sleeve pressure, workable heat, 47 t of useful lift.</p>
-      </div>
-      <dl class="calc__out">
-        <div class="calc__cell"><dt>Outside</dt><dd><span id="cTemp">60</span><span>°C</span></dd></div>
-        <div class="calc__cell"><dt>Pressure</dt><dd><span id="cPres">0.82</span><span>atm</span></dd></div>
-        <div class="calc__cell"><dt>Helium cells</dt><dd><span id="cHe">54.3</span><span>t</span></dd></div>
-        <div class="calc__cell"><dt>Air volume</dt><dd><span id="cAir">13.6</span><span>t</span></dd></div>
-        <div class="calc__cell calc__cell--hero"><dt>Useful payload after structure</dt><dd><span id="cNet">47.3</span><span>t</span></dd></div>
-      </dl>
-      </div>
+      <div class="floats" id="floats"></div>
       <p class="note" style="margin-top:1.6rem; max-width:64ch">
         Go low for lift and you cook. Go high for comfort and you run out of payload.
-        Fifty to fifty-four kilometers is where both curves are livable at once — which is
-        why every serious study of this lands on the same four kilometers.
+        Fifty to fifty-five kilometers is where both curves are livable at once, which is
+        why every serious study of this lands on the same few kilometers.
       </p>
     </div>
 
@@ -411,50 +437,6 @@
   </div>
 </section>
 
-<!-- ============================ THE FLEET IN 3D ============================ -->
-<section class="band" data-rail="The fleet">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">The fleet</p>
-      <h2>Four vehicles. Only one ever touches the clouds.</h2>
-      <div class="sec-head__meta">
-        <span>Built from the plan&rsquo;s own dimensions</span>
-        <span>Drag to turn</span>
-        <span>Download the design files</span>
-      </div>
-    </div>
-
-    <div class="f3d reveal" id="fleet3d">
-      <div class="f3d__top">
-        <div class="f3d__pick" role="group" aria-label="Choose a vehicle"></div>
-        <div class="f3d__tools">
-          <button type="button" class="f3d__btn f3d__cut" aria-pressed="true">Cutaway on</button>
-          <button type="button" class="f3d__btn f3d__in" aria-label="Zoom in">+</button>
-          <button type="button" class="f3d__btn f3d__out" aria-label="Zoom out">−</button>
-        </div>
-      </div>
-      <div class="f3d__stage">
-        <canvas aria-label="Interactive 3D model of the selected vehicle"></canvas>
-        <p class="f3d__fallback" hidden>Your browser could not start WebGL, so the model will not draw here. The design files below open in any 3D program.</p>
-        <div class="f3d__label">
-          <p class="f3d__name">Phosphorus</p>
-          <p class="f3d__dims num">129 × 46 × 34 m</p>
-          <p class="f3d__human">Longer than a 747. That dot by the gondola is a person.</p>
-          <dl class="f3d__specs"></dl>
-        </div>
-      </div>
-      <div class="f3d__foot">
-        <p class="note">
-          Not artist renders: <code>scripts/build_models.py</code> builds each one from the
-          numbers on this page, with a 1.8 m person beside it for scale. They open in
-          Blender or anything that reads OBJ.
-        </p>
-        <a class="f3d__dl" href="models/phosphorus_airship.obj" download="phosphorus_airship.obj">Download this model (.obj)</a>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ============================ LIFE UP THERE ============================ -->
 <section class="band" data-rail="Life up there">
   <div class="shell">
@@ -471,7 +453,7 @@
         24 megawatts &mdash; but the cycle can be bent.
       </p>
       <p>
-        <strong>So the ship chases the sun.</strong> By day it floats low, points its nose
+        <strong>So the ship chases the sun, at ten degrees north.</strong> By day it floats low, points its nose
         into the wind and flies 10&nbsp;m/s upwind on power the array has to spare, stretching
         the daylight. At sunset the props stop, it climbs to 55&nbsp;km where the air is
         fastest and coolest, and coasts across the night. Eighty-eight hours of light,
@@ -479,19 +461,41 @@
       </p>
     </div>
 
+  </div>
+</section>
+<section class="stage stay" id="stay">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="stayCanvas" aria-label="The airship pulls back to show Venus, then rides its thirty-day stay lap by lap: ten degrees north, chasing the sun by day and coasting across the night"></canvas>
+      <p class="act__badge"><span>Thirty days</span> lap by lap</p>
+      <div class="journey__hud stay__hud" role="status" aria-live="polite" aria-atomic="true">
+        <div class="readout__row">
+          <span class="readout__k">Day</span>
+          <span class="readout__v" id="yDay">0.0<small> of 30</small></span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Position</span>
+          <span class="readout__v readout__v--sm" id="yPos">10° N · 120° E</span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Sky</span>
+          <span class="readout__v readout__v--sm" id="ySun">day · 51 km</span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Daylight so far</span>
+          <span class="readout__v" id="yLit">100<small> % in the sun</small></span>
+        </div>
+      </div>
+    </div>
+    <div class="stage__steps" id="staySteps"></div>
+  </div>
+</section>
+<section class="band">
+  <div class="shell">
     <div class="lap reveal">
       <div class="lap__head">
-        <p class="eyebrow eyebrow--aqua">One day and one night, chasing the sun</p>
-        <div class="lap__picks">
-          <div style="display:flex; align-items:center; gap:0.8rem">
-            <span class="lap__pick-l">Day float km</span>
-            <div class="lap__pick" id="lapPick" role="group" aria-label="Day-side float altitude in kilometers"></div>
-          </div>
-          <div style="display:flex; align-items:center; gap:0.8rem">
-            <span class="lap__pick-l">Upwind m/s</span>
-            <div class="lap__pick" id="lapAir" role="group" aria-label="Airspeed flown upwind by day, meters per second"></div>
-          </div>
-        </div>
+        <p class="eyebrow eyebrow--aqua">One day and one night, chasing the sun at 10&deg;&nbsp;N</p>
+        <p class="lap__fixed">51&nbsp;km by day &middot; 10&nbsp;m/s upwind &middot; 55&nbsp;km at night</p>
       </div>
       <div id="lapSvg"></div>
       <dl class="lap__out">
@@ -503,67 +507,80 @@
         <div class="lap__cell"><dt>Wind</dt><dd><span id="lWind">67</span><span>m/s</span></dd></div>
       </dl>
       <p class="note" style="margin-top:1rem">
-        Drag goes as the cube of speed: 10&nbsp;m/s costs about 70&nbsp;kW, 15 costs 250.
-        Lower is more sun and more heat; the nominal day is 51&nbsp;km. The night is always the
-        same 54 hours, coasted at 55&nbsp;km, and that is what sizes the fuel cells.
+        Drag goes as the cube of speed, so 10&nbsp;m/s costs about 70&nbsp;kW and 15 would cost 250.
+        The night is always the same 54 hours, coasted at 55&nbsp;km, and that is what sizes the fuel cells.
       </p>
     </div>
 
     <div class="sunkeep reveal">
       <div class="sunkeep__head">
-        <p class="eyebrow">Why not just park under the sun?</p>
+        <p class="eyebrow">The latitude</p>
         <p class="sunkeep__lede">
-          The airspeed it would take to hold the noon line at 52&nbsp;km, what that costs, and
-          what a 1,000&nbsp;m&sup2; array makes at that latitude. Nothing that floats closes this
-          anywhere the sun is worth having.
+          Decided, not tuned. The ship goes in at ten degrees north and stays within five
+          degrees of it. Every alternative was run through <code>scripts/sunchase.py</code>
+          and <code>scripts/latitude.py</code>; this is what they say.
         </p>
       </div>
-      <div class="sunkeep__rows" id="sunkeep"></div>
-      <p class="note" style="margin-top:1rem; max-width:64ch">
-        Wind by latitude from Venus Express cloud tracking: roughly flat to 50&deg;, then falling
-        toward the pole. Only at 85&deg; does the gap shrink to a factor of three &mdash; inside the polar
-        vortex, with the sun never more than a hand&rsquo;s width above the horizon.
-      </p>
-    </div>
-
-    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
-      <p class="eyebrow" style="margin-bottom:1rem">What it is actually like</p>
-      <div class="experience" id="experience"></div>
-    </div>
-
-    <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
-      <p class="eyebrow" style="margin-bottom:1rem">Everything you need is already outside</p>
-      <div class="loops" id="loops"></div>
-      <p class="note" style="margin-top:1.2rem; max-width:64ch">
-        Each of these has worked somewhere. MOXIE made oxygen on Mars in 2021. Nobody
-        has run them all together, at size, in acid — which is exactly what the early
-        flights are for.
-      </p>
+      <div class="decide">
+        <p class="decide__big">10&deg;&nbsp;N</p>
+        <div class="decide__rows">
+          <div class="decide__row"><b>Same daylight everywhere it matters.</b><span>From the equator to 75&deg; the biggest share of the stay the ship can spend in the sun is 59%, set by wind against airspeed, not by latitude.</span></div>
+          <div class="decide__row"><b>Most margin under 20&deg;.</b><span>Here the array makes 61 to 68&nbsp;kW against 47 of cabin and propellers. At 40&deg; it no longer closes at 10&nbsp;m/s; past 78&deg; it cannot run the cabin at all.</span></div>
+          <div class="decide__row"><b>Steady wind.</b><span>The super-rotation is flat to 50&deg;. Above 75&deg; the polar vortex wanders, and the sun never clears the cloud.</span></div>
+          <div class="decide__row"><b>Parking is out anywhere.</b><span>Holding the noon line takes 24&nbsp;MW at the equator and still 62&nbsp;kW against 18&nbsp;kW of sun at 85&deg;.</span></div>
+          <div class="decide__row"><b>Drifting never makes an Earth day.</b><span>A drift lap is 5.6 days at the equator and 3.7 days at any latitude above 50&deg;. A 24-hour lap exists only within two degrees of the pole, in permanent twilight.</span></div>
+          <div class="decide__row"><b>Ten, not zero.</b><span>North of the equator keeps the option of steering five degrees either way for the isotope runs, and it is where the VEGA balloons flew in 1985.</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- ============================ THE CREW ============================ -->
-<section class="band" data-rail="The crew">
+<!-- ============================ WALKING ON SUNSHINE ============================ -->
+<section class="band band--tight" id="walkIntro">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow">The crew</p>
-      <h2>Four people, two stations.</h2>
+      <p class="eyebrow">Going outside</p>
+      <h2>Walking on Sunshine.</h2>
+      <div class="sec-head__meta">
+        <span>One atmosphere</span><span>140 °F</span><span>0.904 g</span><span>Bring your own air</span>
+      </div>
     </div>
-    <div class="crews reveal" id="crewDetail"></div>
-    
+  </div>
+</section>
+<section class="stage walk" id="walk" data-rail="Walking on sunshine">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="walkCanvas" aria-label="A crew member in a yellow coverall leaves the gondola airlock, walks the plant deck past the oxygen, water, nitrogen and lift-gas intakes, climbs onto the hull in the fog, and comes back in through the rinse"></canvas>
+      <p class="act__badge"><span>Walking on sunshine</span> a trip outside</p>
+      <div class="journey__hud walk__hud" role="status" aria-live="polite" aria-atomic="true">
+        <div class="readout__row">
+          <span class="readout__k">Step</span>
+          <span class="readout__v readout__v--sm" id="wStep">Suit up</span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Outside</span>
+          <span class="readout__v readout__v--sm" id="wOut">60 °C · 1 atm</span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Time outside</span>
+          <span class="readout__v" id="wTime">0:00</span>
+        </div>
+      </div>
+    </div>
+    <div class="stage__steps" id="walkSteps"></div>
   </div>
 </section>
 
 <!-- ============================ THE SCIENCE ============================ -->
-<section class="band" data-rail="What we'd learn">
+<section class="band band--tight" data-rail="What we'd learn">
   <div class="shell">
     <div class="sec-head reveal">
       <p class="eyebrow">What we&rsquo;d learn</p>
       <h2>Six questions worth sending people for.</h2>
     </div>
 
-    <div class="prose col reveal" style="margin-bottom: clamp(2rem, 5vw, 3rem)">
+    <div class="prose col reveal">
       <p>
         Venus is the nearest worked example of a planet that went wrong. Same size as
         Earth, same material, same star — and it is 860&nbsp;°F. Whatever separated the
@@ -572,108 +589,94 @@
       </p>
     </div>
 
-    <div class="questions reveal" id="science"></div>
-
-    
-
-    <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
-      <p class="eyebrow eyebrow--aqua" style="margin-bottom:0.6rem">Where the samples come from</p>
-      <p class="note" style="margin-bottom:1.4rem; max-width:60ch">
-        The ship is the lab and the middle rung. Everything above and below it drops
-        from the hull.
-      </p>
-      <div class="ladder" id="sampling"></div>
+  </div>
+</section>
+<section class="stage learn" id="learn">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="learnCanvas" aria-label="Six animated icons, one per question: a cloud droplet under the microscope, sunlight lost in the haze, an atmosphere lapping its planet, an ocean leaving, a volcano erupting, and a closed loop of air and water around a person"></canvas>
+      <p class="act__badge"><span>Six questions</span> what we&rsquo;d learn</p>
     </div>
+    <div class="stage__steps" id="learnSteps"></div>
+  </div>
+</section>
+
+<section class="band band--tight">
+  <div class="shell">
+    <div class="sec-head reveal">
+      <p class="eyebrow eyebrow--aqua">Where the samples come from</p>
+      <h2>The ship is the lab and the middle rung.</h2>
+      <div class="sec-head__meta">
+        <span>62 km to the ground</span><span>Everything above and below it drops from the hull</span>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="stage samples" id="samples" data-rail="Where the samples come from">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="samplesCanvas" aria-label="The airship sends a package up to 62 km on a tether, works the cloud band from 54 to 50 km, lowers a package to 45 km, and drops probes to 30 km and to the surface"></canvas>
+      <p class="act__badge"><span>Samples</span> from 62 km to the ground</p>
+      <div class="journey__hud samples__hud" role="status" aria-live="polite" aria-atomic="true">
+        <div class="readout__row">
+          <span class="readout__k">Altitude</span>
+          <span class="readout__v" id="sAlt">52.0<small> km</small></span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Outside</span>
+          <span class="readout__v" id="sTemp">60<small> °C</small></span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Pressure</span>
+          <span class="readout__v" id="sPres">1.0<small> atm</small></span>
+        </div>
+      </div>
+    </div>
+    <div class="stage__steps" id="samplesSteps"></div>
   </div>
 </section>
 
 <!-- ============================ THE PROGRAM ============================ -->
-<section class="band" data-rail="The program">
+<section class="band band--tight" data-rail="The program">
   <div class="shell">
     <div class="sec-head reveal">
       <p class="eyebrow">The program</p>
       <h2>Five steps, twenty years, and nobody launches until the way back is parked.</h2>
       <div class="sec-head__meta">
-        <span>2026 → 2055</span><span>People fly in 2042</span><span>$44.4 bn</span>
+        <span>2026 → 2055</span><span>People fly in 2042</span><span>$44.4 bn</span><span>A window every 584 days</span>
       </div>
-    </div>
-    <div class="phases" id="phases"></div>
-
-    <div style="margin-top: clamp(3rem, 7vw, 4.5rem)" class="reveal">
-      <p class="eyebrow eyebrow--dim" style="margin-bottom:1rem">Every chance to go, between now and 2050</p>
-      <div class="tablewrap">
-        <table>
-          <caption>Cheapest departure in each window, from the trajectory search in <code>scripts/porkchop.py</code>.</caption>
-          <thead>
-            <tr>
-              <th scope="col">Window open</th>
-              <th scope="col">Best day to leave</th>
-              <th scope="col">Arrive</th>
-              <th scope="col">Transit</th>
-              <th scope="col">C₃ km²/s²</th>
-              <th scope="col">V∞ km/s</th>
-              <th scope="col" style="text-align:left">Flying what</th>
-            </tr>
-          </thead>
-          <tbody id="windowRows"></tbody>
-        </table>
-      </div>
-      <p class="note" style="margin-top:1.4rem; max-width:60ch">
-        A window opens every 584 days. Mars opens every 780. Over twenty years that is
-        four extra chances to go — and four extra chances to bring somebody home early.
-      </p>
     </div>
   </div>
 </section>
-
-<!-- ============================ THE BILL ============================ -->
-<section class="band" data-rail="The bill">
-  <div class="shell">
-    <div class="sec-head reveal">
-      <p class="eyebrow">The bill</p>
-      <h2>Forty-four billion over twenty years — and launch is barely one percent of it.</h2>
-    </div>
-
-    <div class="costgrid">
-      <div class="reveal">
-        <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Step by step</p>
-        <div class="costbars" id="costBars"></div>
-        <div class="bignum" style="margin-top:2rem">
-          <span class="bignum__v">$2.2 bn</span>
-          <span class="bignum__k">a year, averaged across the program</span>
+<section class="stage program" id="program">
+  <div class="stage__track">
+    <div class="stage__viz">
+      <canvas id="programCanvas" aria-label="A timeline from 2026 to 2055: the five steps as bands, every launch window as an arc from Earth departure to Venus arrival, and the money spent rising underneath"></canvas>
+      <p class="act__badge"><span>2026 → 2055</span> the program</p>
+      <div class="journey__hud program__hud" role="status" aria-live="polite" aria-atomic="true">
+        <div class="readout__row">
+          <span class="readout__k">Year</span>
+          <span class="readout__v" id="pYear">2026</span>
         </div>
-      </div>
-
-      <div class="reveal">
-        <p class="eyebrow eyebrow--dim" style="margin-bottom:1.2rem">Against published crewed-Mars numbers</p>
-        <div class="compare" id="costCompare"></div>
-        <div class="prose" style="margin-top:2rem">
-          <p class="note">
-            Getting people to Venus takes about 450 tons in low Earth orbit. At the
-            prices a Starship-class vehicle is aiming for, that is $90–225 million of
-            launch — half a percent of the whole thing. Launch is not what makes this
-            expensive. The ascent vehicle and twenty years of payroll are.
-          </p>
-          <p class="note">
-            Treat every figure as order-of-magnitude. Estimates like these historically
-            run low. Even tripled, this sits under the cheapest published number for
-            putting people on Mars.
-          </p>
+        <div class="readout__row">
+          <span class="readout__k">Spent so far</span>
+          <span class="readout__v" id="pSpent">$0.0<small> bn</small></span>
+        </div>
+        <div class="readout__row">
+          <span class="readout__k">Next window</span>
+          <span class="readout__v readout__v--sm" id="pNext">22 May 2031</span>
         </div>
       </div>
     </div>
+    <div class="stage__steps" id="programSteps"></div>
   </div>
 </section>
 
 <!-- ============================ RISKS ============================ -->
-<section class="band" data-rail="What could go wrong">
+<section class="band" data-rail="The risks">
   <div class="shell">
     <div class="sec-head reveal">
-      <p class="eyebrow" style="color:var(--critical)">What could go wrong</p>
-      <h2>Seven things that could kill this, roughly in the order they might.</h2>
-      <div class="sec-head__meta">
-        <span>A plan without this section is a brochure.</span>
-      </div>
+      <h2 style="color:var(--critical)">The Risks</h2>
     </div>
     <div class="risks reveal" id="risks"></div>
   </div>
@@ -684,31 +687,19 @@
   <div class="shell">
     <div class="sec-head reveal">
       <p class="eyebrow">So</p>
-      <h2>Venus is not easier than Mars. It is shorter, closer, warmer, better shielded — and it has no floor.</h2>
+      <h2>Venus is not easier. It is shorter, closer, warmer, better shielded.</h2>
     </div>
 
     <div class="prose col reveal">
       <p>
-        The case was never that Venus is gentle. It is that we picked where to go by
-        looking at a surface, and Venus is the one planet where the surface is the worst
-        part of it. Fifty kilometers up, everything that acts on a human body — pressure,
-        gravity, heat, radiation, light, time away from home — is better than anywhere
-        else we could go.
-      </p>
-      <p>
-        Against that: two hard engineering problems and one thing we can never fix. The
-        ride home has to launch off a balloon. The return hits Earth&rsquo;s atmosphere
-        faster than anyone ever has. And there will never be ground to stand on.
-      </p>
-      <p>
-        Those first two are money and time. Mars&rsquo;s problems — three years of cosmic
-        rays at a third of a gravity, in a pressure vessel that has to never once fail —
-        are biology, and biology does not care how well funded you are.
+        In order to become multiplanetary, we need to change ourselves to fit our new
+        home, not the other way around. Fifty kilometers up, pressure, gravity, heat,
+        radiation, light, time away from home &mdash; is better than anywhere else we
+        could go in the solar system.
       </p>
       <p class="lede" style="margin-top:0.6rem">
-        The next window opens March 27, 2031. Flying one balloon through it costs about
-        $900 million and tells us whether the skin survives a Venus year. That is the
-        whole decision.
+        The next window opens March 27, 2031. The cost to test the very first step is
+        $900 million. Let&rsquo;s live in the clouds.
       </p>
     </div>
 
@@ -735,13 +726,12 @@
 
 </div><!-- /page -->
 
-<script src="assets/data.js?v=b6b2d1fa"></script>
+<script src="assets/data.js?v=7fc68262"></script>
 <script src="assets/trajectory.js?v=39dc470b"></script>
 <script src="assets/models.js?v=611cf507"></script>
 <script src="assets/acts.js?v=feb8cc3e"></script>
 <script src="assets/vendor/three.min.js?v=7a7802bf"></script>
-<script src="assets/acts3d.js?v=e741a833"></script>
-<script src="assets/mission.js?v=ef585838"></script>
-<script src="assets/viewer.js?v=8c860163"></script>
+<script src="assets/acts3d.js?v=b48f6a3f"></script>
+<script src="assets/mission.js?v=a3734563"></script>
 </body>
 </html>
