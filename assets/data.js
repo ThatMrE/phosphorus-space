@@ -97,7 +97,8 @@ PHOS.MISSION = {
   earthVinf: 8.67,      // km/s
   earthEntryKms: 14.06, // km/s at the 125 km entry interface
   crew: 4,
-  crewAloft: 2
+  crewAloft: 2,
+  latitudeDeg: 10        // where the ship goes in and stays, +/- 5 deg; see scripts/latitude.py
 };
 
 PHOS.BACKUP_WINDOW = {
@@ -660,57 +661,7 @@ PHOS.LIFT_NOTE = {
    float altitude and airspeed; the night is always coasted at 55 km.
    Day and night are measured against the Sun. */
 PHOS.SUNCHASE = [
-  { km: 50, u:  0, wind: 60, dayH:  83.5, nightH: 53.9, lapDays: 5.72, sunPct: 61, propKw:   0, storageKwh: 431, lift: 66.8 },
-  { km: 50, u:  5, wind: 60, dayH:  90.6, nightH: 53.9, lapDays: 6.02, sunPct: 63, propKw:  10, storageKwh: 431, lift: 66.8 },
-  { km: 50, u: 10, wind: 60, dayH:  99.0, nightH: 53.9, lapDays: 6.37, sunPct: 65, propKw:  81, storageKwh: 431, lift: 66.8 },
-  { km: 50, u: 15, wind: 60, dayH: 109.1, nightH: 53.9, lapDays: 6.79, sunPct: 67, propKw: 273, storageKwh: 431, lift: 66.8 },
-  { km: 51, u:  0, wind: 67, dayH:  75.2, nightH: 53.9, lapDays: 5.38, sunPct: 58, propKw:   0, storageKwh: 431, lift: 61.8 },
-  { km: 51, u:  5, wind: 67, dayH:  80.9, nightH: 53.9, lapDays: 5.62, sunPct: 60, propKw:   9, storageKwh: 431, lift: 61.8 },
   { km: 51, u: 10, wind: 67, dayH:  87.6, nightH: 53.9, lapDays: 5.90, sunPct: 62, propKw:  73, storageKwh: 431, lift: 61.8 },
-  { km: 51, u: 15, wind: 67, dayH:  95.4, nightH: 53.9, lapDays: 6.22, sunPct: 64, propKw: 247, storageKwh: 431, lift: 61.8 },
-  { km: 52, u:  0, wind: 75, dayH:  67.6, nightH: 53.9, lapDays: 5.06, sunPct: 56, propKw:   0, storageKwh: 431, lift: 54.3 },
-  { km: 52, u:  5, wind: 75, dayH:  72.2, nightH: 53.9, lapDays: 5.25, sunPct: 57, propKw:   8, storageKwh: 431, lift: 54.3 },
-  { km: 52, u: 10, wind: 75, dayH:  77.4, nightH: 53.9, lapDays: 5.47, sunPct: 59, propKw:  66, storageKwh: 431, lift: 54.3 },
-  { km: 52, u: 15, wind: 75, dayH:  83.5, nightH: 53.9, lapDays: 5.73, sunPct: 61, propKw: 221, storageKwh: 431, lift: 54.3 },
-  { km: 53, u:  0, wind: 82, dayH:  62.1, nightH: 53.9, lapDays: 4.83, sunPct: 54, propKw:   0, storageKwh: 431, lift: 49.0 },
-  { km: 53, u:  5, wind: 82, dayH:  65.9, nightH: 53.9, lapDays: 4.99, sunPct: 55, propKw:   7, storageKwh: 431, lift: 49.0 },
-  { km: 53, u: 10, wind: 82, dayH:  70.3, nightH: 53.9, lapDays: 5.18, sunPct: 57, propKw:  60, storageKwh: 431, lift: 49.0 },
-  { km: 53, u: 15, wind: 82, dayH:  75.2, nightH: 53.9, lapDays: 5.38, sunPct: 58, propKw: 201, storageKwh: 431, lift: 49.0 },
-  { km: 54, u:  0, wind: 90, dayH:  56.8, nightH: 53.9, lapDays: 4.61, sunPct: 51, propKw:   0, storageKwh: 431, lift: 44.1 },
-  { km: 54, u:  5, wind: 90, dayH:  60.0, nightH: 53.9, lapDays: 4.75, sunPct: 53, propKw:   7, storageKwh: 431, lift: 44.1 },
-  { km: 54, u: 10, wind: 90, dayH:  63.6, nightH: 53.9, lapDays: 4.90, sunPct: 54, propKw:  53, storageKwh: 431, lift: 44.1 },
-  { km: 54, u: 15, wind: 90, dayH:  67.6, nightH: 53.9, lapDays: 5.06, sunPct: 56, propKw: 180, storageKwh: 431, lift: 44.1 },
-];
-
-/* Why the ship cannot simply park under the sun: the airspeed needed to
-   hold the sub-solar longitude at 52 km, the propulsive power that costs
-   (drag on a 34 m hull goes as speed cubed) and what a 1,000 m² array
-   makes at that latitude. derived — scripts/sunchase.py */
-PHOS.SUNKEEP = [
-  { lat:  0, wind: 75, airspeed: 71, propKw:    23648, solarKw: 210 },
-  { lat: 30, wind: 75, airspeed: 72, propKw:    24159, solarKw: 182 },
-  { lat: 50, wind: 75, airspeed: 73, propKw:    25027, solarKw: 135 },
-  { lat: 60, wind: 58, airspeed: 56, propKw:    11779, solarKw: 105 },
-  { lat: 70, wind: 40, airspeed: 39, propKw:     3770, solarKw:  72 },
-  { lat: 75, wind: 30, airspeed: 29, propKw:     1634, solarKw:  54 },
-  { lat: 80, wind: 20, airspeed: 20, propKw:      493, solarKw:  36 },
-  { lat: 85, wind: 10, airspeed: 10, propKw:       62, solarKw:  18 },
-];
-
-/* Does a higher latitude help? Best daylight share that still closes on
-   power, by latitude. derived — scripts/latitude.py */
-PHOS.LATITUDE = [
-  { lat:  0, wind: 75, noonDeg: 90, noonLight: 100, dayLight:  55, holdKw:    23648, holdArrayKw: 106, bestPct:  59, bestU: 11.5, bestArrayKw:  68, bestNeedKw:  67, chase10Pct:  59, chase10ArrayKw:  68, chase10NeedKw:  47 },
-  { lat: 20, wind: 75, noonDeg: 70, noonLight:  90, dayLight:  49, holdKw:    23877, holdArrayKw:  97, bestPct:  59, bestU: 11.1, bestArrayKw:  62, bestNeedKw:  61, chase10Pct:  59, chase10ArrayKw:  61, chase10NeedKw:  47 },
-  { lat: 40, wind: 75, noonDeg: 50, noonLight:  65, dayLight:  36, holdKw:    24545, holdArrayKw:  71, bestPct:  59, bestU:  9.7, bestArrayKw:  44, bestNeedKw:  43, chase10Pct:  59, chase10ArrayKw:  44, chase10NeedKw:  47 },
-  { lat: 50, wind: 75, noonDeg: 40, noonLight:  49, dayLight:  27, holdKw:    25027, holdArrayKw:  55, bestPct:  59, bestU:  8.7, bestArrayKw:  34, bestNeedKw:  33, chase10Pct:  59, chase10ArrayKw:  34, chase10NeedKw:  47 },
-  { lat: 60, wind: 63, noonDeg: 30, noonLight:  33, dayLight:  19, holdKw:    14905, holdArrayKw:  38, bestPct:  59, bestU:  7.3, bestArrayKw:  23, bestNeedKw:  23, chase10Pct:  60, chase10ArrayKw:  24, chase10NeedKw:  47 },
-  { lat: 70, wind: 44, noonDeg: 20, noonLight:  19, dayLight:  11, holdKw:     4951, holdArrayKw:  22, bestPct:  59, bestU:  5.3, bestArrayKw:  14, bestNeedKw:  14, chase10Pct:  62, chase10ArrayKw:  14, chase10NeedKw:  49 },
-  { lat: 75, wind: 34, noonDeg: 15, noonLight:  13, dayLight:   8, holdKw:     2335, holdArrayKw:  16, bestPct:  58, bestU:  3.3, bestArrayKw:   9, bestNeedKw:   9, chase10Pct:  64, chase10ArrayKw:  10, chase10NeedKw:  50 },
-  { lat: 80, wind: 24, noonDeg: 10, noonLight:   8, dayLight:   5, holdKw:      856, holdArrayKw:   9, bestPct:   0, bestU: null, bestArrayKw:   0, bestNeedKw:   0, chase10Pct:  68, chase10ArrayKw:   7, chase10NeedKw:  52 },
-  { lat: 85, wind: 15, noonDeg:  5, noonLight:   3, dayLight:   2, holdKw:      187, holdArrayKw:   4, bestPct:   0, bestU: null, bestArrayKw:   0, bestNeedKw:   0, chase10Pct:  79, chase10ArrayKw:   4, chase10NeedKw:  60 },
-  { lat: 88, wind:  9, noonDeg:  2, noonLight:   1, dayLight:   1, holdKw:       41, holdArrayKw:   2, bestPct:   0, bestU: null, bestArrayKw:   0, bestNeedKw:   0, chase10Pct: 100, chase10ArrayKw:   3, chase10NeedKw:  74 },
-  { lat: 90, wind:  5, noonDeg:  0, noonLight:   0, dayLight:   0, holdKw:        7, holdArrayKw:   0, bestPct:   0, bestU: null, bestArrayKw:   0, bestNeedKw:   0, chase10Pct: 100, chase10ArrayKw:   0, chase10NeedKw:  74 },
 ];
 
 /* ============================================================

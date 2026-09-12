@@ -543,38 +543,28 @@
 
   /* ---------- lift calculator ----------------------------- */
 
-  function liftCalc() {
-    var input = $('#altRange');
-    if (!input) return;
+  /* ---------- how it floats: the two decided altitudes ------ */
+
+  function floatTable() {
+    var wrap = $('#floats');
+    if (!wrap) return;
     var V_HE = 46000, V_AIR = 31500, STRUCT = 20.6;
-    var outs = {
-      alt: $('#cAlt'), t: $('#cTemp'), p: $('#cPres'),
-      he: $('#cHe'), air: $('#cAir'), net: $('#cNet'), verdict: $('#cVerdict')
-    };
-    function update() {
-      var km = +input.value / 10;
-      var s = sample(km);
-      var he = V_HE * s.liftHe / 1000;
-      var air = V_AIR * s.liftAir / 1000;
-      var gross = he + air;
-      var net = gross - STRUCT;
-      outs.alt.textContent = km.toFixed(1);
-      outs.t.textContent = fmt(s.tC, 0);
-      outs.p.textContent = s.atm.toFixed(2);
-      outs.he.textContent = he.toFixed(1);
-      outs.air.textContent = air.toFixed(1);
-      outs.net.textContent = net.toFixed(1);
-      var v, col;
-      if (km < 48) { v = 'Lift is plentiful — but it is ' + fmt(s.tC, 0) + ' °C outside.'; col = 'var(--ember)'; }
-      else if (km <= 54) { v = 'Nominal. Shirt-sleeve pressure, workable heat, ' + net.toFixed(0) + ' t of useful lift.'; col = 'var(--aqua)'; }
-      else if (km <= 58) { v = 'Comfortable, but the hull can only carry ' + net.toFixed(0) + ' t. Payload starts to bite.'; col = 'var(--sulfur)'; }
-      else { v = 'Too thin. This hull cannot lift its own structure up here.'; col = 'var(--critical)'; }
-      outs.verdict.textContent = v;
-      outs.verdict.style.color = col;
-      input.setAttribute('aria-valuetext', km.toFixed(1) + ' kilometers');
-    }
-    input.addEventListener('input', update);
-    update();
+    [[51, 'By day', 'props on, nose into the wind'], [55, 'At night', 'props off, coasting']].forEach(function (row) {
+      var s = sample(row[0]);
+      var he = V_HE * s.liftHe / 1000, air = V_AIR * s.liftAir / 1000, net = he + air - STRUCT;
+      var col = el('div', 'floats__col');
+      var h = el('p', 'floats__h');
+      h.appendChild(el('b', null, row[1]));
+      h.appendChild(el('span', 'num', row[0] + ' km · ' + row[2]));
+      col.appendChild(h);
+      [['Outside', fmt(s.tC, 0), '°C'], ['Pressure', s.atm.toFixed(2), 'atm'], ['Helium cells', he.toFixed(1), 't'], ['Air volume', air.toFixed(1), 't'], ['Useful payload after structure', net.toFixed(1), 't']].forEach(function (c, i) {
+        var cell = el('div', 'floats__cell' + (i === 4 ? ' floats__cell--hero' : ''));
+        cell.appendChild(el('dt', null, c[0]));
+        var dd = el('dd'); dd.appendChild(el('span', null, c[1])); dd.appendChild(el('span', null, c[2])); cell.appendChild(dd);
+        col.appendChild(cell);
+      });
+      wrap.appendChild(col);
+    });
   }
 
   /* ---------- simple list renderers ----------------------- */
@@ -989,7 +979,6 @@
   function sunChart() {
     var host = $('#lapSvg');
     if (!host || !D.SUNCHASE) return;
-    var pickKm = $('#lapPick'), pickAir = $('#lapAir');
     var out = {
       day: $('#lDay'), night: $('#lNight'), sun: $('#lSun'),
       prop: $('#lProp'), store: $('#lStore'), wind: $('#lWind')
@@ -1002,34 +991,9 @@
     var s = svg('svg', {
       viewBox: '0 0 ' + W + ' ' + H, width: '100%', height: '100%',
       preserveAspectRatio: 'xMidYMid meet', role: 'img',
-      'aria-label': 'One day and one night aboard the airship at the selected day-side altitude and airspeed: the altitude flown, the battery state, and the length of daylight and darkness'
+      'aria-label': 'One day and one night aboard the airship: the altitude flown, the battery state, and the length of daylight and darkness'
     });
     host.appendChild(s);
-
-    function uniq(key) {
-      var seen = {}, list = [];
-      D.SUNCHASE.forEach(function (r) { if (!seen[r[key]]) { seen[r[key]] = 1; list.push(r[key]); } });
-      return list;
-    }
-    function buttons(pick, values, current, onpick) {
-      values.forEach(function (v) {
-        var b = el('button', 'lap__btn' + (v === current ? ' is-on' : ''));
-        b.type = 'button';
-        b.textContent = v;
-        b.setAttribute('aria-pressed', v === current ? 'true' : 'false');
-        b.addEventListener('click', function () {
-          Array.prototype.forEach.call(pick.children, function (c) {
-            var on = c === b;
-            c.classList.toggle('is-on', on);
-            c.setAttribute('aria-pressed', on ? 'true' : 'false');
-          });
-          onpick(v);
-        });
-        pick.appendChild(b);
-      });
-    }
-    buttons(pickKm, uniq('km'), km, function (v) { km = v; select(); });
-    buttons(pickAir, uniq('u'), air, function (v) { air = v; select(); });
 
     function txt(x, y, t, o) {
       o = o || {};
@@ -1125,61 +1089,6 @@
 
   /* ---------- why not park under the sun: by latitude ----- */
 
-  function sunkeepRows() {
-    var wrap = $('#sunkeep');
-    if (!wrap || !D.SUNKEEP) return;
-    var lo = 1, hi = 0;
-    D.SUNKEEP.forEach(function (r) { hi = Math.max(hi, Math.log10(r.propKw)); });
-    function width(kw) { return Math.max(1.5, 100 * (Math.log10(Math.max(kw, 10)) - lo) / (hi - lo)); }
-    function kw(v) { return v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1) + ' MW' : v + ' kW'; }
-    D.SUNKEEP.forEach(function (r) {
-      var row = el('div', 'sk');
-      row.appendChild(el('span', 'sk__lat', r.lat + '°'));
-      var bars = el('div', 'sk__bars');
-      var need = el('div', 'sk__bar sk__bar--need'); need.style.width = width(r.propKw) + '%';
-      var have = el('div', 'sk__bar sk__bar--have'); have.style.width = width(r.solarKw) + '%';
-      bars.appendChild(need); bars.appendChild(have);
-      row.appendChild(bars);
-      var v = el('span', 'sk__v');
-      v.appendChild(el('b', null, kw(r.propKw) + ' to hold'));
-      v.appendChild(document.createTextNode(kw(r.solarKw) + ' of sun'));
-      row.appendChild(v);
-      wrap.appendChild(row);
-    });
-    var key = el('div', 'sk__key');
-    var k1 = el('span', null, 'to hold still'); k1.insertBefore(el('i', 'sk__bar--need'), k1.firstChild);
-    var k2 = el('span', null, 'from the array'); k2.insertBefore(el('i', 'sk__bar--have'), k2.firstChild);
-    key.appendChild(k1); key.appendChild(k2);
-    wrap.parentNode.insertBefore(key, wrap.nextSibling);
-  }
-
-  function latitudeRows() {
-    var wrap = $('#latitude');
-    if (!wrap || !D.LATITUDE) return;
-    D.LATITUDE.forEach(function (r) {
-      var ok = r.bestPct > 0;
-      var row = el('div', 'sk' + (ok ? ' is-close' : ''));
-      row.appendChild(el('span', 'sk__lat', r.lat + '°'));
-      var bars = el('div', 'sk__bars');
-      var sun = el('div', 'sk__bar sk__bar--sun'); sun.style.width = Math.max(1.5, r.bestPct) + '%';
-      var light = el('div', 'sk__bar sk__bar--light'); light.style.width = Math.max(1.5, r.dayLight) + '%';
-      bars.appendChild(sun); bars.appendChild(light);
-      row.appendChild(bars);
-      var v = el('span', 'sk__v');
-      v.appendChild(el('b', null, ok ? r.bestPct + '% in daylight' : 'cannot power the cabin'));
-      v.appendChild(document.createTextNode(ok
-        ? r.wind + ' m/s wind · fly ' + r.bestU + ' m/s'
-        : r.wind + ' m/s wind · ' + r.dayLight + '% of the light'));
-      row.appendChild(v);
-      wrap.appendChild(row);
-    });
-    var key = el('div', 'sk__key');
-    var k1 = el('span', null, 'share of the stay in daylight'); k1.insertBefore(el('i', 'sk__bar--sun'), k1.firstChild);
-    var k2 = el('span', null, 'daytime light vs equator noon'); k2.insertBefore(el('i', 'sk__bar--light'), k2.firstChild);
-    key.appendChild(k1); key.appendChild(k2);
-    wrap.parentNode.insertBefore(key, wrap.nextSibling);
-  }
-
   /* ---------- experience + crew --------------------------- */
 
   /* ---------- reveal on scroll ---------------------------- */
@@ -1227,15 +1136,13 @@
     buildHero();
     buildLaminate();
     sunChart();
-    sunkeepRows();
-    latitudeRows();
     buildRisks();
     buildCostVs();
     buildSources();
     /* three dimensions where WebGL is available; the 2D renderers stay as the fallback */
     var three = null;
     try { three = window.PHOS && PHOS.ACTS3D ? PHOS.ACTS3D.init(onTick, trackProgress) : null; } catch (e) { three = null; }
-    liftCalc();
+    floatTable();
     descentStage(three && three.descent);
     compareStage(three && three.compare);
     buildConstruction(three && three.build);

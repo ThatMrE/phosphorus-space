@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Spectral:ital,wght@0,300;0,400;0,500;1,400&display=swap">
-<link rel="stylesheet" href="assets/styles.css?v=309fe5d0">
+<link rel="stylesheet" href="assets/styles.css?v=6dc85e3f">
 </head>
 <body>
 
@@ -402,31 +402,14 @@
     <div class="reveal" style="margin-top: clamp(3rem, 7vw, 4.5rem)">
       <p class="eyebrow" style="margin-bottom:1rem">How it floats</p>
       <p class="note" style="margin-bottom:1.4rem; max-width:60ch">
-        Venus air is mostly CO₂ at 43.5&nbsp;g/mol; what you breathe is 29. The lighter
-        gas rises. Drag the altitude to trade lift against heat.
+        Venus air is mostly CO&#8322; at 43.5&nbsp;g/mol; what you breathe is 29. The lighter
+        gas rises. Two altitudes, decided: 51&nbsp;km by day and 55&nbsp;km at night.
       </p>
-      <div class="calc reveal">
-      <div class="calc__control">
-        <p class="eyebrow eyebrow--aqua">Fly the hull — 77,500 m³, 20.6 t of structure</p>
-        <p class="calc__alt"><span id="cAlt">52.0</span><small>KM</small></p>
-        <label for="altRange" class="note">Drag to trade lift against heat</label>
-        <input type="range" id="altRange" min="440" max="650" value="520" step="1"
-               aria-label="Float altitude in kilometers" aria-valuetext="52.0 kilometers">
-        <div class="calc__scale"><span>44 km</span><span>50</span><span>55</span><span>60</span><span>65 km</span></div>
-        <p class="calc__verdict" id="cVerdict">Nominal. Shirt-sleeve pressure, workable heat, 47 t of useful lift.</p>
-      </div>
-      <dl class="calc__out">
-        <div class="calc__cell"><dt>Outside</dt><dd><span id="cTemp">60</span><span>°C</span></dd></div>
-        <div class="calc__cell"><dt>Pressure</dt><dd><span id="cPres">0.82</span><span>atm</span></dd></div>
-        <div class="calc__cell"><dt>Helium cells</dt><dd><span id="cHe">54.3</span><span>t</span></dd></div>
-        <div class="calc__cell"><dt>Air volume</dt><dd><span id="cAir">13.6</span><span>t</span></dd></div>
-        <div class="calc__cell calc__cell--hero"><dt>Useful payload after structure</dt><dd><span id="cNet">47.3</span><span>t</span></dd></div>
-      </dl>
-      </div>
+      <div class="floats" id="floats"></div>
       <p class="note" style="margin-top:1.6rem; max-width:64ch">
         Go low for lift and you cook. Go high for comfort and you run out of payload.
-        Fifty to fifty-four kilometers is where both curves are livable at once — which is
-        why every serious study of this lands on the same four kilometers.
+        Fifty to fifty-five kilometers is where both curves are livable at once, which is
+        why every serious study of this lands on the same few kilometers.
       </p>
     </div>
 
@@ -470,7 +453,7 @@
         24 megawatts &mdash; but the cycle can be bent.
       </p>
       <p>
-        <strong>So the ship chases the sun.</strong> By day it floats low, points its nose
+        <strong>So the ship chases the sun, at ten degrees north.</strong> By day it floats low, points its nose
         into the wind and flies 10&nbsp;m/s upwind on power the array has to spare, stretching
         the daylight. At sunset the props stop, it climbs to 55&nbsp;km where the air is
         fastest and coolest, and coasts across the night. Eighty-eight hours of light,
@@ -511,17 +494,8 @@
   <div class="shell">
     <div class="lap reveal">
       <div class="lap__head">
-        <p class="eyebrow eyebrow--aqua">One day and one night, chasing the sun</p>
-        <div class="lap__picks">
-          <div style="display:flex; align-items:center; gap:0.8rem">
-            <span class="lap__pick-l">Day float km</span>
-            <div class="lap__pick" id="lapPick" role="group" aria-label="Day-side float altitude in kilometers"></div>
-          </div>
-          <div style="display:flex; align-items:center; gap:0.8rem">
-            <span class="lap__pick-l">Upwind m/s</span>
-            <div class="lap__pick" id="lapAir" role="group" aria-label="Airspeed flown upwind by day, meters per second"></div>
-          </div>
-        </div>
+        <p class="eyebrow eyebrow--aqua">One day and one night, chasing the sun at 10&deg;&nbsp;N</p>
+        <p class="lap__fixed">51&nbsp;km by day &middot; 10&nbsp;m/s upwind &middot; 55&nbsp;km at night</p>
       </div>
       <div id="lapSvg"></div>
       <dl class="lap__out">
@@ -533,50 +507,32 @@
         <div class="lap__cell"><dt>Wind</dt><dd><span id="lWind">67</span><span>m/s</span></dd></div>
       </dl>
       <p class="note" style="margin-top:1rem">
-        Drag goes as the cube of speed: 10&nbsp;m/s costs about 70&nbsp;kW, 15 costs 250.
-        Lower is more sun and more heat; the nominal day is 51&nbsp;km. The night is always the
-        same 54 hours, coasted at 55&nbsp;km, and that is what sizes the fuel cells.
+        Drag goes as the cube of speed, so 10&nbsp;m/s costs about 70&nbsp;kW and 15 would cost 250.
+        The night is always the same 54 hours, coasted at 55&nbsp;km, and that is what sizes the fuel cells.
       </p>
     </div>
 
     <div class="sunkeep reveal">
       <div class="sunkeep__head">
-        <p class="eyebrow">Why not just park under the sun?</p>
+        <p class="eyebrow">The latitude</p>
         <p class="sunkeep__lede">
-          The airspeed it would take to hold the noon line at 52&nbsp;km, what that costs, and
-          what a 1,000&nbsp;m&sup2; array makes at that latitude. Nothing that floats closes this
-          anywhere the sun is worth having.
+          Decided, not tuned. The ship goes in at ten degrees north and stays within five
+          degrees of it. Every alternative was run through <code>scripts/sunchase.py</code>
+          and <code>scripts/latitude.py</code>; this is what they say.
         </p>
       </div>
-      <div class="sunkeep__rows" id="sunkeep"></div>
-      <p class="note" style="margin-top:1rem; max-width:64ch">
-        Wind by latitude from Venus Express cloud tracking: roughly flat to 50&deg;, then falling
-        toward the pole. Only at 85&deg; does the gap shrink to a factor of three &mdash; inside the polar
-        vortex, with the sun never more than a hand&rsquo;s width above the horizon.
-      </p>
-    </div>
-
-    <div class="sunkeep reveal" style="margin-top:1px">
-      <div class="sunkeep__head">
-        <p class="eyebrow">What if it went in near a pole?</p>
-        <p class="sunkeep__lede">
-          The wind dies off toward the pole, so holding under the sun gets cheap. But the sun
-          sinks too, and under fifteen kilometers of cloud a low sun is mostly scattered back to
-          space. The biggest share of the stay the ship can spend in daylight while the array still
-          pays for the propellers and the cabin, by latitude.
-        </p>
+      <div class="decide">
+        <p class="decide__big">10&deg;&nbsp;N</p>
+        <div class="decide__rows">
+          <div class="decide__row"><b>Same daylight everywhere it matters.</b><span>From the equator to 75&deg; the biggest share of the stay the ship can spend in the sun is 59%, set by wind against airspeed, not by latitude.</span></div>
+          <div class="decide__row"><b>Most margin under 20&deg;.</b><span>Here the array makes 61 to 68&nbsp;kW against 47 of cabin and propellers. At 40&deg; it no longer closes at 10&nbsp;m/s; past 78&deg; it cannot run the cabin at all.</span></div>
+          <div class="decide__row"><b>Steady wind.</b><span>The super-rotation is flat to 50&deg;. Above 75&deg; the polar vortex wanders, and the sun never clears the cloud.</span></div>
+          <div class="decide__row"><b>Parking is out anywhere.</b><span>Holding the noon line takes 24&nbsp;MW at the equator and still 62&nbsp;kW against 18&nbsp;kW of sun at 85&deg;.</span></div>
+          <div class="decide__row"><b>Drifting never makes an Earth day.</b><span>A drift lap is 5.6 days at the equator and 3.7 days at any latitude above 50&deg;. A 24-hour lap exists only within two degrees of the pole, in permanent twilight.</span></div>
+          <div class="decide__row"><b>Ten, not zero.</b><span>North of the equator keeps the option of steering five degrees either way for the isotope runs, and it is where the VEGA balloons flew in 1985.</span></div>
+        </div>
       </div>
-      <div class="sunkeep__rows" id="latitude"></div>
-      <p class="note" style="margin-top:1rem; max-width:64ch">
-        Latitude does not move the number. From the equator to 75&deg; the answer is the same
-        three days in five, set by how fast the wind runs against the sun. Past 78&deg; the light
-        is so weak the array cannot run the cabin, propellers off. Venus tilts 2.6&deg;, so the
-        poles get no summer to speak of, and beyond 87&deg; the sun sets for half the year.
-        Light under the cloud scaled as &mu;&middot;(1&nbsp;+&nbsp;2&mu;) for a thick scattering
-        layer; the polar vortex modeled as a 4-day solid turn about an eye 2.5&deg; off the pole.
-      </p>
     </div>
-
   </div>
 </section>
 
@@ -770,12 +726,12 @@
 
 </div><!-- /page -->
 
-<script src="assets/data.js?v=c77b3ca3"></script>
+<script src="assets/data.js?v=7fc68262"></script>
 <script src="assets/trajectory.js?v=39dc470b"></script>
 <script src="assets/models.js?v=611cf507"></script>
 <script src="assets/acts.js?v=feb8cc3e"></script>
 <script src="assets/vendor/three.min.js?v=7a7802bf"></script>
 <script src="assets/acts3d.js?v=b48f6a3f"></script>
-<script src="assets/mission.js?v=70955d6c"></script>
+<script src="assets/mission.js?v=a3734563"></script>
 </body>
 </html>

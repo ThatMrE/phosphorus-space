@@ -92,7 +92,9 @@ floats at 51 km and flies 10 m/s upwind on solar surplus (~73 kW), and at
 sunset it climbs to 55 km and coasts across the night on the fastest air. That
 gives an **88-hour day and a 54-hour night — 62% of the stay in daylight** —
 and at an 8 kW habitat load, **431 kWh** of storage for every night instead of
-up to 668. The same script shows station-keeping by latitude: the propulsive
+up to 668. The latitude is decided, not tuned: 10° N (`scripts/latitude.py`), where the
+daylight share is the same 59% it is anywhere up to 75° and the power margin is best.
+The same script shows station-keeping by latitude: the propulsive
 power and the array's output only meet at ~85°, inside the polar vortex, where
 the sun never rises more than a few degrees. Wind by latitude is taken as flat
 to 50° and solid-body poleward of that, after Venus Express cloud tracking.
