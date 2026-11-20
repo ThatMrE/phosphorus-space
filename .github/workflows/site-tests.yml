@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: site-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   browsers:
     name: Chromium, Firefox and WebKit across devices
