@@ -260,51 +260,88 @@
 
   /* ---------- a renderer bound to one canvas --------------- */
 
+  /* A few WebGL contexts are shared by every stage. One context per stage would be ten
+     at once, which is more than a phone browser keeps alive (Safari and Chrome on phones
+     drop the oldest past eight, and count lost ones until they are collected). So a stage
+     borrows a canvas and renderer from a small pool while it is near the viewport and
+     hands them back a moment after it has gone past; the scene graph is kept, and the
+     next renderer re-uploads it. */
+  var POOL = { opaque: [], alpha: [] }, POOL_MAX = 3;
+  function poolTake(THREE, alpha) {
+    var list = alpha ? POOL.alpha : POOL.opaque;
+    for (var i = 0; i < list.length; i++) if (!list[i].busy && !list[i].dead) { list[i].busy = true; return list[i]; }
+    var c = document.createElement('canvas'), r;
+    try {
+      r = new THREE.WebGLRenderer({ canvas: c, antialias: true, alpha: alpha, powerPreference: 'high-performance' });
+    } catch (e) { return null; }
+    r.outputEncoding = THREE.sRGBEncoding;
+    if (alpha) r.setClearColor(0x000000, 0); else r.setClearColor(0x07060E, 1);
+    var entry = { canvas: c, renderer: r, busy: true, dead: false, pooled: list.length < POOL_MAX, onLost: null };
+    c.addEventListener('webglcontextlost', function (e) {
+      e.preventDefault();
+      entry.dead = true;
+      var at = list.indexOf(entry); if (at >= 0) list.splice(at, 1);
+      if (entry.onLost) entry.onLost();
+    }, false);
+    if (entry.pooled) list.push(entry);
+    return entry;
+  }
+  function poolGive(entry) {
+    entry.busy = false; entry.onLost = null;
+    if (entry.pooled && !entry.dead) return;
+    /* a spare beyond the pool, or one the browser took: let it go for good */
+    try {
+      var gl = entry.renderer.getContext();
+      entry.renderer.dispose();
+      var ext = entry.dead ? null : gl.getExtension('WEBGL_lose_context');
+      if (ext) ext.loseContext();
+    } catch (e) { /* already gone */ }
+  }
+
   function makeView(canvas, o) {
     var THREE = window.THREE;
     if (!THREE) return null;
-    /* One WebGL context per stage would be ten at once, which is more than a phone browser
-       keeps alive (Safari drops the oldest past eight). So the context is made when the
-       stage comes near, and dropped again once it has gone past; the scene graph is kept
-       and simply re-uploaded by the next renderer. */
-    var renderer = null, lost = false, w = 0, h = 0, visible = false, dropTimer = 0, lastArgs = null;
+    var placeholder = canvas, entry = null, w = 0, h = 0, visible = false, dropTimer = 0, lastArgs = null;
     var camera = new THREE.PerspectiveCamera(o.fov || 40, 1, o.near || 0.5, o.far || 60000);
     var watch = o.watch || canvas;
-    function onLost(e) { e.preventDefault(); renderer = null; lost = true; if (visible) setTimeout(function () { if (visible) acquire(); }, 50); }
+    function cur() { return entry ? entry.canvas : placeholder; }
+    function detach(e) {
+      if (e.canvas.parentNode) e.canvas.parentNode.removeChild(e.canvas);
+      placeholder.hidden = false;
+    }
+    function redraw() {
+      if (view.onVisible) view.onVisible();
+      else if (lastArgs) view.render(lastArgs[0], lastArgs[1]);
+    }
     function acquire() {
-      if (renderer) return true;
-      if (lost) {
-        /* a lost context stays lost on its canvas: start a fresh one in its place */
-        var c2 = canvas.cloneNode(false);
-        canvas.parentNode.replaceChild(c2, canvas);
-        canvas = c2; view.canvas = c2; lost = false;
-      }
-      try {
-        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: !!o.alpha, powerPreference: 'high-performance' });
-      } catch (e) { renderer = null; return false; }
-      canvas.addEventListener('webglcontextlost', onLost, false);
+      if (entry) return true;
+      var e = poolTake(THREE, !!o.alpha);
+      if (!e) return false;
+      entry = e;
+      e.canvas.className = placeholder.className;
+      e.canvas.setAttribute('aria-label', placeholder.getAttribute('aria-label') || '');
+      placeholder.parentNode.insertBefore(e.canvas, placeholder);
+      placeholder.hidden = true;
+      e.onLost = function () {
+        /* the browser took the context: hand the entry back and start again on another */
+        var was = entry; entry = null; detach(was); poolGive(was);
+        if (visible) setTimeout(function () { if (visible && !entry && acquire()) redraw(); }, 50);
+      };
       /* phones get a 1:1 buffer; the fill rate matters more than the crispness there */
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1 : 1.5));
-      renderer.outputEncoding = THREE.sRGBEncoding;
-      if (o.alpha) renderer.setClearColor(0x000000, 0); else renderer.setClearColor(0x07060E, 1);
+      e.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1 : 1.5));
       w = h = 0; size();
       return true;
     }
     function release() {
-      if (!renderer) return;
-      var gl = null;
-      try { gl = renderer.getContext(); } catch (e) { gl = null; }
-      renderer.dispose();
-      canvas.removeEventListener('webglcontextlost', onLost, false);
-      var ext = null;
-      try { ext = gl && gl.getExtension('WEBGL_lose_context'); } catch (e) { ext = null; }
-      if (ext) ext.loseContext();
-      renderer = null; lost = true;
+      if (!entry) return;
+      var e = entry; entry = null;
+      detach(e); poolGive(e);
     }
     function size() {
-      w = canvas.clientWidth; h = canvas.clientHeight;
+      var c = cur();
+      w = c.clientWidth; h = c.clientHeight;
       if (!w || !h) return false;
-      if (renderer) renderer.setSize(w, h, false);
+      if (entry) entry.renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       return true;
@@ -314,28 +351,25 @@
       visible = on;
       if (on) {
         if (dropTimer) { clearTimeout(dropTimer); dropTimer = 0; }
-        var fresh = !renderer;
+        var fresh = !entry;
         if (!acquire()) { visible = false; return; }
-        if (!was || fresh) {
-          if (view.onVisible) view.onVisible();
-          else if (lastArgs) view.render(lastArgs[0], lastArgs[1]);
-        }
+        if (!was || fresh) redraw();
       } else if (!dropTimer) {
         dropTimer = setTimeout(function () { dropTimer = 0; if (!visible) release(); }, 1500);
       }
     }
     var view = {
-      THREE: THREE, camera: camera, size: size, canvas: canvas,
+      THREE: THREE, camera: camera, size: size,
       w: function () { return w; }, h: function () { return h; },
       visible: function () { return visible; },
       render: function (scene, cam) {
         lastArgs = [scene, cam];
-        if (!renderer) return;
+        if (!entry) return;
         if (!w || !h) { if (!size()) return; }
-        renderer.render(scene, cam || camera);
+        entry.renderer.render(scene, cam || camera);
       }
     };
-    /* start eagerly only for a stage that is already near the top of the page */
+    /* start at once only for a stage that is already near the top of the page */
     var r = watch.getBoundingClientRect();
     var nearNow = r.bottom > -window.innerHeight * 0.75 && r.top < window.innerHeight * 1.75;
     if (nearNow && !acquire()) return null;
@@ -344,8 +378,8 @@
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (es) { near(es[0].isIntersecting); }, { threshold: 0, rootMargin: '75% 0px 75% 0px' }).observe(watch);
     } else {
-      /* no observer: keep every context, as before */
-      if (!renderer && !acquire()) return null;
+      /* no observer: every stage keeps a context, as before */
+      if (!entry && !acquire()) return null;
       visible = true;
     }
     window.addEventListener('resize', function () { size(); if (view.onResize) view.onResize(); }, { passive: true });

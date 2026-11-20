@@ -24,8 +24,10 @@ const GL_COUNTER = () => {
 
 async function open(page) {
   const failed = [], errors = [];
-  page.on('requestfailed', r => failed.push(r.url() + ' ' + ((r.failure() || {}).errorText || '')));
-  page.on('response', r => { if (r.status() >= 400) failed.push(r.status() + ' ' + r.url()); });
+  /* the web fonts are optional (display=swap), and a locked-down network may refuse them */
+  const optional = u => /fonts\.(googleapis|gstatic)\.com/.test(u);
+  page.on('requestfailed', r => { if (!optional(r.url())) failed.push(r.url() + ' ' + ((r.failure() || {}).errorText || '')); });
+  page.on('response', r => { if (r.status() >= 400 && !optional(r.url())) failed.push(r.status() + ' ' + r.url()); });
   page.on('pageerror', e => errors.push(String(e.message)));
   page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
   await page.addInitScript(GL_COUNTER);
@@ -106,7 +108,7 @@ test('every stage draws, and its cards fit the screen', async ({ page }) => {
         const cr = card.getBoundingClientRect();
         if (cr.right > vw + 1 || cr.left < -1) out.push('card ' + i + ' off the side ' + Math.round(cr.left) + '..' + Math.round(cr.right));
         if (cr.height > vh * 1.15) out.push('card ' + i + ' is ' + Math.round(cr.height) + 'px tall on a ' + vh + 'px screen');
-        for (const el of card.querySelectorAll('*')) if (!el.children.length && el.textContent.trim() && el.scrollWidth > el.clientWidth + 3 && getComputedStyle(el).display !== 'none') out.push('card ' + i + ' text spills: "' + el.textContent.trim().slice(0, 30) + '"');
+        for (const el of card.querySelectorAll('*')) if (!el.children.length && el.textContent.trim() && el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 3) out.push('card ' + i + ' text spills: "' + el.textContent.trim().slice(0, 30) + '"');
         const hud = s.querySelector('.journey__hud');
         if (hud && getComputedStyle(hud).display !== 'none') { const h = hud.getBoundingClientRect(); if (h.width && (h.right > vw + 1 || h.bottom > vh + 1 || h.left < -1)) out.push('card ' + i + ' readout outside the screen'); }
         const viz = s.querySelector('.stage__viz');
