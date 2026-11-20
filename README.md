@@ -190,6 +190,22 @@ turn.
 No build step, no dependencies, no framework. Open `index.html` directly or serve
 the directory; both work.
 
+### Tests
+
+`npm test` drives the page through Chromium, Firefox and WebKit at desktop, laptop,
+tablet and phone sizes (Playwright; see `playwright.config.js` and `tests/site.spec.js`).
+Each project checks that every asset loads with no script errors, that nothing runs off
+the side of the screen, that every scroll stage draws and its cards fit the viewport,
+that the WebGL scenes stay within a phone's context budget while scrolling, that the
+2D fallback draws when WebGL is off, and that the spec sheets open and the model
+downloads resolve. The same suite runs on every push and pull request in GitHub
+Actions (`.github/workflows/site-tests.yml`). To run one device:
+
+```
+npx playwright install --with-deps chromium firefox webkit   # once
+npx playwright test --project=webkit-iphone
+```
+
 ### How the scroll works
 
 One `requestAnimationFrame` loop drives every scroll-linked graphic. Each

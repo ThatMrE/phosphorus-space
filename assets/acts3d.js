@@ -263,42 +263,92 @@
   function makeView(canvas, o) {
     var THREE = window.THREE;
     if (!THREE) return null;
-    var renderer;
-    try {
-      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: !!o.alpha, powerPreference: 'high-performance' });
-    } catch (e) { return null; }
-    /* phones get a 1:1 buffer; the fill rate matters more than the crispness there */
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1 : 1.5));
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    if (o.alpha) renderer.setClearColor(0x000000, 0); else renderer.setClearColor(0x07060E, 1);
+    /* One WebGL context per stage would be ten at once, which is more than a phone browser
+       keeps alive (Safari drops the oldest past eight). So the context is made when the
+       stage comes near, and dropped again once it has gone past; the scene graph is kept
+       and simply re-uploaded by the next renderer. */
+    var renderer = null, lost = false, w = 0, h = 0, visible = false, dropTimer = 0, lastArgs = null;
     var camera = new THREE.PerspectiveCamera(o.fov || 40, 1, o.near || 0.5, o.far || 60000);
-    var w = 0, h = 0, visible = true;
+    var watch = o.watch || canvas;
+    function onLost(e) { e.preventDefault(); renderer = null; lost = true; if (visible) setTimeout(function () { if (visible) acquire(); }, 50); }
+    function acquire() {
+      if (renderer) return true;
+      if (lost) {
+        /* a lost context stays lost on its canvas: start a fresh one in its place */
+        var c2 = canvas.cloneNode(false);
+        canvas.parentNode.replaceChild(c2, canvas);
+        canvas = c2; view.canvas = c2; lost = false;
+      }
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: !!o.alpha, powerPreference: 'high-performance' });
+      } catch (e) { renderer = null; return false; }
+      canvas.addEventListener('webglcontextlost', onLost, false);
+      /* phones get a 1:1 buffer; the fill rate matters more than the crispness there */
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 760 ? 1 : 1.5));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      if (o.alpha) renderer.setClearColor(0x000000, 0); else renderer.setClearColor(0x07060E, 1);
+      w = h = 0; size();
+      return true;
+    }
+    function release() {
+      if (!renderer) return;
+      var gl = null;
+      try { gl = renderer.getContext(); } catch (e) { gl = null; }
+      renderer.dispose();
+      canvas.removeEventListener('webglcontextlost', onLost, false);
+      var ext = null;
+      try { ext = gl && gl.getExtension('WEBGL_lose_context'); } catch (e) { ext = null; }
+      if (ext) ext.loseContext();
+      renderer = null; lost = true;
+    }
     function size() {
       w = canvas.clientWidth; h = canvas.clientHeight;
       if (!w || !h) return false;
-      renderer.setSize(w, h, false);
+      if (renderer) renderer.setSize(w, h, false);
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       return true;
     }
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (es) {
-        var was = visible;
-        visible = es[0].isIntersecting;
-        if (visible && !was && view.onVisible) view.onVisible();
-      }, { threshold: 0 }).observe(o.watch || canvas);
+    function near(on) {
+      var was = visible;
+      visible = on;
+      if (on) {
+        if (dropTimer) { clearTimeout(dropTimer); dropTimer = 0; }
+        var fresh = !renderer;
+        if (!acquire()) { visible = false; return; }
+        if (!was || fresh) {
+          if (view.onVisible) view.onVisible();
+          else if (lastArgs) view.render(lastArgs[0], lastArgs[1]);
+        }
+      } else if (!dropTimer) {
+        dropTimer = setTimeout(function () { dropTimer = 0; if (!visible) release(); }, 1500);
+      }
     }
     var view = {
-      THREE: THREE, renderer: renderer, camera: camera, size: size,
+      THREE: THREE, camera: camera, size: size, canvas: canvas,
       w: function () { return w; }, h: function () { return h; },
       visible: function () { return visible; },
       render: function (scene, cam) {
+        lastArgs = [scene, cam];
+        if (!renderer) return;
         if (!w || !h) { if (!size()) return; }
         renderer.render(scene, cam || camera);
       }
     };
+    /* start eagerly only for a stage that is already near the top of the page */
+    var r = watch.getBoundingClientRect();
+    var nearNow = r.bottom > -window.innerHeight * 0.75 && r.top < window.innerHeight * 1.75;
+    if (nearNow && !acquire()) return null;
+    if (!nearNow) size();
+    visible = nearNow;
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { near(es[0].isIntersecting); }, { threshold: 0, rootMargin: '75% 0px 75% 0px' }).observe(watch);
+    } else {
+      /* no observer: keep every context, as before */
+      if (!renderer && !acquire()) return null;
+      visible = true;
+    }
     window.addEventListener('resize', function () { size(); if (view.onResize) view.onResize(); }, { passive: true });
-    size();
     return view;
   }
 
@@ -2125,6 +2175,7 @@
       var gl = null;
       try { gl = probe.getContext('webgl2') || probe.getContext('webgl') || probe.getContext('experimental-webgl'); } catch (e) { gl = null; }
       if (!gl) return null;
+      try { var lose = gl.getExtension('WEBGL_lose_context'); if (lose) lose.loseContext(); } catch (e) { /* the probe is done with */ }
 
       var out = { acts: false, descent: null, cutaway: false, compare: null, build: null, walk: null, learn: null, samples: null, stay: null, chase: null };
       var a = document.getElementById('assemblyCanvas');

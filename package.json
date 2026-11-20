@@ -1,0 +1,26 @@
+{
+  "name": "phosphorus-space",
+  "version": "1.0.0",
+  "description": "phosphorus.space: a crewed Venus cloud-habitat mission, as a scroll-driven single page",
+  "scripts": {
+    "test": "playwright test",
+    "test:phone": "playwright test --project=chromium-iphone --project=webkit-iphone",
+    "serve": "python3 -m http.server 8765 --bind 127.0.0.1",
+    "stamp": "python3 scripts/stamp_assets.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThatMrE/phosphorus-space.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/ThatMrE/phosphorus-space/issues"
+  },
+  "homepage": "https://github.com/ThatMrE/phosphorus-space#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  },
+  "private": true
+}
