@@ -66,6 +66,8 @@
 [hidden] { display: none !important; }
 
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+/* the smallest phones: a notch down on the base size so the stage cards fit a 568px screen */
+@media (max-width: 360px) { html { font-size: 93.75%; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
