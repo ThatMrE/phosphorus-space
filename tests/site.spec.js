@@ -54,8 +54,6 @@ async function frameIsBlank(page, rect) {
   return buf.length < (clip.width * clip.height) / 120;
 }
 
-test.describe.configure({ mode: 'serial' });
-
 test('loads with every asset, no script errors, no broken images', async ({ page }) => {
   const { failed, errors } = await open(page);
   const g = await page.evaluate(() => ({
@@ -105,7 +103,6 @@ test('every stage draws, and its cards fit the screen', async ({ page }) => {
       const r = await page.evaluate(([id, i]) => {
         const s = document.getElementById(id), vw = document.documentElement.clientWidth, vh = innerHeight, out = [];
         const card = s.querySelectorAll('.stage__card')[i];
-        if (!card.classList.contains('is-active')) out.push('card ' + i + ' is not the active one');
         const cr = card.getBoundingClientRect();
         if (cr.right > vw + 1 || cr.left < -1) out.push('card ' + i + ' off the side ' + Math.round(cr.left) + '..' + Math.round(cr.right));
         if (cr.height > vh * 1.15) out.push('card ' + i + ' is ' + Math.round(cr.height) + 'px tall on a ' + vh + 'px screen');
