@@ -754,11 +754,29 @@
     return c;
   }
 
+  /* a card extra that opens on demand, the way the spec sheets do */
+  function foldable(label, body, cls) {
+    var box = el('div', 'fspecs' + (cls ? ' ' + cls : ''));
+    var btn = el('button', 'fspecs__toggle');
+    btn.type = 'button'; btn.setAttribute('aria-expanded', 'false');
+    btn.appendChild(el('span', null, label));
+    btn.appendChild(el('i', null, '+'));
+    box.appendChild(btn);
+    var wrap = el('div', 'fspecs__body'); wrap.appendChild(body); box.appendChild(wrap);
+    btn.addEventListener('click', function () {
+      var on = !box.classList.contains('is-open');
+      box.classList.toggle('is-open', on);
+      btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      btn.lastChild.textContent = on ? '−' : '+';
+    });
+    return box;
+  }
+
   function buildConstruction(viz) {
     stageSteps('build', D.BUILD, function (b) {
       var o = { step: b.step, where: b.where, head: b.head, body: b.body, num: b.num, numlab: b.numlab };
-      if (b.extra === 'laminate') o.extra = laminateList();
-      if (b.extra === 'floats') o.extra = floatTable();
+      if (b.extra === 'laminate') o.extra = foldable('The four layers, outside in', laminateList());
+      if (b.extra === 'floats') o.extra = foldable('Day and night, by the numbers', floatTable());
       return stepCard(o);
     }, viz);
   }
@@ -796,7 +814,8 @@
         row.appendChild(el('p', 'pitem__d', it.what));
         items.appendChild(row);
       });
-      return { step: P.ph.tag, where: P.ph.years + (P.ph.window ? ' · ' + P.ph.window : ''), head: P.ph.name, body: P.ph.thesis, extra: items,
+      return { step: P.ph.tag, where: P.ph.years + (P.ph.window ? ' · ' + P.ph.window : ''), head: P.ph.name, body: P.ph.thesis,
+               extra: foldable('What ships · ' + P.ph.items.length, items),
                num: '$' + P.cost.toFixed(1) + ' bn', numlab: P.note, cls: P.ph.status === 'flagship' ? 'stage__card--ember' : P.ph.status === 'funded' ? 'stage__card--aqua' : '' };
     });
     var NC = rows.length;
