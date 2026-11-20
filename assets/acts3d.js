@@ -1243,9 +1243,12 @@
     v.onVisible = function () { if (last >= 0) frame(last); };
     return {
       update: function (p) {
-        if (!v.visible() && last >= 0) return;
-        if (Math.abs(p - last) < 0.0008) return;
-        last = p; frame(p);
+        /* keep the latest progress even while the stage is off screen, so the frame drawn
+           when it comes back is the right one, not the one from before it left */
+        var moved = Math.abs(p - last) >= 0.0008;
+        last = p;
+        if (!v.visible() || !moved) return;
+        frame(p);
       }
     };
   }
