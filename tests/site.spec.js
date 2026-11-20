@@ -44,7 +44,7 @@ async function toCard(page, id, i, n) {
     const top = t.getBoundingClientRect().top + window.scrollY;
     window.scrollTo(0, top + (t.offsetHeight - window.innerHeight) * f);
   }, [id, (i + 0.5) / n]);
-  await page.waitForTimeout(450);
+  await page.waitForTimeout(350);
 }
 
 /* a flat frame compresses to almost nothing; anything drawn does not */

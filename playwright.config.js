@@ -13,13 +13,14 @@ const chromium = function (device, extra) {
 
 module.exports = defineConfig({
   testDir: './tests',
-  timeout: 240000,
+  /* the stage-by-stage check scrolls through ~85 cards, which is slow on a shared runner */
+  timeout: 600000,
   expect: { timeout: 15000 },
   fullyParallel: false,
   workers: process.env.CI ? 2 : 2,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
-  use: { baseURL: 'http://127.0.0.1:8765', trace: 'retain-on-failure' },
+  use: { baseURL: 'http://127.0.0.1:8765', trace: process.env.CI ? 'off' : 'retain-on-failure', screenshot: 'only-on-failure' },
   webServer: {
     command: 'python3 -m http.server 8765 --bind 127.0.0.1',
     url: 'http://127.0.0.1:8765/index.html',
