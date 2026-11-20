@@ -1129,4 +1129,6 @@ input[type="range"]::-moz-range-thumb {
   .learn .stage__steps { margin-top: -100svh; }
   .learn .stage__step { min-height: 88svh; }
   .learn .act__badge { display: block; }
+  /* the learn stage has no readouts on the right, so its cards can use the width */
+  .learn .stage__card { max-width: min(36rem, 82vw); }
 }
